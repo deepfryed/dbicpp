@@ -45,7 +45,7 @@ you have any comments, suggestions or patches they're very much welcome.
       h.begin("transaction_2");
       h.execute("DELETE FROM users WHERE id = 2");
       h.rollback("transaction_2");
-      h.commit("transaction1");
+      h.commit("transaction_1");
   }
 
 == TODO
