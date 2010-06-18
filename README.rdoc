@@ -1,0 +1,58 @@
+= C++ DBI style database interface
+
+dbic++ is a Perl DBI style database client library abstraction which comes with support for
+the following databases.
+
+* PostgreSQL >= 8.0
+* MySQL >= 5.0
+
+== Warning
+
+My C++ is a bit rusty and might have horrendous, hideous or outdated code/coding style. If
+you have any comments, suggestions or patches they're very much welcome.
+
+== Example
+
+  #include "dbic++.h"
+  
+  using namespace std;
+  using namespace dbi;
+  
+  int main() {
+      // Handle h = dbiConnect("driver", "user", "password", "database", "host", "port");
+      Handle h = dbiConnect("postgresql", "udbicpp", "", "dbicpp");
+      Statement st(h, "SELECT id, name, email FROM users WHERE id >= ? AND id < ?");
+  
+      // bind and execute the statement in one go.
+      st % 1L, 10L, execute();
+      ResultRow r;
+      while ((r = st.fetchRow()).size() > 0) {
+          cout << r.join("\t") << endl;
+      }
+      st.finish();
+  
+      // bind and execute the statement later.
+      st % 1L, 10L;
+      st.execute();
+      ResultRowHash rh;
+      while ((rh = st.fetchRowHash()).size() > 0) {
+          cout << rh["name"] << endl;
+      }
+      st.finish();
+  
+      h.begin("transaction_1");
+      h.execute("DELETE FROM users WHERE id = 1");
+      h.begin("transaction_2");
+      h.execute("DELETE FROM users WHERE id = 2");
+      h.rollback("transaction_2");
+      h.commit("transaction1");
+  }
+
+== TODO
+
+* CURSOR and corresponding result iterator support.
+* Database related function call interface.
+
+== LICENSE
+
+See LICENSE.
