@@ -20,7 +20,7 @@ namespace dbi {
     using namespace std;
     using namespace pcrecpp;
 
-    struct null    {};
+    struct null {};
     struct execute {};
 
     class AbstractStatement;
@@ -29,7 +29,7 @@ namespace dbi {
         public:
         AbstractHandle() {};
         virtual unsigned int execute(string sql) = 0;
-        virtual unsigned int execute(string sql, vector<string> &bind) = 0;
+        virtual unsigned int execute(string sql, vector<Param> &bind) = 0;
         virtual AbstractStatement* prepare(string sql) = 0;
         virtual bool begin() = 0;
         virtual bool commit() = 0;
@@ -46,7 +46,7 @@ namespace dbi {
         AbstractStatement() {};
         virtual unsigned int rows() = 0;
         virtual unsigned int execute() = 0;
-        virtual unsigned int execute(vector<string> &bind) = 0;
+        virtual unsigned int execute(vector<Param> &bind) = 0;
         virtual ResultRow fetchRow() = 0;
         virtual ResultRowHash fetchRowHash() = 0;
         virtual bool finish() = 0;
@@ -70,7 +70,7 @@ namespace dbi {
         Handle(AbstractHandle *ah);
         ~Handle();
         unsigned int execute(string sql);
-        unsigned int execute(string sql, vector<string> &bind);
+        unsigned int execute(string sql, vector<Param> &bind);
         Statement prepare(string sql);
         Statement operator<<(string sql);
         bool begin();
@@ -88,7 +88,7 @@ namespace dbi {
         private:
         AbstractStatement *st;
         AbstractHandle *h;
-        vector<string> params;
+        vector<Param> params;
         public:
         Statement();
         Statement(AbstractStatement *);
@@ -96,11 +96,12 @@ namespace dbi {
         Statement(Handle &h, string sql);
         ~Statement();
         unsigned int rows();
-        void bind(string v);
         void bind(long v);
         void bind(double v);
+        void bind(string v);
+        void bind(Param v);
         unsigned int execute();
-        unsigned int execute(vector<string> &bind);
+        unsigned int execute(vector<Param> &bind);
         Statement& operator<<(string sql);
         Statement& operator,(string v);
         Statement& operator%(string v);
@@ -108,6 +109,8 @@ namespace dbi {
         Statement& operator%(long v);
         Statement& operator,(double v);
         Statement& operator%(double v);
+        Statement& operator,(dbi::null const &e);
+        Statement& operator%(dbi::null const &e);
         unsigned int  operator,(dbi::execute const &);
         ResultRow fetchRow();
         ResultRowHash fetchRowHash();

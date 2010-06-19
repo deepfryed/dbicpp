@@ -6,7 +6,7 @@ LIBDIR=libs
 INCDIR=inc
 CFLAGS=-ggdb -Wall -I$(INCDIR)
 
-DBILIB_SFILES=dbic++.cc
+DBILIB_SFILES=dbic++.cc container.cc
 DBILIB_OFILES=$(DBILIB_SFILES:.cc=.o)
 DBILIB_SOURCES=$(patsubst %,$(SRCDIR)/%,$(DBILIB_SFILES))
 DBILIB_OBJECTS=$(patsubst %,$(OBJDIR)/%,$(DBILIB_OFILES))
@@ -21,18 +21,18 @@ INCLUDES=$(INCDIR)/*.h $(INCDIR)/*/*.h
 
 #-------------------------------------------------------------------------
 
-DRVDIR=drivers
+DRVDIR=src/drivers
 DBD_PGVMAJOR=1
-DBD_PGVMINOR=1.0.1 
+DBD_PGVMINOR=1.0.1
 
-DBD_PGSOURCES=$(DRVDIR)/pg.cc $(DRVDIR)/container.cc
-DBD_PGOBJECTS=$(DRVDIR)/pg.o $(DRVDIR)/container.o
+DBD_PGSOURCES=$(DRVDIR)/pg.cc
+DBD_PGOBJECTS=$(DRVDIR)/pg.o
 
 DBD_PGSOFILE=$(LIBDIR)/libdbdpg.so.$(DBD_PGVMINOR)
 DBD_PGSONAME=libdbdpg.so.$(DBD_PGVMAJOR)
 
-DBD_PGLDFLAGS=-L$(LIBDIR) -lpcrecpp -lpq -luuid
-DBD_CFLAGS=-I/usr/include/postgresql -I/usr/include/postgresql/8.4/server 
+DBD_PGLDFLAGS=-L$(LIBDIR) -lpcrecpp -lpq -luuid -ldbic++
+DBD_CFLAGS=-I/usr/include/postgresql -I/usr/include/postgresql/8.4/server
 
 #-------------------------------------------------------------------------
 
@@ -49,11 +49,11 @@ $(DRVDIR)/%.o: $(DRVDIR)/%.cc Makefile $(INCLUDES)
 $(DBILIB): $(DBILIB_OBJECTS) $(DBILIB_SOURCES)
 	$(AR) rcs $(DBILIB) $(DBILIB_OBJECTS)
 
-$(DBD_PGSOFILE): $(DBD_PGOBJECTS) Makefile
-	$(CC) -shared -Wl,-soname,$(DBD_PGSONAME) $(DBD_PGLDFLAGS) -o $(DBD_PGSOFILE) $(DBD_PGOBJECTS) 
+$(DBD_PGSOFILE): $(DBD_PGOBJECTS) $(DBILIB) Makefile
+	$(CC) -shared -Wl,-soname,$(DBD_PGSONAME) $(DBD_PGLDFLAGS) -o $(DBD_PGSOFILE) $(DBD_PGOBJECTS)
 
-$(EXE): example.cc $(DBILIB)
-	$(CC) $(CFLAGS) example.cc -o $@ $(LDFLAGS) -ldbic++
+$(EXE): $(SRCDIR)/example.cc $(DBILIB)
+	$(CC) $(CFLAGS) $(SRCDIR)/example.cc -o $@ $(LDFLAGS) -ldbic++ $(DBD_PGLDFLAGS)
 
 clean:
-	rm -f $(OBJDIR)/*.o $(OBJDIR)/*.so.* $(OBJDIR)/*.a $(EXE)
+	rm -f $(OBJDIR)/*.o $(OBJDIR)/*.so.* $(OBJDIR)/*.a $(EXE) $(DRVDIR)/*.o

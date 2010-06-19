@@ -9,10 +9,7 @@
 
 namespace dbi {
 
-    pcrecpp::RE rows_re("^\\w+\\s+(\\d+)");
-
     void pgCheckResult(PGresult *result, string sql) {
-        int rows;
         char *cstatus;
         switch(PQresultStatus(result)) {
             case PGRES_TUPLES_OK:
@@ -21,8 +18,8 @@ namespace dbi {
             case PGRES_EMPTY_QUERY:
                 return;
             case PGRES_COMMAND_OK:
-                cstatus = PQcmdStatus(result);
-                if (rows_re.FullMatch(cstatus, &rows)) result->ntups = rows;
+                cstatus = PQcmdTuples(result);
+                if (strcmp(cstatus, "") != 0) result->ntups = atoi(cstatus);
                 return;
             case PGRES_BAD_RESPONSE:
             case PGRES_FATAL_ERROR:
@@ -31,13 +28,13 @@ namespace dbi {
                 break;
             default:
                 throw RuntimeError("Unknown error, check logs." + string(" - in query: ") + sql);
-        } 
+        }
     }
 
     string generateCompactUUID() {
         string rv;
         char hex[3];
-        unsigned char uuid[16]; 
+        unsigned char uuid[16];
         uuid_generate(uuid);
         for (int i = 0; i < 16; i++) {
             sprintf(hex, "%02X", uuid[i]);
@@ -95,24 +92,26 @@ namespace dbi {
 
         unsigned int execute() {
             st_result_columns.clear();
-            st_result = PQexecPrepared(conn, st_uuid.c_str(), 0, NULL, NULL, NULL, 0);         
+            st_result = PQexecPrepared(conn, st_uuid.c_str(), 0, NULL, NULL, NULL, 0);
             pgCheckResult(st_result, sql);
             return rows();
         }
 
-        unsigned int execute(vector<string> &bind) {
+        unsigned int execute(vector<Param> &bind) {
             char **params = new char*[bind.size()];
             int *param_l  = new int[bind.size()];
             st_result_columns.clear();
             for (unsigned int i = 0; i < bind.size(); i++) {
-                params[i]  = (char *)bind[i].c_str();
-                param_l[i] = bind[i].length();
+                bool isnull = bind[i].isnull();
+                params[i]  = isnull ? NULL : (char *)bind[i].c_str();
+                param_l[i] = isnull ? 0    : bind[i].length();
             }
-            st_result = PQexecPrepared(conn, st_uuid.c_str(), bind.size(), 
-                                       (const char* const *)params, (const int*)param_l, NULL, 0);         
+            st_result = PQexecPrepared(conn, st_uuid.c_str(), bind.size(),
+                                       (const char* const *)params, (const int*)param_l, NULL, 0);
             delete params;
             delete param_l;
             pgCheckResult(st_result, sql);
+            bind.clear();
             return rows();
         }
 
@@ -121,8 +120,12 @@ namespace dbi {
             ResultRow rs;
             if (st_rowno < rows()) {
                 st_rowno++;
-                for (int i = 0; i < PQnfields(st_result); i++)
-                    rs << PQgetvalue(st_result, st_rowno-1, i);
+                for (int i = 0; i < PQnfields(st_result); i++) {
+                    rs.push_back(
+                        PQgetisnull(st_result, st_rowno-1, i) ?
+                            Param() : PQgetvalue(st_result, st_rowno-1, i)
+                    );
+                }
             }
             return rs;
         }
@@ -136,7 +139,9 @@ namespace dbi {
                     for (int i = 0; i < PQnfields(st_result); i++)
                         st_result_columns.push_back(PQfname(st_result, i));
                 for (int i = 0; i < PQnfields(st_result); i++)
-                    rs[st_result_columns[i]] = PQgetvalue(st_result, st_rowno-1, i);
+                    rs[st_result_columns[i]] = (
+                        PQgetisnull(st_result, st_rowno-1, i) ? Param() : PQgetvalue(st_result, st_rowno-1, i)
+                    );
             }
             return rs;
         }
@@ -183,7 +188,7 @@ namespace dbi {
             return ntups;
         }
 
-        unsigned int execute(string sql, vector<string> &bind) {
+        unsigned int execute(string sql, vector<Param> &bind) {
             return 0;
         }
 
@@ -192,19 +197,19 @@ namespace dbi {
         }
 
         bool begin() {
-            execute("BEGIN WORK"); 
+            execute("BEGIN WORK");
             tr_nesting++;
             return true;
         };
 
         bool commit() {
-            execute("COMMIT"); 
+            execute("COMMIT");
             tr_nesting--;
             return true;
         };
 
         bool rollback() {
-            execute("ROLLBACK"); 
+            execute("ROLLBACK");
             tr_nesting--;
             return true;
         };

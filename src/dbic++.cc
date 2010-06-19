@@ -79,7 +79,7 @@ namespace dbi {
     Handle::Handle(AbstractHandle *ah)                                      { h = ah; }
     Handle::~Handle()                                                       { close(); delete h; }
     unsigned int Handle::execute(string sql)                                { return h->execute(sql); }
-    unsigned int Handle::execute(string sql, vector<string> &bind)          { return h->execute(sql, bind); }
+    unsigned int Handle::execute(string sql, vector<Param> &bind)           { return h->execute(sql, bind); }
     Statement Handle::prepare(string sql)                                   { return Statement(h->prepare(sql)); } 
     bool Handle::begin()                                                    { return h->begin(); }
     bool Handle::commit()                                                   { return h->commit(); }
@@ -97,7 +97,7 @@ namespace dbi {
     Statement::~Statement()                                                 { finish(); if (st != NULL) delete st; }
     unsigned int Statement::rows()                                          { return st->rows(); }
     unsigned int Statement::execute()                                       { return st->execute(params); }
-    unsigned int Statement::execute(vector<string> &bind)                   { return st->execute(bind); }        
+    unsigned int Statement::execute(vector<Param> &bind)                    { return st->execute(bind); }        
     ResultRow Statement::fetchRow()                                         { return st->fetchRow(); }
     ResultRowHash Statement::fetchRowHash()                                 { return st->fetchRowHash(); }
     bool Statement::finish()                                                { params.clear(); return st->finish(); }
@@ -105,12 +105,14 @@ namespace dbi {
 
     // syntactic sugar.
     Statement Handle::operator<<(string sql)                                { return Statement(h->prepare(sql)); }
-    Statement& Statement::operator,(string v)                               { bind(v); return *this; }
-    Statement& Statement::operator%(string v)                               { bind(v); return *this; }
+    Statement& Statement::operator,(string v)                               { bind(Param(v)); return *this; }
+    Statement& Statement::operator%(string v)                               { bind(Param(v)); return *this; }
     Statement& Statement::operator,(long   v)                               { bind(v); return *this; }
     Statement& Statement::operator%(long   v)                               { bind(v); return *this; }
     Statement& Statement::operator,(double v)                               { bind(v); return *this; }
     Statement& Statement::operator%(double v)                               { bind(v); return *this; }
+    Statement& Statement::operator,(dbi::null const &e)                     { bind(Param()); return *this; }
+    Statement& Statement::operator%(dbi::null const &e)                     { bind(Param()); return *this; }
     unsigned int Statement::operator,(dbi::execute const &e)                { return st->execute(params); }
 
     Statement& Statement::operator<<(string sql) { 
@@ -121,7 +123,17 @@ namespace dbi {
         return *this;
     }
 
-    void Statement::bind(string v) { params.push_back(v); }
-    void Statement::bind(long v)   { ostringstream out; out << v; params.push_back(out.str()); }
-    void Statement::bind(double v) { ostringstream out; out << v; params.push_back(out.str()); }
+    void Statement::bind(Param v) {
+        params.push_back(v);
+    }
+    void Statement::bind(long v) {
+        char val[256];
+        sprintf(val, "%ld", v);
+        params.push_back(Param(val));
+    }
+    void Statement::bind(double v) {
+        char val[256];
+        sprintf(val, "%lf", v);
+        params.push_back(val);
+    }
 }

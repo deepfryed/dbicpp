@@ -6,7 +6,7 @@ namespace dbi {
         ostringstream o;
         if (size() > 0) {
             for (unsigned int i = 0; i < size(); i++) {
-                o << at(i);
+                o << (at(i).isnull() ? "\\N" : at(i));
                 if (i >= 0 && i < size() - 1) o << delim;
             }
         }
@@ -16,10 +16,14 @@ namespace dbi {
     void ResultRow::operator<<(string v) {
         this->push_back(v);
     }
+
+    void ResultRow::operator<<(Param &v) {
+        this->push_back(v);
+    }
     
     vector<string> ResultRowHash::columns(void) {
         vector<string> rs;
-        for(map<string,string>::iterator iter = begin(); iter != end(); ++iter)
+        for(map<string,Param>::iterator iter = begin(); iter != end(); ++iter)
             rs.push_back(iter->first);
         return rs;
     }
@@ -30,7 +34,7 @@ namespace dbi {
     }
 
     ostream& operator<< (ostream &out, ResultRowHash &r) {
-        for(map<string,string>::iterator iter = r.begin(); iter != r.end();) {
+        for(map<string,Param>::iterator iter = r.begin(); iter != r.end();) {
             out << iter->first << "\t" << iter->second;
             if (++iter != r.end()) out << "\t";
         }
