@@ -72,7 +72,6 @@ namespace dbi {
         Handle(AbstractHandle *ah);
         ~Handle();
         unsigned int execute(string sql);
-        unsigned int execute(string sql, vector<Param> &bind);
         Statement prepare(string sql);
         Statement operator<<(string sql);
         bool begin();

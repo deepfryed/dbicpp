@@ -79,7 +79,6 @@ namespace dbi {
     Handle::Handle(AbstractHandle *ah)                                      { h = ah; }
     Handle::~Handle()                                                       { close(); delete h; }
     unsigned int Handle::execute(string sql)                                { return h->execute(sql); }
-    unsigned int Handle::execute(string sql, vector<Param> &bind)           { return h->execute(sql, bind); }
     Statement Handle::prepare(string sql)                                   { return Statement(h->prepare(sql)); } 
     bool Handle::begin()                                                    { return h->begin(); }
     bool Handle::commit()                                                   { return h->commit(); }

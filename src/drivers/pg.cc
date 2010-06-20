@@ -9,6 +9,12 @@
 
 namespace dbi {
 
+    const char *typemap[] = {
+        "d", "int", "u", "int", "lu", "int", "ld", "int",
+        "f", "float", "lf", "float",
+        "s", "text"
+    };
+
     void pgCheckResult(PGresult *result, string sql) {
         char *cstatus;
         switch(PQresultStatus(result)) {
@@ -45,10 +51,37 @@ namespace dbi {
 
     // TODO: raise parser errors here before sending it to server ?
     void pgPreProcessQuery(string &query) {
-        int n = 1;
-        char repl[256];
-        RE re("(?<!')\\?(?!')");
-        do { sprintf(repl, "$%d", n++); } while (re.Replace(repl, &query));
+        int i, n = 0;
+        char repl[128];
+        string var;
+        RE re("(?<!')(%(?:[dsfu]|l[dfu])|\\?)(?!')");
+        while (re.PartialMatch(query, &var)) {
+            for (i = 0; i < (int)(sizeof(typemap)/sizeof(char *)); i += 2) {
+                if (var == typemap[i]) {
+                    sprintf(repl, "$%d::%s", ++n, typemap[i+1]);
+                    re.Replace(repl, &query);
+                    i = -1;
+                    break;
+                }
+            }
+            if (i != -1) {
+                sprintf(repl, "$%d", ++n);
+                re.Replace(repl, &query);
+            }
+        }
+    }
+
+    void pgProcessBindParams(const char ***param_v, int **param_l, vector<Param> &bind) {
+        *param_v = new const char*[bind.size()];
+        *param_l = new int[bind.size()];
+        for (unsigned int i = 0; i < bind.size(); i++) {
+            bool isnull = bind[i].isnull();
+            (*param_v)[i] = isnull ? NULL : bind[i].str().data();
+            (*param_l)[i] = isnull ? 0    : bind[i].str().length();
+            // TODO figure out where the Schrodinger cat is hiding. The following line
+            // prevents some sort of eager compiler optimization of str().data() values.
+            bind[i].str().data();
+        }
     }
 
     class PgStatement : public AbstractStatement {
@@ -98,17 +131,10 @@ namespace dbi {
         }
 
         unsigned int execute(vector<Param> &bind) {
-            const char **param_v = new const char*[bind.size()];
-            int *param_l   = new int[bind.size()];
+            int *param_l;
+            const char **param_v;
             st_result_columns.clear();
-            for (unsigned int i = 0; i < bind.size(); i++) {
-                bool isnull = bind[i].isnull();
-                param_v[i] = isnull ? NULL : bind[i].str().data();
-                param_l[i] = isnull ? 0    : bind[i].str().length();
-                // TODO figure out where the Schrodinger cat is hiding. The following line
-                // prevents some sort of eager compiler optimization of str().data() values.
-                bind[i].str().data();
-            }
+            pgProcessBindParams(&param_v, &param_l, bind);
             st_result = PQexecPrepared(conn, st_uuid.c_str(), bind.size(),
                                        (const char* const *)param_v, (const int*)param_l, NULL, NULL);
             delete []param_v;
@@ -192,7 +218,17 @@ namespace dbi {
         }
 
         unsigned int execute(string sql, vector<Param> &bind) {
-            return 0;
+            int *param_l;
+            const char **param_v;
+            pgProcessBindParams(&param_v, &param_l, bind);
+            PGresult *result = PQexecParams(conn, sql.c_str(), bind.size(),
+                                            0, (const char* const *)param_v, param_l, 0, 0);
+            delete []param_v;
+            delete []param_l;
+            pgCheckResult(result, sql);
+            unsigned int ntups = (unsigned int)result->ntups;
+            PQclear(result);
+            return ntups;
         }
 
         PgStatement* prepare(string sql) {

@@ -32,7 +32,9 @@ int main() {
     Statement tdata(h, "INSERT INTO users(name, email) VALUES(?, ?)");
     tdata % "Apple Arthurton", "apple@example.com", execute();
     tdata % "Benny Arthurton", "benny@example.com", execute();
-    tdata % "James Arthurton", "james@example.com", execute();
+
+    // prepare, bind and execute in one go.
+    ( h << "INSERT INTO users(name, email) VALUES (?, ?)" ) % "James Arthurton", "james@example.com", execute();
 
     cout << "Simple select" << endl;
     cout << "-------------" << endl << endl;
