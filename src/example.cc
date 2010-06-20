@@ -1,5 +1,13 @@
 #include "dbic++.h"
 
+/*-------------------------------------------------------------------------
+
+   To compile:
+
+   g++ -Iinc -Llibs -rdynamic -o example example.cc -ldbic++ -ldl -lpcrecpp
+
+-------------------------------------------------------------------------*/
+
 using namespace std;
 using namespace dbi;
 
@@ -84,7 +92,9 @@ int main() {
     cout << "Inserted 1 row, last insert id = " << r << endl;
     ins % "John Doe", null(), execute();
     cout << "Inserted 1 row with null email value" << endl << endl;
-    st << "SELECT id, name, email FROM users", execute();
+
+    // type specific binding.
+    st << "SELECT id, name, email FROM users WHERE id > %d", 0L, execute();
     printResultRows(st);
     st.finish();
     h.rollback();
