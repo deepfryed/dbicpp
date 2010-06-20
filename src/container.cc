@@ -3,14 +3,12 @@
 namespace dbi {
 
     string ResultRow::join(string delim) {
-        ostringstream o;
+        ostringstream out;
         if (size() > 0) {
-            for (unsigned int i = 0; i < size(); i++) {
-                o << (at(i).isnull() ? "\\N" : at(i));
-                if (i >= 0 && i < size() - 1) o << delim;
-            }
+            for (unsigned int i = 0; i < size(); i++)
+                out << at(i) << ( (i >= 0 && i < size() - 1) ? delim : "");
         }
-        return o.str();
+        return out.str();
     }
 
     void ResultRow::operator<<(string v) {

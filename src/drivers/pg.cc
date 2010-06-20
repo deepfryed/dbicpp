@@ -98,18 +98,20 @@ namespace dbi {
         }
 
         unsigned int execute(vector<Param> &bind) {
-            char **params = new char*[bind.size()];
-            int *param_l  = new int[bind.size()];
+            const char **param_v = new const char*[bind.size()];
+            int *param_l   = new int[bind.size()];
             st_result_columns.clear();
             for (unsigned int i = 0; i < bind.size(); i++) {
                 bool isnull = bind[i].isnull();
-                params[i]  = isnull ? NULL : (char *)bind[i].c_str();
-                param_l[i] = isnull ? 0    : bind[i].length();
+                param_v[i] = isnull ? NULL : bind[i].str().data();
+                param_l[i] = isnull ? 0    : bind[i].str().length();
+                // TODO figure out where the Schrodinger cat is hiding.
+                bind[i].str().data();
             }
             st_result = PQexecPrepared(conn, st_uuid.c_str(), bind.size(),
-                                       (const char* const *)params, (const int*)param_l, NULL, 0);
-            delete params;
-            delete param_l;
+                                       (const char* const *)param_v, (const int*)param_l, NULL, NULL);
+            delete []param_v;
+            delete []param_l;
             pgCheckResult(st_result, sql);
             bind.clear();
             return rows();
@@ -123,7 +125,7 @@ namespace dbi {
                 for (int i = 0; i < PQnfields(st_result); i++) {
                     rs.push_back(
                         PQgetisnull(st_result, st_rowno-1, i) ?
-                            Param() : PQgetvalue(st_result, st_rowno-1, i)
+                              Param(null()) : PQgetvalue(st_result, st_rowno-1, i)
                     );
                 }
             }

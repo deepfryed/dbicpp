@@ -5,21 +5,11 @@
 #include <vector>
 #include <sstream>
 
+#include "dbic++/param.h"
+
 namespace dbi {
 
     using namespace std;
-
-    class Param : public string {
-        private:
-        bool nullvalue;
-        public:
-        Param()              : string("") { nullvalue = true; };
-        Param(char *s)       : string(s)  { nullvalue = false; };
-        Param(const char *s) : string(s)  { nullvalue = false; };
-        Param(string &s)     : string(s)  { nullvalue = false; };
-        bool isnull() { return nullvalue; }
-
-    };
 
     class ResultRow : public vector<Param> {
         public:

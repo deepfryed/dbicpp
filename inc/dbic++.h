@@ -9,6 +9,11 @@
 #include <dlfcn.h>
 #include <pcrecpp.h>
 
+namespace dbi {
+    struct null {};
+    struct execute {};
+}
+
 #include "dbic++/error.h"
 #include "dbic++/container.h"
 
@@ -19,9 +24,6 @@ namespace dbi {
 
     using namespace std;
     using namespace pcrecpp;
-
-    struct null {};
-    struct execute {};
 
     class AbstractStatement;
 
@@ -98,7 +100,6 @@ namespace dbi {
         unsigned int rows();
         void bind(long v);
         void bind(double v);
-        void bind(string v);
         void bind(Param v);
         unsigned int execute();
         unsigned int execute(vector<Param> &bind);

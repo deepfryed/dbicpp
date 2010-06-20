@@ -111,8 +111,8 @@ namespace dbi {
     Statement& Statement::operator%(long   v)                               { bind(v); return *this; }
     Statement& Statement::operator,(double v)                               { bind(v); return *this; }
     Statement& Statement::operator%(double v)                               { bind(v); return *this; }
-    Statement& Statement::operator,(dbi::null const &e)                     { bind(Param()); return *this; }
-    Statement& Statement::operator%(dbi::null const &e)                     { bind(Param()); return *this; }
+    Statement& Statement::operator,(dbi::null const &e)                     { bind(Param(e)); return *this; }
+    Statement& Statement::operator%(dbi::null const &e)                     { bind(Param(e)); return *this; }
     unsigned int Statement::operator,(dbi::execute const &e)                { return st->execute(params); }
 
     Statement& Statement::operator<<(string sql) { 
@@ -126,10 +126,11 @@ namespace dbi {
     void Statement::bind(Param v) {
         params.push_back(v);
     }
+
     void Statement::bind(long v) {
         char val[256];
         sprintf(val, "%ld", v);
-        params.push_back(Param(val));
+        params.push_back(val);
     }
     void Statement::bind(double v) {
         char val[256];
