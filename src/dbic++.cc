@@ -59,7 +59,7 @@ namespace dbi {
     }
 
     Handle dbiConnect(string driver_name, string user, string pass, string dbname, string host, string port) {
-        if (!drivers["null"]) { 
+        if (!drivers["null"]) {
             dbiInitialize("./libs");
             dbiInitialize();
         }
@@ -79,7 +79,7 @@ namespace dbi {
     Handle::Handle(AbstractHandle *ah)                                      { h = ah; }
     Handle::~Handle()                                                       { close(); delete h; }
     unsigned int Handle::execute(string sql)                                { return h->execute(sql); }
-    Statement Handle::prepare(string sql)                                   { return Statement(h->prepare(sql)); } 
+    Statement Handle::prepare(string sql)                                   { return Statement(h->prepare(sql)); }
     bool Handle::begin()                                                    { return h->begin(); }
     bool Handle::commit()                                                   { return h->commit(); }
     bool Handle::rollback()                                                 { return h->rollback(); }
@@ -96,7 +96,7 @@ namespace dbi {
     Statement::~Statement()                                                 { finish(); if (st != NULL) delete st; }
     unsigned int Statement::rows()                                          { return st->rows(); }
     unsigned int Statement::execute()                                       { return st->execute(params); }
-    unsigned int Statement::execute(vector<Param> &bind)                    { return st->execute(bind); }        
+    unsigned int Statement::execute(vector<Param> &bind)                    { return st->execute(bind); }
     ResultRow Statement::fetchRow()                                         { return st->fetchRow(); }
     ResultRowHash Statement::fetchRowHash()                                 { return st->fetchRowHash(); }
     bool Statement::finish()                                                { params.clear(); return st->finish(); }
@@ -114,7 +114,7 @@ namespace dbi {
     Statement& Statement::operator%(dbi::null const &e)                     { bind(Param(e)); return *this; }
     unsigned int Statement::operator,(dbi::execute const &e)                { return st->execute(params); }
 
-    Statement& Statement::operator<<(string sql) { 
+    Statement& Statement::operator<<(string sql) {
         params.clear();
         if (st) delete st;
         if (!h) throw RuntimeError("Unable to call prepare() without database handle.");
@@ -136,4 +136,7 @@ namespace dbi {
         sprintf(val, "%lf", v);
         params.push_back(val);
     }
+
+    unsigned char* Statement::fetchValue(int r, int c) { return st->fetchValue(r, c); }
+    unsigned char* Statement::operator()(int r, int c) { return st->fetchValue(r, c); }
 }

@@ -76,8 +76,8 @@ namespace dbi {
         *param_l = new int[bind.size()];
         for (unsigned int i = 0; i < bind.size(); i++) {
             bool isnull = bind[i].isnull();
-            (*param_v)[i] = isnull ? NULL : bind[i].str().data();
-            (*param_l)[i] = isnull ? 0    : bind[i].str().length();
+            (*param_v)[i] = isnull ? 0 : bind[i].str().data();
+            (*param_l)[i] = isnull ? 0 : bind[i].str().length();
             // TODO figure out where the Schrodinger cat is hiding. The following line
             // prevents some sort of eager compiler optimization of str().data() values.
             bind[i].str().data();
@@ -91,12 +91,14 @@ namespace dbi {
         PGresult *st_result;
         PGconn *conn;
         vector<string> st_result_columns;
-        unsigned int st_rowno;
+        unsigned int _rowno, _rows, _cols;
 
         void init() {
-            st_rowno  = 0;
-            st_result = NULL;
+            st_result = 0;
             st_uuid   = generateCompactUUID();
+            _rowno    = 0;
+            _rows     = 0;
+            _cols     = 0;
         }
 
         public:
@@ -107,27 +109,29 @@ namespace dbi {
             conn = c;
             sql = query;
             pgPreProcessQuery(query);
-            PGresult *result = PQprepare(conn, st_uuid.c_str(), query.c_str(), 0, NULL);
-            if (result == NULL) throw RuntimeError("Unable to allocate statement");
+            PGresult *result = PQprepare(conn, st_uuid.c_str(), query.c_str(), 0, 0);
+            if (!result) throw RuntimeError("Unable to allocate statement");
             pgCheckResult(result, sql);
             PQclear(result);
         }
 
         void check_ready(string m) {
-            if (st_result == NULL)
+            if (!st_result)
                 throw RuntimeError((m + " cannot be called yet. call execute() first").c_str());
         }
 
         unsigned int rows() {
             check_ready("rows()");
-            return (unsigned int)st_result->ntups;
+            return _rows;
         }
 
         unsigned int execute() {
             st_result_columns.clear();
-            st_result = PQexecPrepared(conn, st_uuid.c_str(), 0, NULL, NULL, NULL, 0);
+            st_result = PQexecPrepared(conn, st_uuid.c_str(), 0, 0, 0, 0, 0);
             pgCheckResult(st_result, sql);
-            return rows();
+            _rows = (unsigned int)PQntuples(st_result);
+            _cols = (unsigned int)PQnfields(st_result);
+            return _rows;
         }
 
         unsigned int execute(vector<Param> &bind) {
@@ -136,23 +140,26 @@ namespace dbi {
             st_result_columns.clear();
             pgProcessBindParams(&param_v, &param_l, bind);
             st_result = PQexecPrepared(conn, st_uuid.c_str(), bind.size(),
-                                       (const char* const *)param_v, (const int*)param_l, NULL, NULL);
+                                       (const char* const *)param_v, (const int*)param_l, 0, 0);
             delete []param_v;
             delete []param_l;
             pgCheckResult(st_result, sql);
             bind.clear();
-            return rows();
+            _rows = (unsigned int)PQntuples(st_result);
+            _cols = (unsigned int)PQnfields(st_result);
+            return _rows;
         }
 
         ResultRow fetchRow() {
             check_ready("fetchRow()");
             ResultRow rs;
-            if (st_rowno < rows()) {
-                st_rowno++;
-                for (int i = 0; i < PQnfields(st_result); i++) {
+            rs.reserve(_cols);
+            if (_rowno < _rows) {
+                _rowno++;
+                for (unsigned int i = 0; i < _cols; i++) {
                     rs.push_back(
-                        PQgetisnull(st_result, st_rowno-1, i) ?
-                              Param(null()) : PQgetvalue(st_result, st_rowno-1, i)
+                        PQgetisnull(st_result, _rowno-1, i) ?
+                              Param(null()) : PQgetvalue(st_result, _rowno-1, i)
                     );
                 }
             }
@@ -162,23 +169,29 @@ namespace dbi {
         ResultRowHash fetchRowHash() {
             check_ready("fetchRowHash()");
             ResultRowHash rs;
-            if (st_rowno < rows()) {
-                st_rowno++;
+            if (_rowno < _rows) {
+                _rowno++;
                 if (st_result_columns.size() == 0)
-                    for (int i = 0; i < PQnfields(st_result); i++)
+                    for (unsigned int i = 0; i < _cols; i++)
                         st_result_columns.push_back(PQfname(st_result, i));
-                for (int i = 0; i < PQnfields(st_result); i++)
+                for (unsigned int i = 0; i < _cols; i++)
                     rs[st_result_columns[i]] = (
-                        PQgetisnull(st_result, st_rowno-1, i) ? Param() : PQgetvalue(st_result, st_rowno-1, i)
+                        PQgetisnull(st_result, _rowno-1, i) ? Param(null()) : PQgetvalue(st_result, _rowno-1, i)
                     );
             }
             return rs;
         }
 
         bool finish() {
-            st_rowno = 0;
-            if (st_result != NULL) { PQclear(st_result); st_result = NULL; }
+            _rowno = _rows = _cols = 0;
+            if (st_result) PQclear(st_result);
+            st_result = 0;
             return true;
+        }
+
+        unsigned char* fetchValue(int r, int c) {
+            check_ready("fetchValue()");
+            return (unsigned char*)PQgetvalue(st_result, r, c);
         }
     };
 
@@ -199,7 +212,7 @@ namespace dbi {
             conninfo += "password='" + pass + "' ";
             conninfo += "dbname='" + dbname + "' ";
             conn = PQconnectdb(conninfo.c_str());
-            if (conn == NULL)
+            if (!conn)
                 throw ConnectionError("Unable to allocate db handle");
             else if (PQstatus(conn) == CONNECTION_BAD)
                 throw ConnectionError(PQerrorMessage(conn));

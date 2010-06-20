@@ -18,7 +18,7 @@ namespace dbi {
     void ResultRow::operator<<(Param &v) {
         this->push_back(v);
     }
-    
+
     vector<string> ResultRowHash::columns(void) {
         vector<string> rs;
         for(map<string,Param>::iterator iter = begin(); iter != end(); ++iter)

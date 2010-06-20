@@ -52,6 +52,7 @@ namespace dbi {
         virtual ResultRow fetchRow() = 0;
         virtual ResultRowHash fetchRowHash() = 0;
         virtual bool finish() = 0;
+        virtual unsigned char* fetchValue(int, int) = 0;
     };
 
     class Driver {
@@ -114,6 +115,8 @@ namespace dbi {
         unsigned int  operator,(dbi::execute const &);
         ResultRow fetchRow();
         ResultRowHash fetchRowHash();
+        unsigned char* fetchValue(int r, int c);
+        unsigned char* operator()(int r, int c);
         bool finish();
     };
 
