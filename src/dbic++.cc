@@ -104,14 +104,14 @@ namespace dbi {
 
     // syntactic sugar.
     Statement Handle::operator<<(string sql)                                { return Statement(h->prepare(sql)); }
-    Statement& Statement::operator,(string v)                               { bind(Param(v)); return *this; }
-    Statement& Statement::operator%(string v)                               { bind(Param(v)); return *this; }
+    Statement& Statement::operator,(string v)                               { bind(PARAM(v)); return *this; }
+    Statement& Statement::operator%(string v)                               { bind(PARAM(v)); return *this; }
     Statement& Statement::operator,(long   v)                               { bind(v); return *this; }
     Statement& Statement::operator%(long   v)                               { bind(v); return *this; }
     Statement& Statement::operator,(double v)                               { bind(v); return *this; }
     Statement& Statement::operator%(double v)                               { bind(v); return *this; }
-    Statement& Statement::operator,(dbi::null const &e)                     { bind(Param(e)); return *this; }
-    Statement& Statement::operator%(dbi::null const &e)                     { bind(Param(e)); return *this; }
+    Statement& Statement::operator,(dbi::null const &e)                     { bind(PARAM(e)); return *this; }
+    Statement& Statement::operator%(dbi::null const &e)                     { bind(PARAM(e)); return *this; }
     unsigned int Statement::operator,(dbi::execute const &e)                { return st->execute(params); }
 
     Statement& Statement::operator<<(string sql) {
@@ -129,12 +129,12 @@ namespace dbi {
     void Statement::bind(long v) {
         char val[256];
         sprintf(val, "%ld", v);
-        params.push_back(val);
+        params.push_back(PARAM(val));
     }
     void Statement::bind(double v) {
         char val[256];
         sprintf(val, "%lf", v);
-        params.push_back(val);
+        params.push_back(PARAM(val));
     }
 
     unsigned char* Statement::fetchValue(int r, int c) { return st->fetchValue(r, c); }

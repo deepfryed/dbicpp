@@ -3,7 +3,7 @@
 namespace dbi {
 
     string ResultRow::join(string delim) {
-        ostringstream out;
+        stringstream out;
         if (size() > 0) {
             for (unsigned int i = 0; i < size(); i++)
                 out << at(i) << ( (i >= 0 && i < size() - 1) ? delim : "");
@@ -12,7 +12,7 @@ namespace dbi {
     }
 
     void ResultRow::operator<<(string v) {
-        this->push_back(v);
+        this->push_back(PARAM(v));
     }
 
     void ResultRow::operator<<(Param &v) {

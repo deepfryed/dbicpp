@@ -75,12 +75,9 @@ namespace dbi {
         *param_v = new const char*[bind.size()];
         *param_l = new int[bind.size()];
         for (unsigned int i = 0; i < bind.size(); i++) {
-            bool isnull = bind[i].isnull();
-            (*param_v)[i] = isnull ? 0 : bind[i].str().data();
-            (*param_l)[i] = isnull ? 0 : bind[i].str().length();
-            // TODO figure out where the Schrodinger cat is hiding. The following line
-            // prevents some sort of eager compiler optimization of str().data() values.
-            bind[i].str().data();
+            bool isnull = bind[i].isnull;
+            (*param_v)[i] = isnull ? 0 : bind[i].value.data();
+            (*param_l)[i] = isnull ? 0 : bind[i].value.length();
         }
     }
 
@@ -159,7 +156,7 @@ namespace dbi {
                 for (unsigned int i = 0; i < _cols; i++) {
                     rs.push_back(
                         PQgetisnull(st_result, _rowno-1, i) ?
-                              Param(null()) : PQgetvalue(st_result, _rowno-1, i)
+                              PARAM(null()) : PARAM(PQgetvalue(st_result, _rowno-1, i))
                     );
                 }
             }
@@ -175,9 +172,8 @@ namespace dbi {
                     for (unsigned int i = 0; i < _cols; i++)
                         st_result_columns.push_back(PQfname(st_result, i));
                 for (unsigned int i = 0; i < _cols; i++)
-                    rs[st_result_columns[i]] = (
-                        PQgetisnull(st_result, _rowno-1, i) ? Param(null()) : PQgetvalue(st_result, _rowno-1, i)
-                    );
+                    rs[st_result_columns[i]] =
+                        PQgetisnull(st_result, _rowno-1, i) ? PARAM(null()) : PARAM(PQgetvalue(st_result, _rowno-1, i));
             }
             return rs;
         }
