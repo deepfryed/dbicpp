@@ -105,7 +105,8 @@ namespace dbi {
                 bool isnull = bind[i].isnull();
                 param_v[i] = isnull ? NULL : bind[i].str().data();
                 param_l[i] = isnull ? 0    : bind[i].str().length();
-                // TODO figure out where the Schrodinger cat is hiding.
+                // TODO figure out where the Schrodinger cat is hiding. The following line
+                // prevents some sort of eager compiler optimization of str().data() values.
                 bind[i].str().data();
             }
             st_result = PQexecPrepared(conn, st_uuid.c_str(), bind.size(),
