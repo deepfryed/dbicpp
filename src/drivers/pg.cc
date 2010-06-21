@@ -10,9 +10,9 @@
 namespace dbi {
 
     const char *typemap[] = {
-        "d", "int", "u", "int", "lu", "int", "ld", "int",
-        "f", "float", "lf", "float",
-        "s", "text"
+        "%d", "int", "%u", "int", "%lu", "int", "%ld", "int",
+        "%f", "float", "%lf", "float",
+        "%s", "text"
     };
 
     void pgCheckResult(PGresult *result, string sql) {
