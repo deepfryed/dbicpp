@@ -85,26 +85,15 @@ int main() {
     cout << "Inserts & Selects inside transaction" << endl;
     cout << "------------------------------------" << endl << endl;
 
-    h.begin();
     Statement ins(h, "INSERT INTO users (name, email) VALUES (?, ?) RETURNING id");
     ins % "John Doe", "doe@example.com", execute();
     ResultRow r = ins.fetchRow(); ins.finish();
     cout << "Inserted 1 row, last insert id = " << r << endl;
-    ins % "John Doe", null(), execute();
+    ins % "Jane Doe", null(), execute();
     cout << "Inserted 1 row with null email value" << endl << endl;
 
     // type specific binding.
     st << "SELECT id, name, email FROM users WHERE id > %d", 0L, execute();
-    printResultRows(st);
-    st.finish();
-    h.rollback();
-
-    // post transaction
-    cout << endl;
-    cout << "After transaction rollback" << endl;
-    cout << "--------------------------" << endl << endl;
-
-    st << "SELECT id, name, email FROM users", execute();
     printResultRows(st);
     st.finish();
 

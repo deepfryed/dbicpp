@@ -1,5 +1,4 @@
 #include "dbic++.h"
-#include <internal/libpq-int.h>
 #include <libpq-fe.h>
 #include <libpq/libpq-fs.h>
 #include <uuid/uuid.h>
