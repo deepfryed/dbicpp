@@ -7,6 +7,9 @@
 #define DRIVER_NAME     "postgresql"
 #define DRIVER_VERSION  "1.0.1"
 
+
+#define PQTUPLES(r) (int __n = PQntuples(r); n
+
 namespace dbi {
 
     const char *typemap[] = {
@@ -15,17 +18,18 @@ namespace dbi {
         "%s", "text"
     };
 
+    inline int PQNTUPLES(PGresult *r) {
+        int n = PQntuples(r);
+        return n > 0 ? n : atoi(PQcmdTuples(r));
+    }
+
     void pgCheckResult(PGresult *result, string sql) {
-        char *cstatus;
         switch(PQresultStatus(result)) {
             case PGRES_TUPLES_OK:
             case PGRES_COPY_OUT:
             case PGRES_COPY_IN:
             case PGRES_EMPTY_QUERY:
-                return;
             case PGRES_COMMAND_OK:
-                cstatus = PQcmdTuples(result);
-                if (strcmp(cstatus, "") != 0) result->ntups = atoi(cstatus);
                 return;
             case PGRES_BAD_RESPONSE:
             case PGRES_FATAL_ERROR:
@@ -84,18 +88,18 @@ namespace dbi {
     class PgStatement : public AbstractStatement {
         private:
         string sql;
-        string st_uuid;
-        PGresult *st_result;
+        string _uuid;
+        PGresult *_result;
         PGconn *conn;
-        vector<string> st_result_columns;
+        vector<string> _result_columns;
         unsigned int _rowno, _rows, _cols;
 
         void init() {
-            st_result = 0;
-            st_uuid   = generateCompactUUID();
-            _rowno    = 0;
-            _rows     = 0;
-            _cols     = 0;
+            _result = 0;
+            _rowno  = 0;
+            _rows   = 0;
+            _cols   = 0;
+            _uuid   = generateCompactUUID();
         }
 
         public:
@@ -106,14 +110,14 @@ namespace dbi {
             conn = c;
             sql = query;
             pgPreProcessQuery(query);
-            PGresult *result = PQprepare(conn, st_uuid.c_str(), query.c_str(), 0, 0);
+            PGresult *result = PQprepare(conn, _uuid.c_str(), query.c_str(), 0, 0);
             if (!result) throw RuntimeError("Unable to allocate statement");
             pgCheckResult(result, sql);
             PQclear(result);
         }
 
         void check_ready(string m) {
-            if (!st_result)
+            if (!_result)
                 throw RuntimeError((m + " cannot be called yet. call execute() first").c_str());
         }
 
@@ -123,27 +127,27 @@ namespace dbi {
         }
 
         unsigned int execute() {
-            st_result_columns.clear();
-            st_result = PQexecPrepared(conn, st_uuid.c_str(), 0, 0, 0, 0, 0);
-            pgCheckResult(st_result, sql);
-            _rows = (unsigned int)PQntuples(st_result);
-            _cols = (unsigned int)PQnfields(st_result);
+            _result_columns.clear();
+            _result = PQexecPrepared(conn, _uuid.c_str(), 0, 0, 0, 0, 0);
+            pgCheckResult(_result, sql);
+            _rows = (unsigned int)PQNTUPLES(_result);
+            _cols = (unsigned int)PQnfields(_result);
             return _rows;
         }
 
         unsigned int execute(vector<Param> &bind) {
             int *param_l;
             const char **param_v;
-            st_result_columns.clear();
+            _result_columns.clear();
             pgProcessBindParams(&param_v, &param_l, bind);
-            st_result = PQexecPrepared(conn, st_uuid.c_str(), bind.size(),
+            _result = PQexecPrepared(conn, _uuid.c_str(), bind.size(),
                                        (const char* const *)param_v, (const int*)param_l, 0, 0);
             delete []param_v;
             delete []param_l;
-            pgCheckResult(st_result, sql);
+            pgCheckResult(_result, sql);
             bind.clear();
-            _rows = (unsigned int)PQntuples(st_result);
-            _cols = (unsigned int)PQnfields(st_result);
+            _rows = (unsigned int)PQNTUPLES(_result);
+            _cols = (unsigned int)PQnfields(_result);
             return _rows;
         }
 
@@ -155,8 +159,8 @@ namespace dbi {
                 _rowno++;
                 for (unsigned int i = 0; i < _cols; i++) {
                     rs.push_back(
-                        PQgetisnull(st_result, _rowno-1, i) ?
-                              PARAM(null()) : PARAM(PQgetvalue(st_result, _rowno-1, i))
+                        PQgetisnull(_result, _rowno-1, i) ?
+                              PARAM(null()) : PARAM(PQgetvalue(_result, _rowno-1, i))
                     );
                 }
             }
@@ -168,26 +172,26 @@ namespace dbi {
             ResultRowHash rs;
             if (_rowno < _rows) {
                 _rowno++;
-                if (st_result_columns.size() == 0)
+                if (_result_columns.size() == 0)
                     for (unsigned int i = 0; i < _cols; i++)
-                        st_result_columns.push_back(PQfname(st_result, i));
+                        _result_columns.push_back(PQfname(_result, i));
                 for (unsigned int i = 0; i < _cols; i++)
-                    rs[st_result_columns[i]] =
-                        PQgetisnull(st_result, _rowno-1, i) ? PARAM(null()) : PARAM(PQgetvalue(st_result, _rowno-1, i));
+                    rs[_result_columns[i]] =
+                        PQgetisnull(_result, _rowno-1, i) ? PARAM(null()) : PARAM(PQgetvalue(_result, _rowno-1, i));
             }
             return rs;
         }
 
         bool finish() {
             _rowno = _rows = _cols = 0;
-            if (st_result) PQclear(st_result);
-            st_result = 0;
+            if (_result) PQclear(_result);
+            _result = 0;
             return true;
         }
 
         unsigned char* fetchValue(int r, int c) {
             check_ready("fetchValue()");
-            return (unsigned char*)PQgetvalue(st_result, r, c);
+            return (unsigned char*)PQgetvalue(_result, r, c);
         }
     };
 
@@ -219,25 +223,27 @@ namespace dbi {
         }
 
         unsigned int execute(string sql) {
+            unsigned int rows;
             PGresult *result = PQexec(conn, sql.c_str());
             pgCheckResult(result, sql);
-            unsigned int ntups = (unsigned int)result->ntups;
+            rows = (unsigned int)PQNTUPLES(result);
             PQclear(result);
-            return ntups;
+            return rows;
         }
 
         unsigned int execute(string sql, vector<Param> &bind) {
             int *param_l;
             const char **param_v;
+            unsigned int rows;
             pgProcessBindParams(&param_v, &param_l, bind);
             PGresult *result = PQexecParams(conn, sql.c_str(), bind.size(),
                                             0, (const char* const *)param_v, param_l, 0, 0);
             delete []param_v;
             delete []param_l;
             pgCheckResult(result, sql);
-            unsigned int ntups = (unsigned int)result->ntups;
+            rows = (unsigned int)PQNTUPLES(result);
             PQclear(result);
-            return ntups;
+            return rows;
         }
 
         PgStatement* prepare(string sql) {
