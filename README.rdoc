@@ -80,7 +80,7 @@ See LICENSE.
 
 == Warning
 
-I'm no C++ or Ruby expert. So the code have horrendous, hideous or outdated code/coding style. If
+I'm no C++ or Ruby expert. So the code may have horrendous, hideous or outdated code/coding style. If
 you are lucky you may not encounter any bugs. So suffice to say, if you have any comments,
 suggestions or patches they're very much welcome.
 
