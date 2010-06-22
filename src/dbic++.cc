@@ -10,6 +10,8 @@ namespace dbi {
     vector<string> available_drivers();
 
     bool dbiInitialize(string path = DEFAULT_DRIVER_PATH) {
+        _trace    = false;
+        _trace_fd = 1;
         pcrecpp::RE re("\\.so\\.\\d+");
         drivers["null"] = NULL;
         string filename;
@@ -51,7 +53,7 @@ namespace dbi {
 
     vector<string> available_drivers () {
         vector <string>list;
-        if (!drivers["null"]) dbiInitialize();
+        if (!drivers.size()) dbiInitialize();
         for(map<string, Driver *>::iterator iter = drivers.begin(); iter != drivers.end(); ++iter) {
             list.push_back(iter->first);
         }
@@ -59,13 +61,23 @@ namespace dbi {
     }
 
     Handle dbiConnect(string driver_name, string user, string pass, string dbname, string host, string port) {
-        if (!drivers["null"]) {
+        if (!drivers.size()) {
             dbiInitialize("./libs");
             dbiInitialize();
         }
         if (!drivers[driver_name])
             throw InvalidDriverError("Unable to find the '" + driver_name + "' driver.");
         return Handle(drivers[driver_name]->connect(user, pass, dbname, host, port));
+    }
+
+    Handle* dbiConnectionHandle(string driver_name, string user, string pass, string dbname, string host, string port) {
+        if (!drivers.size()) {
+            dbiInitialize("./libs");
+            dbiInitialize();
+        }
+        if (!drivers[driver_name])
+            throw InvalidDriverError("Unable to find the '" + driver_name + "' driver.");
+        return new Handle(drivers[driver_name]->connect(user, pass, dbname, host, port));
     }
 
     Handle dbiConnect(string driver_name, string user, string pass, string dbname, string host) {
@@ -78,7 +90,6 @@ namespace dbi {
 
     Handle::Handle(AbstractHandle *ah)                                      { h = ah; }
     Handle::~Handle()                                                       { close(); delete h; }
-    unsigned int Handle::execute(string sql)                                { return h->execute(sql); }
     Statement Handle::prepare(string sql)                                   { return Statement(h->prepare(sql)); }
     bool Handle::begin()                                                    { return h->begin(); }
     bool Handle::commit()                                                   { return h->commit(); }
@@ -93,10 +104,10 @@ namespace dbi {
     Statement::Statement(AbstractStatement *ast)                            { st = ast; }
     Statement::Statement(Handle &handle)                                    { st = NULL; h = handle.h; }
     Statement::Statement(Handle &handle, string sql)                        { h = handle.h; st = h->prepare(sql); }
+    Statement::Statement(Handle *handle)                                    { st = NULL; h = handle->h; }
+    Statement::Statement(Handle *handle, string sql)                        { h = handle->h; st = h->prepare(sql); }
     Statement::~Statement()                                                 { finish(); if (st != NULL) delete st; }
     unsigned int Statement::rows()                                          { return st->rows(); }
-    unsigned int Statement::execute()                                       { return st->execute(params); }
-    unsigned int Statement::execute(vector<Param> &bind)                    { return st->execute(bind); }
     ResultRow Statement::fetchRow()                                         { return st->fetchRow(); }
     ResultRowHash Statement::fetchRowHash()                                 { return st->fetchRowHash(); }
     bool Statement::finish()                                                { params.clear(); return st->finish(); }
@@ -112,7 +123,6 @@ namespace dbi {
     Statement& Statement::operator%(double v)                               { bind(v); return *this; }
     Statement& Statement::operator,(dbi::null const &e)                     { bind(PARAM(e)); return *this; }
     Statement& Statement::operator%(dbi::null const &e)                     { bind(PARAM(e)); return *this; }
-    unsigned int Statement::operator,(dbi::execute const &e)                { return st->execute(params); }
 
     Statement& Statement::operator<<(string sql) {
         params.clear();
@@ -137,6 +147,64 @@ namespace dbi {
         params.push_back(PARAM(val));
     }
 
+    vector<string> Statement::fields() {
+        return st->fields();
+    }
+
+    unsigned int Statement::columns() {
+        return st->columns();
+    }
+
     unsigned char* Statement::fetchValue(int r, int c) { return st->fetchValue(r, c); }
     unsigned char* Statement::operator()(int r, int c) { return st->fetchValue(r, c); }
+
+    unsigned int Statement::currentRow() { return st->currentRow(); }
+    void Statement::advanceRow() { st->advanceRow(); }
+
+    bool trace()                   { return _trace; }
+    void trace(bool flag)          { _trace = flag; }
+    void trace(bool flag, int fd)  { _trace = flag; _trace_fd = fd; }
+
+    unsigned int Handle::execute(string sql) {
+        if (_trace) logMessage(_trace_fd, sql);
+        return h->execute(sql);
+    }
+
+    static string inline formatParams(string sql, ResultRow &p) {
+        string message(sql);
+        if (p.size() > 0) message += " : " + p.join(", ");
+        return message;
+    }
+
+    unsigned int Statement::execute() {
+        if (_trace) logMessage(_trace_fd, formatParams(st->command(), params));
+        return st->execute(params);
+    }
+
+    unsigned int Statement::execute(ResultRow &bind) {
+        if (_trace) logMessage(_trace_fd, formatParams(st->command(), bind));
+        return st->execute(bind);
+    }
+
+    unsigned int Statement::operator,(dbi::execute const &e) {
+        if (_trace) logMessage(_trace_fd, formatParams(st->command(), params));
+        return st->execute(params);
+    }
+
+    void logMessage(int fd, string msg) {
+        long n;
+        char buffer[512];
+        time_t now = time(NULL);
+        struct tm *now_tm = localtime(&now);
+        struct timeval tv;
+        struct timezone tz;
+
+        gettimeofday(&tv, &tz);
+        strftime(buffer, 512, "[%FT%H:%M:%S", now_tm);
+        n = write(fd, buffer, strlen(buffer));
+        sprintf(buffer, ".%ld] ", tv.tv_usec);
+        n += write(fd, buffer, strlen(buffer));
+        n += write(fd, msg.data(), msg.length());
+        n += write(fd, "\n", 1);
+    }
 }

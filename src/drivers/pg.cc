@@ -90,7 +90,7 @@ namespace dbi {
         string _uuid;
         PGresult *_result;
         PGconn *conn;
-        vector<string> _result_columns;
+        vector<string> _result_fields;
         unsigned int _rowno, _rows, _cols;
 
         void init() {
@@ -115,6 +115,10 @@ namespace dbi {
             PQclear(result);
         }
 
+        string command() {
+            return sql;
+        }
+
         void check_ready(string m) {
             if (!_result)
                 throw RuntimeError((m + " cannot be called yet. call execute() first").c_str());
@@ -126,7 +130,7 @@ namespace dbi {
         }
 
         unsigned int execute() {
-            _result_columns.clear();
+            _result_fields.clear();
             _result = PQexecPrepared(conn, _uuid.c_str(), 0, 0, 0, 0, 0);
             pgCheckResult(_result, sql);
             _rows = (unsigned int)PQNTUPLES(_result);
@@ -137,7 +141,7 @@ namespace dbi {
         unsigned int execute(vector<Param> &bind) {
             int *param_l;
             const char **param_v;
-            _result_columns.clear();
+            _result_fields.clear();
             pgProcessBindParams(&param_v, &param_l, bind);
             _result = PQexecPrepared(conn, _uuid.c_str(), bind.size(),
                                        (const char* const *)param_v, (const int*)param_l, 0, 0);
@@ -171,14 +175,22 @@ namespace dbi {
             ResultRowHash rs;
             if (_rowno < _rows) {
                 _rowno++;
-                if (_result_columns.size() == 0)
-                    for (unsigned int i = 0; i < _cols; i++)
-                        _result_columns.push_back(PQfname(_result, i));
+                if (_result_fields.size() == 0) fields();
                 for (unsigned int i = 0; i < _cols; i++)
-                    rs[_result_columns[i]] =
+                    rs[_result_fields[i]] =
                         PQgetisnull(_result, _rowno-1, i) ? PARAM(null()) : PARAM(PQgetvalue(_result, _rowno-1, i));
             }
             return rs;
+        }
+
+        vector<string> fields() {
+            check_ready("fields()");
+            for (unsigned int i = 0; i < _cols; i++) _result_fields.push_back(PQfname(_result, i));
+            return _result_fields;
+        }
+
+        unsigned int columns() {
+            return _cols;
         }
 
         bool finish() {
@@ -190,8 +202,11 @@ namespace dbi {
 
         unsigned char* fetchValue(int r, int c) {
             check_ready("fetchValue()");
-            return (unsigned char*)PQgetvalue(_result, r, c);
+            return PQgetisnull(_result, r, c) ? 0 : (unsigned char*)PQgetvalue(_result, r, c);
         }
+
+        unsigned int currentRow() { return _rowno; }
+        void advanceRow() { _rowno = _rowno <= _rows ? _rowno + 1 : _rowno; }
     };
 
     class PgHandle : public AbstractHandle {

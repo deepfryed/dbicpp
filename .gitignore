@@ -2,3 +2,8 @@ objs/
 libs/
 *.o
 example
+bench/*-test
+!ruby/*.c
+!ruby/*.cc
+!ruby/*.rb
+ruby/*

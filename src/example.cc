@@ -22,6 +22,9 @@ int main() {
     // Handle h = dbiConnect("driver", "user", "password", "database", "host", "port");
     Handle h = dbiConnect("postgresql", "udbicpp", "", "dbicpp");
 
+    // Set trace on and log queries to stderr
+    // trace(true, 2);
+
     // create table.
     cout << endl;
     cout << "Creating table" << endl;

@@ -8,6 +8,7 @@
 #include <dirent.h>
 #include <dlfcn.h>
 #include <pcrecpp.h>
+#include <sys/time.h>
 
 namespace dbi {
     struct null {};
@@ -24,6 +25,9 @@ namespace dbi {
 
     using namespace std;
     using namespace pcrecpp;
+
+    static bool _trace;
+    static int  _trace_fd;
 
     class AbstractStatement;
 
@@ -47,12 +51,17 @@ namespace dbi {
         public:
         AbstractStatement() {};
         virtual unsigned int rows() = 0;
+        virtual unsigned int columns() = 0;
+        virtual vector<string> fields() = 0;
         virtual unsigned int execute() = 0;
         virtual unsigned int execute(vector<Param> &bind) = 0;
         virtual ResultRow fetchRow() = 0;
         virtual ResultRowHash fetchRowHash() = 0;
         virtual bool finish() = 0;
         virtual unsigned char* fetchValue(int, int) = 0;
+        virtual string command() = 0;
+        virtual unsigned int currentRow() = 0;
+        virtual void advanceRow() = 0;
     };
 
     class Driver {
@@ -90,19 +99,21 @@ namespace dbi {
         private:
         AbstractStatement *st;
         AbstractHandle *h;
-        vector<Param> params;
+        ResultRow params;
         public:
         Statement();
         Statement(AbstractStatement *);
         Statement(Handle &h);
         Statement(Handle &h, string sql);
+        Statement(Handle *h);
+        Statement(Handle *h, string sql);
         ~Statement();
         unsigned int rows();
         void bind(long v);
         void bind(double v);
         void bind(Param v);
         unsigned int execute();
-        unsigned int execute(vector<Param> &bind);
+        unsigned int execute(ResultRow &bind);
         Statement& operator<<(string sql);
         Statement& operator,(string v);
         Statement& operator%(string v);
@@ -115,8 +126,12 @@ namespace dbi {
         unsigned int  operator,(dbi::execute const &);
         ResultRow fetchRow();
         ResultRowHash fetchRowHash();
+        unsigned int columns();
+        vector<string> fields();
         unsigned char* fetchValue(int r, int c);
         unsigned char* operator()(int r, int c);
+        unsigned int currentRow();
+        void advanceRow();
         bool finish();
     };
 
@@ -124,9 +139,15 @@ namespace dbi {
     Handle dbiConnect(string driver, string user, string pass, string dbname, string host);
     Handle dbiConnect(string driver, string user, string pass, string dbname, string host, string port);
 
-    bool dbiInitialize(string path);
+    Handle* dbiConnectionHandle(string driver, string user, string pass, string dbname, string host, string port);
 
+    bool dbiInitialize(string path);
     void dbiShutdown();
+
+    bool trace();
+    void trace(bool flag);
+    void trace(bool flag, int fd);
+    void logMessage(int fd, string msg);
 }
 
 #endif
