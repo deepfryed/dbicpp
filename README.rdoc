@@ -41,7 +41,15 @@ See src/example.cc for more specific examples.
 
 == TODO
 
+=== Database Features
+
 * CURSOR, function calls, async queries, result iterators and a lot more.
+
+=== Distribution
+
+* automake and configure files for libs.
+* deb specs and packages for base and driver libs.
+* proper extconf.rb and gemspec for ruby bindings.
 
 == LICENSE
 

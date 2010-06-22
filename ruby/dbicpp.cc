@@ -44,6 +44,15 @@ VALUE rb_default_port(VALUE driver) {
     return port == Qnil ? rb_str_new2("") : port;
 }
 
+void rb_extract_bind_params(int argc, VALUE* argv, std::vector<dbi::Param> &bind) {
+    int i;
+    VALUE to_s = rb_intern("to_s");
+    for (i = 0; i < argc; i++) {
+        VALUE v = rb_funcall(argv[i], to_s, 0);
+        bind.push_back(dbi::PARAM(RSTRING_PTR(v)));
+    }
+}
+
 static VALUE rb_handle_new(VALUE klass, VALUE opts) {
     dbi::Handle *h;
     VALUE obj;
@@ -82,15 +91,6 @@ static VALUE rb_handle_prepare(VALUE self, VALUE sql) {
     dbi::Statement *st = new dbi::Statement(h, RSTRING_PTR(sql));
     VALUE rv = Data_Wrap_Struct(cStatement, NULL, free_statement, st);
     return rv;
-}
-
-void rb_extract_bind_params(int argc, VALUE* argv, std::vector<dbi::Param> &bind) {
-    int i;
-    VALUE to_s = rb_intern("to_s");
-    for (i = 0; i < argc; i++) {
-        VALUE v = rb_funcall(argv[i], to_s, 0);
-        bind.push_back(dbi::PARAM(RSTRING_PTR(v)));
-    }
 }
 
 VALUE rb_handle_execute(int argc, VALUE *argv, VALUE self) {
@@ -206,7 +206,6 @@ VALUE rb_dbi_trace(int argc, VALUE *argv, VALUE self) {
     dbi::trace(flag, fd);
 }
 
-
 extern "C" {
     void Init_dbicpp(void) {
         eRuntimeError  = CONST_GET(rb_mKernel, "RuntimeError");
@@ -231,6 +230,8 @@ extern "C" {
         rb_define_singleton_method(cStatement, "new", RUBY_METHOD_FUNC(rb_statement_new), 2);
         rb_define_method(cStatement, "execute", RUBY_METHOD_FUNC(rb_statement_execute), -1);
         rb_define_method(cStatement, "each", RUBY_METHOD_FUNC(rb_statement_each), 0);
+        rb_define_method(cStatement, "fetchrow", RUBY_METHOD_FUNC(rb_statement_fetchrow), 0);
+
         rb_include_module(cStatement, CONST_GET(rb_mKernel, "Enumerable"));
     }
 }
