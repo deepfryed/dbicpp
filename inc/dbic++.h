@@ -79,6 +79,8 @@ namespace dbi {
         protected:
         AbstractHandle *h;
         public:
+        Handle(string driver, string user, string pass, string dbname, string host, string port);
+        Handle(string driver, string user, string pass, string dbname);
         Handle(AbstractHandle *ah);
         ~Handle();
         unsigned int execute(string sql);
@@ -134,12 +136,6 @@ namespace dbi {
         void advanceRow();
         bool finish();
     };
-
-    Handle dbiConnect(string driver, string user, string pass, string dbname);
-    Handle dbiConnect(string driver, string user, string pass, string dbname, string host);
-    Handle dbiConnect(string driver, string user, string pass, string dbname, string host, string port);
-
-    Handle* dbiConnectionHandle(string driver, string user, string pass, string dbname, string host, string port);
 
     bool dbiInitialize(string path);
     void dbiShutdown();

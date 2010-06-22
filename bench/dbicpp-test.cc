@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
     int max;
     dbiInitialize("../libs");
     max = argc == 2 ? atoi(argv[1]) : 10000;
-    Handle h = dbiConnect("postgresql", "udbicpp", "", "dbicpp");
+    Handle h("postgresql", "udbicpp", "", "dbicpp");
 
     Statement st(h, "SELECT id, name, email FROM users");
     ResultRow r;

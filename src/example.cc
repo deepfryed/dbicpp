@@ -19,8 +19,8 @@ void printResultRows(Statement &st) {
 }
 
 int main() {
-    // Handle h = dbiConnect("driver", "user", "password", "database", "host", "port");
-    Handle h = dbiConnect("postgresql", "udbicpp", "", "dbicpp");
+    // Handle h("driver", "user", "password", "database", "host", "port");
+    Handle h("postgresql", "udbicpp", "", "dbicpp");
 
     // Set trace on and log queries to stderr
     // trace(true, 2);

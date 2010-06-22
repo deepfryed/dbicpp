@@ -60,33 +60,25 @@ namespace dbi {
         return list;
     }
 
-    Handle dbiConnect(string driver_name, string user, string pass, string dbname, string host, string port) {
+    void init_and_check(string driver_name) {
         if (!drivers.size()) {
             dbiInitialize("./libs");
             dbiInitialize();
         }
         if (!drivers[driver_name])
             throw InvalidDriverError("Unable to find the '" + driver_name + "' driver.");
-        return Handle(drivers[driver_name]->connect(user, pass, dbname, host, port));
     }
 
-    Handle* dbiConnectionHandle(string driver_name, string user, string pass, string dbname, string host, string port) {
-        if (!drivers.size()) {
-            dbiInitialize("./libs");
-            dbiInitialize();
-        }
-        if (!drivers[driver_name])
-            throw InvalidDriverError("Unable to find the '" + driver_name + "' driver.");
-        return new Handle(drivers[driver_name]->connect(user, pass, dbname, host, port));
+    Handle::Handle(string driver_name, string user, string pass, string dbname, string host, string port) {
+        init_and_check(driver_name);
+        h = drivers[driver_name]->connect(user, pass, dbname, host, port);
     }
 
-    Handle dbiConnect(string driver_name, string user, string pass, string dbname, string host) {
-        return dbiConnect(driver_name, user, pass, dbname, host, "0");
+    Handle::Handle(string driver_name, string user, string pass, string dbname) {
+        init_and_check(driver_name);
+        h = drivers[driver_name]->connect(user, pass, dbname, "", "");
     }
 
-    Handle dbiConnect(string driver_name, string user, string pass, string dbname) {
-        return dbiConnect(driver_name, user, pass, dbname, "127.0.0.1", "0");
-    }
 
     Handle::Handle(AbstractHandle *ah)                                      { h = ah; }
     Handle::~Handle()                                                       { close(); delete h; }

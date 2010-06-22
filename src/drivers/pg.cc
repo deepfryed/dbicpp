@@ -319,7 +319,8 @@ using namespace dbi;
 
 extern "C" {
     PgHandle* dbdConnect(string user, string pass, string dbname, string host, string port) {
-        if (port == "0") port = "5432";
+        if (host == "") host = "127.0.0.1";
+        if (port == "0" || port == "") port = "5432";
         return new PgHandle(user, pass, dbname, host, port);
     }
 

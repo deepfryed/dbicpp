@@ -11,7 +11,6 @@ static VALUE cStatement;
 static VALUE eRuntimeError;
 static VALUE eArgumentError;
 static VALUE eStandardError;
-static VALUE hDatabasePort;
 
 #define REQUIRED_PARAM(v, msg) { if (v == Qnil) rb_raise(eArgumentError, "missing required argument %s", msg); }
 
@@ -39,11 +38,6 @@ VALUE rb_dbi_init(VALUE self, VALUE path) {
     dbi::dbiInitialize(RSTRING_PTR(path));
 }
 
-VALUE rb_default_port(VALUE driver) {
-    VALUE port = rb_hash_aref(hDatabasePort, driver);
-    return port == Qnil ? rb_str_new2("") : port;
-}
-
 void rb_extract_bind_params(int argc, VALUE* argv, std::vector<dbi::Param> &bind) {
     int i;
     VALUE to_s = rb_intern("to_s");
@@ -68,12 +62,12 @@ static VALUE rb_handle_new(VALUE klass, VALUE opts) {
     REQUIRED_PARAM(user,   ":user");
     REQUIRED_PARAM(driver, ":driver");
 
-    host     = host == Qnil ? rb_str_new2("127.0.0.1") : host;
-    port     = port == Qnil ? rb_default_port(driver) : port;
+    host     = host == Qnil ? rb_str_new2("") : host;
+    port     = port == Qnil ? rb_str_new2("") : port;
     password = password == Qnil ? rb_str_new2("") : password;
 
     try {
-        h = dbi::dbiConnectionHandle(
+        h = new dbi::Handle(
             RSTRING_PTR(driver), RSTRING_PTR(user), RSTRING_PTR(password),
             RSTRING_PTR(db), RSTRING_PTR(host), RSTRING_PTR(port)
         );
@@ -211,10 +205,6 @@ extern "C" {
         eRuntimeError  = CONST_GET(rb_mKernel, "RuntimeError");
         eArgumentError = CONST_GET(rb_mKernel, "ArgumentError");
         eStandardError = CONST_GET(rb_mKernel, "StandardError");
-
-        hDatabasePort  = rb_hash_new();
-        rb_hash_aset(hDatabasePort, rb_str_new2("postgresql"), rb_str_new2("5432"));
-        rb_hash_aset(hDatabasePort, rb_str_new2("mysql"), rb_str_new2("3306"));
 
         mDBI           = rb_define_module("DBI");
         cHandle        = rb_define_class_under(mDBI, "Handle", rb_cObject);
