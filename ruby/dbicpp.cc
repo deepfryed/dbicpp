@@ -230,6 +230,7 @@ extern "C" {
         rb_define_singleton_method(cStatement, "new", RUBY_METHOD_FUNC(rb_statement_new), 2);
         rb_define_method(cStatement, "execute", RUBY_METHOD_FUNC(rb_statement_execute), -1);
         rb_define_method(cStatement, "each", RUBY_METHOD_FUNC(rb_statement_each), 0);
+        rb_define_method(cStatement, "rows", RUBY_METHOD_FUNC(rb_statement_rows), 0);
         rb_define_method(cStatement, "fetchrow", RUBY_METHOD_FUNC(rb_statement_fetchrow), 0);
 
         rb_include_module(cStatement, CONST_GET(rb_mKernel, "Enumerable"));

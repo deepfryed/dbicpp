@@ -38,7 +38,6 @@ st = conn.prepare "query_bench", "SELECT id, name, email FROM users"
 (ARGV[0] || 10000).to_i.times do
   st.execute
   while r = st.fetchrow
-    #r << r[2].gsub(/^.+?@/, '')
     puts r.join("\t")
   end
   st.clear

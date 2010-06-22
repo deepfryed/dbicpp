@@ -11,13 +11,12 @@ int main(int argc, char *argv[]) {
     Handle h = dbiConnect("postgresql", "udbicpp", "", "dbicpp");
 
     Statement st(h, "SELECT id, name, email FROM users");
+    ResultRow r;
 
     for (int n = 0; n < max; n++) {
         st.execute();
-        ResultRow r;
-        while ((r = st.fetchRow()).size() > 0) {
-            cout << r[0] << "\t" << r[1] << "\t" << r[2] << endl;
-        }
+        while ((r = st.fetchRow()).size() > 0)
+            printf("%s\t%s\t%s\n", r[0].value.c_str(), r[1].value.c_str(), r[2].value.c_str());
         st.finish();
     }
 }
