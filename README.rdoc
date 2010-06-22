@@ -5,17 +5,14 @@ the following databases.
 
 * PostgreSQL >= 8.0
 
-Support for the following databases will be available soon.
+I'm working on drivers for the following, which will be available soon.
 
 * MySQL  >= 5.0
 * SQLite >= 3
 
-== Warning
+== Examples
 
-My C++ is a bit rusty and might have horrendous, hideous or outdated code/coding style. If
-you have any comments, suggestions or patches they're very much welcome.
-
-== Example
+=== C++
 
   #include "dbic++.h"
   
@@ -39,6 +36,32 @@ you have any comments, suggestions or patches they're very much welcome.
 
 See src/example.cc for more specific examples.
 
+=== Ruby
+
+  require 'dbicpp'
+
+  h = DBI::Handle.new user: "udbicpp", driver: "postgresql", database: "dbicpp"
+
+  st = h.prepare "SELECT name, email FROM users where id > ? AND id < ?"
+
+  st.execute(0, 10) do |row|
+    puts row["name"]
+    puts row["email"]
+  end
+  
+  h.transaction {
+    h.execute "DELETE FROM users WHERE id = ?", 2
+    begin
+      h.transaction {
+        h.execute "DELETE FROM users"
+        raise "changed my mind"
+      }
+    rescue => e
+      # nop
+    end
+  }
+
+
 == TODO
 
 === Database Features
@@ -54,3 +77,11 @@ See src/example.cc for more specific examples.
 == LICENSE
 
 See LICENSE.
+
+== Warning
+
+I'm no C++ or Ruby expert. So the code have horrendous, hideous or outdated code/coding style. If
+you are lucky you may not encounter any bugs. So suffice to say, if you have any comments,
+suggestions or patches they're very much welcome.
+
+The project is under heavy development and is not production ready. Use it at your own risk.
