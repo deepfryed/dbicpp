@@ -13,3 +13,6 @@ $(DBICPP) : $(DBICPP).cc
 
 $(PQEXEC) : $(PQEXEC).c
 	g++ -O3 -o $(PQEXEC) $(PQEXEC).c -I /usr/include/postgresql -lpq
+
+clean:
+	rm -f pq-test dbicpp-test

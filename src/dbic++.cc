@@ -1,6 +1,7 @@
 #include "dbic++.h"
 #include <sstream>
 #include <cstdio>
+#include <uuid/uuid.h>
 
 #define CONNECT_FUNC(f) ((AbstractHandle* (*)(string, string, string, string, string)) f)
 
@@ -8,6 +9,18 @@ namespace dbi {
 
     map<string, Driver *> drivers;
     vector<string> available_drivers();
+
+    string generateCompactUUID() {
+        string rv;
+        char hex[3];
+        unsigned char uuid[16];
+        uuid_generate(uuid);
+        for (int i = 0; i < 16; i++) {
+            sprintf(hex, "%02X", uuid[i]);
+            rv += hex;
+        }
+        return rv;
+    }
 
     bool dbiInitialize(string path = DEFAULT_DRIVER_PATH) {
         _trace    = false;
@@ -80,41 +93,42 @@ namespace dbi {
     }
 
 
-    Handle::Handle(AbstractHandle *ah)                                      { h = ah; }
-    Handle::~Handle()                                                       { close(); delete h; }
-    Statement Handle::prepare(string sql)                                   { return Statement(h->prepare(sql)); }
-    bool Handle::begin()                                                    { return h->begin(); }
-    bool Handle::commit()                                                   { return h->commit(); }
-    bool Handle::rollback()                                                 { return h->rollback(); }
-    bool Handle::begin(string name)                                         { return h->begin(name); }
-    bool Handle::commit(string name)                                        { return h->commit(name); }
-    bool Handle::rollback(string name)                                      { return h->rollback(name); }
-    bool Handle::close()                                                    { return h->close(); }
-    void* Handle::call(string name, void* arg)                              { return h->call(name, arg); }
+    Handle::Handle(AbstractHandle *ah)                       { h = ah; }
+    Handle::~Handle()                                        { close(); delete h; }
+    Statement Handle::prepare(string sql)                    { return Statement(h->prepare(sql)); }
+    bool Handle::begin()                                     { return h->begin(); }
+    bool Handle::commit()                                    { trx.clear(); return h->commit(); }
+    bool Handle::rollback()                                  { trx.clear(); return h->rollback(); }
+    bool Handle::begin(string name)                          { trx.push_back(name); return h->begin(name); }
+    bool Handle::commit(string name)                         { trx.pop_back(); return h->commit(name); }
+    bool Handle::rollback(string name)                       { trx.pop_back(); return h->rollback(name); }
+    bool Handle::close()                                     { return h->close(); }
+    void* Handle::call(string name, void* arg)               { return h->call(name, arg); }
+    vector<string>& Handle::transactions()                   { return trx; }
 
-    Statement::Statement()                                                  { st = NULL; h = NULL; }
-    Statement::Statement(AbstractStatement *ast)                            { st = ast; }
-    Statement::Statement(Handle &handle)                                    { st = NULL; h = handle.h; }
-    Statement::Statement(Handle &handle, string sql)                        { h = handle.h; st = h->prepare(sql); }
-    Statement::Statement(Handle *handle)                                    { st = NULL; h = handle->h; }
-    Statement::Statement(Handle *handle, string sql)                        { h = handle->h; st = h->prepare(sql); }
-    Statement::~Statement()                                                 { finish(); if (st != NULL) delete st; }
-    unsigned int Statement::rows()                                          { return st->rows(); }
-    ResultRow Statement::fetchRow()                                         { return st->fetchRow(); }
-    ResultRowHash Statement::fetchRowHash()                                 { return st->fetchRowHash(); }
-    bool Statement::finish()                                                { params.clear(); return st->finish(); }
+    Statement::Statement()                                   { st = NULL; h = NULL; }
+    Statement::Statement(AbstractStatement *ast)             { st = ast; }
+    Statement::Statement(Handle &handle)                     { st = NULL; h = handle.h; }
+    Statement::Statement(Handle &handle, string sql)         { h = handle.h; st = h->prepare(sql); }
+    Statement::Statement(Handle *handle)                     { st = NULL; h = handle->h; }
+    Statement::Statement(Handle *handle, string sql)         { h = handle->h; st = h->prepare(sql); }
+    Statement::~Statement()                                  { finish(); if (st != NULL) delete st; }
+    unsigned int Statement::rows()                           { return st->rows(); }
+    ResultRow Statement::fetchRow()                          { return st->fetchRow(); }
+    ResultRowHash Statement::fetchRowHash()                  { return st->fetchRowHash(); }
+    bool Statement::finish()                                 { params.clear(); return st->finish(); }
 
 
     // syntactic sugar.
-    Statement Handle::operator<<(string sql)                                { return Statement(h->prepare(sql)); }
-    Statement& Statement::operator,(string v)                               { bind(PARAM(v)); return *this; }
-    Statement& Statement::operator%(string v)                               { bind(PARAM(v)); return *this; }
-    Statement& Statement::operator,(long   v)                               { bind(v); return *this; }
-    Statement& Statement::operator%(long   v)                               { bind(v); return *this; }
-    Statement& Statement::operator,(double v)                               { bind(v); return *this; }
-    Statement& Statement::operator%(double v)                               { bind(v); return *this; }
-    Statement& Statement::operator,(dbi::null const &e)                     { bind(PARAM(e)); return *this; }
-    Statement& Statement::operator%(dbi::null const &e)                     { bind(PARAM(e)); return *this; }
+    Statement Handle::operator<<(string sql)                 { return Statement(h->prepare(sql)); }
+    Statement& Statement::operator,(string v)                { bind(PARAM(v)); return *this; }
+    Statement& Statement::operator%(string v)                { bind(PARAM(v)); return *this; }
+    Statement& Statement::operator,(long   v)                { bind(v); return *this; }
+    Statement& Statement::operator%(long   v)                { bind(v); return *this; }
+    Statement& Statement::operator,(double v)                { bind(v); return *this; }
+    Statement& Statement::operator%(double v)                { bind(v); return *this; }
+    Statement& Statement::operator,(dbi::null const &e)      { bind(PARAM(e)); return *this; }
+    Statement& Statement::operator%(dbi::null const &e)      { bind(PARAM(e)); return *this; }
 
     Statement& Statement::operator<<(string sql) {
         params.clear();

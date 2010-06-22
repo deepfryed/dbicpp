@@ -6,6 +6,6 @@ Config::CONFIG['CC']  = 'g++'
 Config::CONFIG['CPP'] = 'g++'
 
 $CFLAGS = "-I../inc -fPIC"
-$LDFLAGS = "-L../libs -lpcrecpp -ldl -ldbic++"
+$LDFLAGS = "-L../libs -lpcrecpp -luuid -ldl -ldbic++"
 
 create_makefile 'dbicpp'

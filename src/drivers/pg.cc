@@ -1,7 +1,6 @@
 #include "dbic++.h"
 #include <libpq-fe.h>
 #include <libpq/libpq-fs.h>
-#include <uuid/uuid.h>
 
 #define DRIVER_NAME     "postgresql"
 #define DRIVER_VERSION  "1.0.1"
@@ -38,18 +37,6 @@ namespace dbi {
             default:
                 throw RuntimeError("Unknown error, check logs." + string(" - in query: ") + sql);
         }
-    }
-
-    string generateCompactUUID() {
-        string rv;
-        char hex[3];
-        unsigned char uuid[16];
-        uuid_generate(uuid);
-        for (int i = 0; i < 16; i++) {
-            sprintf(hex, "%02X", uuid[i]);
-            rv += hex;
-        }
-        return rv;
     }
 
     // TODO: raise parser errors here before sending it to server ?

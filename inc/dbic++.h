@@ -78,6 +78,7 @@ namespace dbi {
     class Handle {
         protected:
         AbstractHandle *h;
+        vector<string> trx;
         public:
         Handle(string driver, string user, string pass, string dbname, string host, string port);
         Handle(string driver, string user, string pass, string dbname);
@@ -94,6 +95,7 @@ namespace dbi {
         bool rollback(string name);
         void* call(string name, void*);
         bool close();
+        vector<string>& transactions();
         friend class Statement;
     };
 
@@ -144,6 +146,8 @@ namespace dbi {
     void trace(bool flag);
     void trace(bool flag, int fd);
     void logMessage(int fd, string msg);
+
+    string generateCompactUUID();
 }
 
 #endif
