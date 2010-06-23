@@ -49,17 +49,19 @@ See src/example.cc for more specific examples.
     puts row["email"]
   end
 
-  h.transaction {
+  # Named save point.
+  h.transaction 'delete_stuff' do
     h.execute "DELETE FROM users WHERE id = ?", 2
     begin
-      h.transaction {
+      # UUID save point.
+      h.transaction do
         h.execute "DELETE FROM users"
         raise "changed my mind"
-      }
+      end
     rescue => e
       # nop
     end
-  }
+  end
 
 
 == TODO
