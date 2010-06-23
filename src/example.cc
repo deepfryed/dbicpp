@@ -20,7 +20,7 @@ void printResultRows(Statement &st) {
 
 int main() {
     // Handle h("driver", "user", "password", "database", "host", "port");
-    Handle h("postgresql", "udbicpp", "", "dbicpp");
+    Handle h ("postgresql", "udbicpp", "", "dbicpp");
 
     // Set trace on and log queries to stderr
     // trace(true, 2);
@@ -40,7 +40,7 @@ int main() {
     cout << "-------------------" << endl << endl;
 
     // insert some test data
-    Statement tdata(h, "INSERT INTO users(name, email) VALUES(?, ?)");
+    Statement tdata (h, "INSERT INTO users(name, email) VALUES(?, ?)");
     tdata % "Apple Arthurton", "apple@example.com", execute();
     tdata % "Benny Arthurton", "benny@example.com", execute();
 
@@ -50,7 +50,7 @@ int main() {
     cout << "Simple select" << endl;
     cout << "-------------" << endl << endl;
 
-    Statement st(h, "SELECT id, name, email FROM users WHERE id >= ? AND id < ?");
+    Statement st (h, "SELECT id, name, email FROM users WHERE id >= ? AND id < ?");
 
     // bind and execute the statement in one go.
     st % 1L, 10L, execute();
@@ -88,7 +88,7 @@ int main() {
     cout << "Inserts & Selects inside transaction" << endl;
     cout << "------------------------------------" << endl << endl;
 
-    Statement ins(h, "INSERT INTO users (name, email) VALUES (?, ?) RETURNING id");
+    Statement ins (h, "INSERT INTO users (name, email) VALUES (?, ?) RETURNING id");
     ins % "John Doe", "doe@example.com", execute();
     ResultRow r = ins.fetchRow(); ins.finish();
     cout << "Inserted 1 row, last insert id = " << r << endl;
