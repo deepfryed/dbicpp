@@ -9,7 +9,7 @@ bench: $(DBICPP) $(PQEXEC)
 	@echo -n "Ruby DBI++ "; time -f 'cpu:%P sys:%S user:%U wall:%E' ./dbicpp-test.rb $(ITER) > /dev/null
 
 $(DBICPP) : $(DBICPP).cc
-	g++ -O3 -o $(DBICPP) -rdynamic -I../inc -L../libs $(DBICPP).cc -lpcrecpp -ldl -ldbic++
+	g++ -O3 -o $(DBICPP) -rdynamic -I../inc -L../libs $(DBICPP).cc -lpcrecpp -luuid -ldl -ldbic++
 
 $(PQEXEC) : $(PQEXEC).c
 	g++ -O3 -o $(PQEXEC) $(PQEXEC).c -I /usr/include/postgresql -lpq
