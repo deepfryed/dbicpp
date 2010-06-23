@@ -19,7 +19,7 @@ void printResultRows(Statement &st) {
 }
 
 int main() {
-    // Handle h("driver", "user", "password", "database", "host", "port");
+    // Handle h ("driver", "user", "password", "database", "host", "port");
     Handle h ("postgresql", "udbicpp", "", "dbicpp");
 
     // Set trace on and log queries to stderr

@@ -20,7 +20,7 @@ I'm working on drivers for the following, which will be available soon.
   using namespace dbi;
   
   int main() {
-      // Handle h("driver", "user", "password", "database", "host", "port");
+      // Handle h ("driver", "user", "password", "database", "host", "port");
       Handle h ("postgresql", "udbicpp", "", "dbicpp");
       Statement st (h, "SELECT id, name, email FROM users WHERE id >= ? AND id < ?");
   
