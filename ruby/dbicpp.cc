@@ -101,40 +101,41 @@ VALUE rb_handle_execute(int argc, VALUE *argv, VALUE self) {
 
 VALUE rb_handle_begin(int argc, VALUE *argv, VALUE self) {
     dbi::Handle *h = DBI_HANDLE(self);
-    if (argc > 1) rb_raise(eArgumentError, "Got %d parameters. Handle#begin expects 0 or 1", argc);
-    try { argc == 0 ? h->begin() : h->begin(CSTRING(argv[0])); } catch EXCEPTION("Runtime");
+    VALUE save;
+    rb_scan_args(argc, argv, "01", &save);
+    try { NIL_P(save) ? h->begin() : h->begin(CSTRING(save)); } catch EXCEPTION("Runtime");
 }
-
 
 VALUE rb_handle_commit(int argc, VALUE *argv, VALUE self) {
     dbi::Handle *h = DBI_HANDLE(self);
-    if (argc > 1) rb_raise(eArgumentError, "Got %d parameters. Handle#commit expect 0 or 1", argc);
-    try { argc == 0 ? h->commit() : h->commit(CSTRING(argv[0])); } catch EXCEPTION("Runtime");
+    VALUE save;
+    rb_scan_args(argc, argv, "01", &save);
+    try { NIL_P(save) ? h->commit() : h->commit(CSTRING(save)); } catch EXCEPTION("Runtime");
 }
 
 VALUE rb_handle_rollback(int argc, VALUE *argv, VALUE self) {
     dbi::Handle *h = DBI_HANDLE(self);
-    if (argc > 1) rb_raise(eArgumentError, "Got %d parameters. Handle#rollback expects 0 or 1", argc);
-    try { argc == 0 ? h->rollback() : h->rollback(CSTRING(argv[0])); } catch EXCEPTION("Runtime");
+    VALUE save_point;
+    rb_scan_args(argc, argv, "01", &save_point);
+    try { NIL_P(save_point) ? h->rollback() : h->rollback(CSTRING(save_point)); } catch EXCEPTION("Runtime");
 }
 
-VALUE rb_handle_transaction(VALUE self) {
+VALUE rb_handle_transaction(int argc, VALUE *argv, VALUE self) {
     int status;
-    std::string uuid = "SP" + dbi::generateCompactUUID();
-    dbi::Handle *h = DBI_HANDLE(self);
-    if (rb_block_given_p()) {
-        h->begin(uuid);
-        rb_protect(rb_yield, self, &status);
-        if (status == 0 && h->transactions().back() == uuid) {
-            h->commit(uuid);
-        }
-        else if (status != 0) {
-            if (h->transactions().back() == uuid) h->rollback(uuid);
-            rb_jump_tag(status);
-        }
+    VALUE sp, block;
+    rb_scan_args(argc, argv, "01&", &sp, &block);
+
+    std::string save_point = NIL_P(sp) ? "SP" + dbi::generateCompactUUID() : CSTRING(sp);
+    dbi::Handle *h         = DBI_HANDLE(self);
+
+    h->begin(save_point);
+    rb_protect(rb_yield, self, &status);
+    if (status == 0 && h->transactions().back() == save_point) {
+        h->commit(save_point);
     }
-    else {
-        rb_raise(eRuntimeError, "No block given to Handle#transaction");
+    else if (status != 0) {
+        if (h->transactions().back() == save_point) h->rollback(save_point);
+        rb_jump_tag(status);
     }
 }
 
@@ -239,7 +240,7 @@ extern "C" {
         rb_define_method(cHandle, "begin",       RUBY_METHOD_FUNC(rb_handle_begin), -1);
         rb_define_method(cHandle, "commit",      RUBY_METHOD_FUNC(rb_handle_commit), -1);
         rb_define_method(cHandle, "rollback",    RUBY_METHOD_FUNC(rb_handle_rollback), -1);
-        rb_define_method(cHandle, "transaction", RUBY_METHOD_FUNC(rb_handle_transaction), 0);
+        rb_define_method(cHandle, "transaction", RUBY_METHOD_FUNC(rb_handle_transaction), -1);
 
         rb_define_singleton_method(cStatement, "new", RUBY_METHOD_FUNC(rb_statement_new), 2);
 
