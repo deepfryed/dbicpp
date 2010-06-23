@@ -120,16 +120,16 @@ VALUE rb_handle_rollback(int argc, VALUE *argv, VALUE self) {
 
 VALUE rb_handle_transaction(VALUE self) {
     int status;
-    std::string uuid = "SP" + dbi::generateCompactUUID();
+    std::string spname = "SP" + dbi::generateCompactUUID();
     dbi::Handle *h = DBI_HANDLE(self);
     if (rb_block_given_p()) {
-        h->begin(uuid);
+        h->begin(spname);
         rb_protect(rb_yield, self, &status);
-        if (status == 0 && h->transactions().back() == uuid) {
-            h->commit(uuid);
+        if (status == 0 && h->transactions().back() == spname) {
+            h->commit(spname);
         }
         else if (status != 0) {
-            if (h->transactions().back() == uuid) h->rollback(uuid);
+            if (h->transactions().back() == spname) h->rollback(spname);
             rb_jump_tag(status);
         }
     }
@@ -138,8 +138,15 @@ VALUE rb_handle_transaction(VALUE self) {
     }
 }
 
-VALUE rb_statement_new(VALUE klass, VALUE h, VALUE sql) {
-    dbi::Statement *st = new dbi::Statement(DBI_HANDLE(h), RSTRING_PTR(sql));
+VALUE rb_statement_new(VALUE klass, VALUE hl, VALUE sql) {
+    dbi::Handle *h = DBI_HANDLE(hl);
+
+    if (hl  == Qnil || !h)
+        rb_raise(eArgumentError, "Statement#new called without a Handle instance");
+    if (sql == Qnil || TYPE(sql) != T_STRING)
+        rb_raise(eArgumentError, "Statement#new called without a SQL command");
+
+    dbi::Statement *st = new dbi::Statement(h, RSTRING_PTR(sql));
     VALUE rv = Data_Wrap_Struct(cStatement, NULL, free_statement, st);
     return rv;
 }
@@ -206,14 +213,19 @@ VALUE rb_statement_fetchrow(VALUE self) {
 }
 
 VALUE rb_dbi_trace(int argc, VALUE *argv, VALUE self) {
-    rb_io_t *fptr;
+    // by default log all messages to stderr.
     int fd = 2;
+    rb_io_t *fptr;
+
     if (argc == 0) rb_raise(eArgumentError, "DBI#trace expects a boolean value, got none.");
+
     bool flag = argv[0] == Qtrue ? true : false;
-    if (argc > 0) {
+
+    if (argc > 1) {
         GetOpenFile(rb_convert_type(argv[1], T_FILE, "IO", "to_io"), fptr);
         fd = fptr->fd;
     }
+
     dbi::trace(flag, fd);
 }
 
@@ -249,5 +261,6 @@ extern "C" {
         rb_define_method(cStatement, "fetchrow", RUBY_METHOD_FUNC(rb_statement_fetchrow), 0);
 
         rb_include_module(cStatement, CONST_GET(rb_mKernel, "Enumerable"));
+
     }
 }

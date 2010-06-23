@@ -220,6 +220,8 @@ namespace dbi {
         }
 
         ~PgHandle() {
+            // This gets called only on dlclose, so the wrapper dbi::Handle
+            // closes connections and frees memory.
             if (conn) PQfinish(conn);
         }
 
@@ -296,6 +298,7 @@ namespace dbi {
 
         bool close() {
             if (conn) PQfinish(conn);
+            conn = 0;
             return true;
         }
     };
