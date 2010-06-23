@@ -20,8 +20,8 @@ I'm working on drivers for the following, which will be available soon.
   using namespace dbi;
   
   int main() {
-      // Handle h = dbiConnect("driver", "user", "password", "database", "host", "port");
-      Handle h = dbiConnect("postgresql", "udbicpp", "", "dbicpp");
+      // Handle h("driver", "user", "password", "database", "host", "port");
+      Handle h("postgresql", "udbicpp", "", "dbicpp");
       Statement st(h, "SELECT id, name, email FROM users WHERE id >= ? AND id < ?");
   
       // bind and execute the statement.
@@ -81,7 +81,7 @@ See LICENSE.
 == Warning
 
 I'm no C++ or Ruby expert. So the code may have horrendous, hideous or outdated code/coding style. If
-you are lucky you may not encounter any bugs. So suffice to say, if you have any comments,
+you are lucky, you may not encounter any bugs. So suffice to say, if you have any comments,
 suggestions or patches they're very much welcome.
 
 The project is under heavy development and is not production ready. Use it at your own risk.
