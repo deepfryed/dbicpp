@@ -18,13 +18,13 @@ static VALUE fStringify;
 
 static dbi::Handle* DBI_HANDLE(VALUE self) {
     dbi::Handle *h;
-	Data_Get_Struct(self, dbi::Handle, h);
+    Data_Get_Struct(self, dbi::Handle, h);
     return h;
 }
 
 static dbi::Statement* DBI_STATEMENT(VALUE self) {
     dbi::Statement *st;
-	Data_Get_Struct(self, dbi::Statement, st);
+    Data_Get_Struct(self, dbi::Statement, st);
     return st;
 }
 
