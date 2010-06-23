@@ -1,8 +1,10 @@
 #!/usr/bin/ruby
 
 require_relative 'dbicpp'
+require 'pathname'
 
-DBI.init File.dirname(__FILE__) + '/../libs'
+DBI.init Pathname.new(__FILE__).dirname + '..' + 'libs'
+DBI.trace true
 
 h = DBI::Handle.new user: 'bharanee', db: 'dbicpp', driver: 'postgresql'
 

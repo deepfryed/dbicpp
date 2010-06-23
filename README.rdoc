@@ -15,15 +15,15 @@ I'm working on drivers for the following, which will be available soon.
 === C++
 
   #include "dbic++.h"
-  
+
   using namespace std;
   using namespace dbi;
-  
+
   int main() {
       // Handle h ("driver", "user", "password", "database", "host", "port");
       Handle h ("postgresql", "udbicpp", "", "dbicpp");
       Statement st (h, "SELECT id, name, email FROM users WHERE id >= ? AND id < ?");
-  
+
       // bind and execute the statement.
       st % 1L, 10L;
       st.execute();
@@ -48,18 +48,20 @@ See src/example.cc for more specific examples.
     puts row["name"]
     puts row["email"]
   end
-  
-  h.transaction {
+
+  # Named save point.
+  h.transaction 'delete_stuff' do
     h.execute "DELETE FROM users WHERE id = ?", 2
     begin
-      h.transaction {
+      # UUID save point.
+      h.transaction do
         h.execute "DELETE FROM users"
         raise "changed my mind"
-      }
+      end
     rescue => e
       # nop
     end
-  }
+  end
 
 
 == TODO

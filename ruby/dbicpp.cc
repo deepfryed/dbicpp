@@ -18,13 +18,13 @@ static VALUE fStringify;
 
 static dbi::Handle* DBI_HANDLE(VALUE self) {
     dbi::Handle *h;
-	Data_Get_Struct(self, dbi::Handle, h);
+    Data_Get_Struct(self, dbi::Handle, h);
     return h;
 }
 
 static dbi::Statement* DBI_STATEMENT(VALUE self) {
     dbi::Statement *st;
-	Data_Get_Struct(self, dbi::Statement, st);
+    Data_Get_Struct(self, dbi::Statement, st);
     return st;
 }
 
@@ -37,7 +37,7 @@ static void free_statement(dbi::Statement *self) {
 }
 
 VALUE rb_dbi_init(VALUE self, VALUE path) {
-    try { dbi::dbiInitialize(RSTRING_PTR(path)); } catch EXCEPTION("Invalid Driver");
+    try { dbi::dbiInitialize(CSTRING(path)); } catch EXCEPTION("Invalid Driver");
 }
 
 void static inline rb_extract_bind_params(int argc, VALUE* argv, std::vector<dbi::Param> &bind) {
@@ -55,18 +55,18 @@ static VALUE rb_handle_new(VALUE klass, VALUE opts) {
     VALUE driver   = rb_hash_aref(opts, ID2SYM(rb_intern("driver")));
     VALUE password = rb_hash_aref(opts, ID2SYM(rb_intern("password")));
 
-    if (db     == Qnil) rb_raise(eArgumentError, "Handle#new called without :db");
-    if (user   == Qnil) rb_raise(eArgumentError, "Handle#new called without :user");
-    if (driver == Qnil) rb_raise(eArgumentError, "Handle#new called without :driver");
+    if (NIL_P(db)) rb_raise(eArgumentError, "Handle#new called without :db");
+    if (NIL_P(user)) rb_raise(eArgumentError, "Handle#new called without :user");
+    if (NIL_P(driver)) rb_raise(eArgumentError, "Handle#new called without :driver");
 
-    host     = host == Qnil ? rb_str_new2("") : host;
-    port     = port == Qnil ? rb_str_new2("") : port;
-    password = password == Qnil ? rb_str_new2("") : password;
+    host     = NIL_P(host)     ? rb_str_new2("") : host;
+    port     = NIL_P(port)     ? rb_str_new2("") : port;
+    password = NIL_P(password) ? rb_str_new2("") : password;
 
     try {
         h = new dbi::Handle(
-            RSTRING_PTR(driver), RSTRING_PTR(user), RSTRING_PTR(password),
-            RSTRING_PTR(db), RSTRING_PTR(host), RSTRING_PTR(port)
+            CSTRING(driver), CSTRING(user), CSTRING(password),
+            CSTRING(db), CSTRING(host), CSTRING(port)
         );
     } catch EXCEPTION("Connection");
 
@@ -76,7 +76,7 @@ static VALUE rb_handle_new(VALUE klass, VALUE opts) {
 
 static VALUE rb_handle_prepare(VALUE self, VALUE sql) {
     dbi::Handle *h = DBI_HANDLE(self);
-    dbi::Statement *st = new dbi::Statement(h, RSTRING_PTR(sql));
+    dbi::Statement *st = new dbi::Statement(h, CSTRING(sql));
     VALUE rv = Data_Wrap_Struct(cStatement, NULL, free_statement, st);
     return rv;
 }
@@ -84,15 +84,16 @@ static VALUE rb_handle_prepare(VALUE self, VALUE sql) {
 VALUE rb_handle_execute(int argc, VALUE *argv, VALUE self) {
     unsigned int rows = 0;
     dbi::Handle *h = DBI_HANDLE(self);
-    if (argc == 0) rb_raise(eArgumentError, "Handle#execute called without a SQL command");
+    if (argc == 0 || NIL_P(argv[0]))
+        rb_raise(eArgumentError, "Handle#execute called without a SQL command");
     try {
         if (argc == 1) {
-            rows = h->execute(RSTRING_PTR(argv[0]));
+            rows = h->execute(CSTRING(argv[0]));
         }
         else {
             dbi::ResultRow bind;
             rb_extract_bind_params(argc, argv+1, bind);
-            dbi::Statement st = h->prepare(RSTRING_PTR(argv[0]));
+            dbi::Statement st = h->prepare(CSTRING(argv[0]));
             rows = st.execute(bind);
         }
     } catch EXCEPTION("Runtime");
@@ -101,52 +102,55 @@ VALUE rb_handle_execute(int argc, VALUE *argv, VALUE self) {
 
 VALUE rb_handle_begin(int argc, VALUE *argv, VALUE self) {
     dbi::Handle *h = DBI_HANDLE(self);
-    if (argc > 1) rb_raise(eArgumentError, "Got %d parameters. Handle#begin expects 0 or 1", argc);
-    try { argc == 0 ? h->begin() : h->begin(CSTRING(argv[0])); } catch EXCEPTION("Runtime");
+    VALUE save;
+    rb_scan_args(argc, argv, "01", &save);
+    try { NIL_P(save) ? h->begin() : h->begin(CSTRING(save)); } catch EXCEPTION("Runtime");
 }
-
 
 VALUE rb_handle_commit(int argc, VALUE *argv, VALUE self) {
     dbi::Handle *h = DBI_HANDLE(self);
-    if (argc > 1) rb_raise(eArgumentError, "Got %d parameters. Handle#commit expect 0 or 1", argc);
-    try { argc == 0 ? h->commit() : h->commit(CSTRING(argv[0])); } catch EXCEPTION("Runtime");
+    VALUE save;
+    rb_scan_args(argc, argv, "01", &save);
+    try { NIL_P(save) ? h->commit() : h->commit(CSTRING(save)); } catch EXCEPTION("Runtime");
 }
 
 VALUE rb_handle_rollback(int argc, VALUE *argv, VALUE self) {
     dbi::Handle *h = DBI_HANDLE(self);
-    if (argc > 1) rb_raise(eArgumentError, "Got %d parameters. Handle#rollback expects 0 or 1", argc);
-    try { argc == 0 ? h->rollback() : h->rollback(CSTRING(argv[0])); } catch EXCEPTION("Runtime");
+    VALUE save_point;
+    rb_scan_args(argc, argv, "01", &save_point);
+    try { NIL_P(save_point) ? h->rollback() : h->rollback(CSTRING(save_point)); } catch EXCEPTION("Runtime");
 }
 
-VALUE rb_handle_transaction(VALUE self) {
+VALUE rb_handle_transaction(int argc, VALUE *argv, VALUE self) {
     int status;
-    std::string spname = "SP" + dbi::generateCompactUUID();
-    dbi::Handle *h = DBI_HANDLE(self);
-    if (rb_block_given_p()) {
-        h->begin(spname);
+    VALUE sp, block;
+    rb_scan_args(argc, argv, "01&", &sp, &block);
+
+    std::string save_point = NIL_P(sp) ? "SP" + dbi::generateCompactUUID() : CSTRING(sp);
+    dbi::Handle *h         = DBI_HANDLE(self);
+
+    try {
+        h->begin(save_point);
         rb_protect(rb_yield, self, &status);
-        if (status == 0 && h->transactions().back() == spname) {
-            h->commit(spname);
+        if (status == 0 && h->transactions().back() == save_point) {
+            h->commit(save_point);
         }
         else if (status != 0) {
-            if (h->transactions().back() == spname) h->rollback(spname);
+            if (h->transactions().back() == save_point) h->rollback(save_point);
             rb_jump_tag(status);
         }
-    }
-    else {
-        rb_raise(eRuntimeError, "No block given to Handle#transaction");
-    }
+    } catch EXCEPTION("Runtime");
 }
 
 VALUE rb_statement_new(VALUE klass, VALUE hl, VALUE sql) {
     dbi::Handle *h = DBI_HANDLE(hl);
 
-    if (hl  == Qnil || !h)
+    if (NIL_P(hl)  || !h)
         rb_raise(eArgumentError, "Statement#new called without a Handle instance");
-    if (sql == Qnil || TYPE(sql) != T_STRING)
+    if (NIL_P(sql))
         rb_raise(eArgumentError, "Statement#new called without a SQL command");
 
-    dbi::Statement *st = new dbi::Statement(h, RSTRING_PTR(sql));
+    dbi::Statement *st = new dbi::Statement(h, CSTRING(sql));
     VALUE rv = Data_Wrap_Struct(cStatement, NULL, free_statement, st);
     return rv;
 }
@@ -216,17 +220,19 @@ VALUE rb_dbi_trace(int argc, VALUE *argv, VALUE self) {
     // by default log all messages to stderr.
     int fd = 2;
     rb_io_t *fptr;
+    VALUE flag, io;
 
-    if (argc == 0) rb_raise(eArgumentError, "DBI#trace expects a boolean value, got none.");
+    rb_scan_args(argc, argv, "11", &flag, &io);
 
-    bool flag = argv[0] == Qtrue ? true : false;
+    if (TYPE(flag) != T_TRUE && TYPE(flag) != T_FALSE)
+        rb_raise(eArgumentError, "DBI#trace expects a boolean flag, got %s", CSTRING(flag));
 
-    if (argc > 1) {
-        GetOpenFile(rb_convert_type(argv[1], T_FILE, "IO", "to_io"), fptr);
+    if (!NIL_P(io)) {
+        GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
         fd = fptr->fd;
     }
 
-    dbi::trace(flag, fd);
+    dbi::trace(flag == Qtrue ? true : false, fd);
 }
 
 extern "C" {
@@ -251,7 +257,7 @@ extern "C" {
         rb_define_method(cHandle, "begin",       RUBY_METHOD_FUNC(rb_handle_begin), -1);
         rb_define_method(cHandle, "commit",      RUBY_METHOD_FUNC(rb_handle_commit), -1);
         rb_define_method(cHandle, "rollback",    RUBY_METHOD_FUNC(rb_handle_rollback), -1);
-        rb_define_method(cHandle, "transaction", RUBY_METHOD_FUNC(rb_handle_transaction), 0);
+        rb_define_method(cHandle, "transaction", RUBY_METHOD_FUNC(rb_handle_transaction), -1);
 
         rb_define_singleton_method(cStatement, "new", RUBY_METHOD_FUNC(rb_statement_new), 2);
 
