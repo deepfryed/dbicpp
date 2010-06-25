@@ -45,6 +45,7 @@ namespace dbi {
         virtual bool rollback(string name) = 0;
         virtual void* call(string name, void*) = 0;
         virtual bool close() = 0;
+        virtual void cleanup() = 0;
     };
 
     class AbstractStatement {
@@ -62,6 +63,8 @@ namespace dbi {
         virtual string command() = 0;
         virtual unsigned int currentRow() = 0;
         virtual void advanceRow() = 0;
+        virtual void cleanup() = 0;
+        virtual unsigned long lastInsertID() = 0;
     };
 
     class Driver {
@@ -137,6 +140,7 @@ namespace dbi {
         unsigned int currentRow();
         void advanceRow();
         bool finish();
+        unsigned long lastInsertID();
     };
 
     bool dbiInitialize(string path);

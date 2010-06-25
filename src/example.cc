@@ -90,8 +90,7 @@ int main() {
 
     Statement ins (h, "INSERT INTO users (name, email) VALUES (?, ?) RETURNING id");
     ins % "John Doe", "doe@example.com", execute();
-    ResultRow r = ins.fetchRow(); ins.finish();
-    cout << "Inserted 1 row, last insert id = " << r << endl;
+    cout << "Inserted 1 row, last insert id = " << ins.lastInsertID() << endl;
     ins % "Jane Doe", null(), execute();
     cout << "Inserted 1 row with null email value" << endl << endl;
 

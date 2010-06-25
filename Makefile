@@ -22,6 +22,7 @@ INCLUDES=$(INCDIR)/*.h $(INCDIR)/*/*.h
 #-------------------------------------------------------------------------
 
 DRVDIR=src/drivers
+
 DBD_PGVMAJOR=1
 DBD_PGVMINOR=1.0.1
 
@@ -32,13 +33,25 @@ DBD_PGSOFILE=$(LIBDIR)/libdbdpg.so.$(DBD_PGVMINOR)
 DBD_PGSONAME=libdbdpg.so.$(DBD_PGVMAJOR)
 
 DBD_PGLDFLAGS=-L$(LIBDIR) -lpq
-DBD_CFLAGS=-I/usr/include/postgresql -I/usr/include/postgresql/8.4/server
+
+DBD_MYVMAJOR=1
+DBD_MYVMINOR=1.0.1
+
+DBD_MYSOURCES=$(DRVDIR)/mysql.cc
+DBD_MYOBJECTS=$(DRVDIR)/mysql.o
+
+DBD_MYSOFILE=$(LIBDIR)/libdbdmysql.so.$(DBD_MYVMINOR)
+DBD_MYSONAME=libdbdmysql.so.$(DBD_MYVMAJOR)
+
+DBD_MYLDFLAGS=-L$(LIBDIR) -lmysqlclient
+
+DBD_CFLAGS=-I/usr/include/mysql -I/usr/include/postgresql
 
 #-------------------------------------------------------------------------
 
 LDFLAGS=-L$(LIBDIR) -ldl -lpcrecpp -luuid
 
-all: $(DBILIB) $(EXE) $(DBD_PGSOFILE)
+all: $(DBILIB) $(EXE) $(DBD_PGSOFILE) $(DBD_MYSOFILE)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cc Makefile $(INCLUES)
 	$(CC) -c $(CFLAGS) $< -o $@
@@ -52,8 +65,11 @@ $(DBILIB): $(DBILIB_OBJECTS) $(DBILIB_SOURCES)
 $(DBD_PGSOFILE): $(DBD_PGOBJECTS) $(DBILIB) Makefile
 	$(CC) -shared -Wl,-soname,$(DBD_PGSONAME) $(DBD_PGLDFLAGS) -o $(DBD_PGSOFILE) $(DBD_PGOBJECTS)
 
+$(DBD_MYSOFILE): $(DBD_MYOBJECTS) $(DBILIB) Makefile
+	$(CC) -shared -Wl,-soname,$(DBD_MYSONAME) $(DBD_MYLDFLAGS) -o $(DBD_MYSOFILE) $(DBD_MYOBJECTS)
+
 $(EXE): $(SRCDIR)/example.cc $(DBILIB)
-	$(CC) $(CFLAGS) -rdynamic $(SRCDIR)/example.cc -o $@ $(LDFLAGS) -ldbic++ $(DBD_PGLDFLAGS)
+	$(CC) $(CFLAGS) -rdynamic $(SRCDIR)/example.cc -o $@ $(LDFLAGS) -ldbic++ $(DBD_PGLDFLAGS) $(DBD_MYLDFLAGS)
 
 clean:
 	rm -f $(OBJDIR)/*.o $(OBJDIR)/*.so.* $(OBJDIR)/*.a $(EXE) $(DRVDIR)/*.o

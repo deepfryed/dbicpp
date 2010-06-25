@@ -1,5 +1,7 @@
-objs/
-libs/
+objs
+libs
+!objs/.keepthis
+!libs/.keepthis
 *.o
 example
 bench/*-test

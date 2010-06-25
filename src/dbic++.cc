@@ -94,7 +94,7 @@ namespace dbi {
 
 
     Handle::Handle(AbstractHandle *ah)                       { h = ah; }
-    Handle::~Handle()                                        { close(); delete h; }
+    Handle::~Handle()                                        { close(); h->cleanup(); delete h; }
     Statement Handle::prepare(string sql)                    { return Statement(h->prepare(sql)); }
     bool Handle::begin()                                     { return h->begin(); }
     bool Handle::commit()                                    { trx.clear(); return h->commit(); }
@@ -112,7 +112,7 @@ namespace dbi {
     Statement::Statement(Handle &handle, string sql)         { h = handle.h; st = h->prepare(sql); }
     Statement::Statement(Handle *handle)                     { st = NULL; h = handle->h; }
     Statement::Statement(Handle *handle, string sql)         { h = handle->h; st = h->prepare(sql); }
-    Statement::~Statement()                                  { finish(); if (st != NULL) delete st; }
+    Statement::~Statement()                                  { finish(); if (st != NULL) { st->cleanup(); delete st; } }
     unsigned int Statement::rows()                           { return st->rows(); }
     ResultRow Statement::fetchRow()                          { return st->fetchRow(); }
     ResultRowHash Statement::fetchRowHash()                  { return st->fetchRowHash(); }
@@ -195,6 +195,10 @@ namespace dbi {
     unsigned int Statement::operator,(dbi::execute const &e) {
         if (_trace) logMessage(_trace_fd, formatParams(st->command(), params));
         return st->execute(params);
+    }
+
+    unsigned long Statement::lastInsertID() {
+        return st->lastInsertID();
     }
 
     void logMessage(int fd, string msg) {

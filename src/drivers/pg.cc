@@ -5,9 +5,6 @@
 #define DRIVER_NAME     "postgresql"
 #define DRIVER_VERSION  "1.0.1"
 
-
-#define PQTUPLES(r) (int __n = PQntuples(r); n
-
 namespace dbi {
 
     const char *typemap[] = {
@@ -90,7 +87,7 @@ namespace dbi {
 
         public:
         PgStatement() {}
-        ~PgStatement() { finish(); }
+        ~PgStatement() { cleanup(); }
         PgStatement(string query,  PGconn *c) {
             init();
             conn = c;
@@ -100,6 +97,10 @@ namespace dbi {
             if (!result) throw RuntimeError("Unable to allocate statement");
             pgCheckResult(result, sql);
             PQclear(result);
+        }
+
+        void cleanup() {
+            finish();
         }
 
         string command() {
@@ -139,6 +140,12 @@ namespace dbi {
             _rows = (unsigned int)PQNTUPLES(_result);
             _cols = (unsigned int)PQnfields(_result);
             return _rows;
+        }
+
+        unsigned long lastInsertID() {
+            check_ready("lastInsertID()");
+            ResultRow r = fetchRow();
+            return r.size() > 0 ? atol(r[0].value.c_str()) : 0;
         }
 
         ResultRow fetchRow() {
@@ -220,9 +227,14 @@ namespace dbi {
         }
 
         ~PgHandle() {
+            cleanup();
+        }
+
+        void cleanup() {
             // This gets called only on dlclose, so the wrapper dbi::Handle
             // closes connections and frees memory.
             if (conn) PQfinish(conn);
+            conn = 0;
         }
 
         unsigned int execute(string sql) {
