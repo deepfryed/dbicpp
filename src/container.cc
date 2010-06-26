@@ -4,10 +4,12 @@ namespace dbi {
 
     string ResultRow::join(string delim) {
         stringstream out;
+
         if (size() > 0) {
             for (unsigned int i = 0; i < size(); i++)
                 out << at(i) << ( (i >= 0 && i < size() - 1) ? delim : "");
         }
+
         return out.str();
     }
 
@@ -21,8 +23,10 @@ namespace dbi {
 
     vector<string> ResultRowHash::columns(void) {
         vector<string> rs;
+
         for(map<string,Param>::iterator iter = begin(); iter != end(); ++iter)
             rs.push_back(iter->first);
+
         return rs;
     }
 
@@ -36,6 +40,7 @@ namespace dbi {
             out << iter->first << "\t" << iter->second;
             if (++iter != r.end()) out << "\t";
         }
+
         return out;
     }
 }

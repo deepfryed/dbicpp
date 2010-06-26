@@ -14,35 +14,49 @@ namespace dbi {
         string rv;
         char hex[3];
         unsigned char uuid[16];
+
         uuid_generate(uuid);
+
         for (int i = 0; i < 16; i++) {
             sprintf(hex, "%02X", uuid[i]);
             rv += hex;
         }
+
         return rv;
     }
 
     bool dbiInitialize(string path = DEFAULT_DRIVER_PATH) {
-        _trace    = false;
-        _trace_fd = 1;
-        pcrecpp::RE re("\\.so\\.\\d+");
-        drivers["null"] = NULL;
         string filename;
-        Driver* (*info)(void);
-        DIR *dir = opendir(path.c_str());
         struct dirent *file;
-        if (!dir) return false;
+        Driver* (*info)(void);
+        pcrecpp::RE re("\\.so\\.\\d+");
+
+        _trace          = false;
+        _trace_fd       = 1;
+        drivers["null"] = NULL;
+
+        DIR *dir = opendir(path.c_str());
+        if (!dir)
+            return false;
+
         while((file = readdir(dir))) {
-            if (file->d_type != DT_REG) continue;
-            if (!re.PartialMatch(file->d_name)) continue;
+            if (file->d_type != DT_REG)
+                continue;
+            if (!re.PartialMatch(file->d_name))
+                continue;
+
             filename = path + "/" + string(file->d_name);
             void *handle = dlopen(filename.c_str(), RTLD_NOW|RTLD_LOCAL);
+
             if (handle != NULL) {
                 if ((info = (Driver* (*)(void)) dlsym(handle, "dbdInfo"))) {
                     Driver *driver = info();
                     driver->handle = handle;
                     driver->connect = CONNECT_FUNC(dlsym(handle, "dbdConnect"));
-                    if (driver->connect == NULL) throw InvalidDriverError(dlerror());
+
+                    if (driver->connect == NULL)
+                        throw InvalidDriverError(dlerror());
+
                     drivers[driver->name] = driver;
                 }
                 else {
@@ -53,6 +67,7 @@ namespace dbi {
                 cout << "[WARNING] Ignoring " << filename << ":" << dlerror() << endl;
             }
         }
+
         closedir(dir);
         return true;
     }
@@ -60,16 +75,20 @@ namespace dbi {
     void dbiShutdown() {
         for (map<string, Driver*>::iterator iter = drivers.begin(); iter != drivers.end(); ++iter) {
             Driver *driver = iter->second;
-            if (driver) delete driver;
+            if (driver)
+                delete driver;
         }
     }
 
     vector<string> available_drivers () {
         vector <string>list;
-        if (!drivers.size()) dbiInitialize();
+
+        if (!drivers.size())
+            dbiInitialize();
         for(map<string, Driver *>::iterator iter = drivers.begin(); iter != drivers.end(); ++iter) {
             list.push_back(iter->first);
         }
+
         return list;
     }
 
@@ -78,6 +97,7 @@ namespace dbi {
             dbiInitialize("./libs");
             dbiInitialize();
         }
+
         if (!drivers[driver_name])
             throw InvalidDriverError("Unable to find the '" + driver_name + "' driver.");
     }
@@ -132,8 +152,12 @@ namespace dbi {
 
     Statement& Statement::operator<<(string sql) {
         params.clear();
-        if (st) delete st;
-        if (!h) throw RuntimeError("Unable to call prepare() without database handle.");
+
+        if (st)
+            delete st;
+        if (!h)
+            throw RuntimeError("Unable to call prepare() without database handle.");
+
         st = h->prepare(sql);
         return *this;
     }
@@ -161,15 +185,34 @@ namespace dbi {
         return st->columns();
     }
 
-    unsigned char* Statement::fetchValue(int r, int c) { return st->fetchValue(r, c); }
-    unsigned char* Statement::operator()(int r, int c) { return st->fetchValue(r, c); }
+    unsigned char* Statement::fetchValue(int r, int c) {
+        return st->fetchValue(r, c);
+    }
 
-    unsigned int Statement::currentRow() { return st->currentRow(); }
-    void Statement::advanceRow() { st->advanceRow(); }
+    unsigned char* Statement::operator()(int r, int c) {
+        return st->fetchValue(r, c);
+    }
 
-    bool trace()                   { return _trace; }
-    void trace(bool flag)          { _trace = flag; }
-    void trace(bool flag, int fd)  { _trace = flag; _trace_fd = fd; }
+    unsigned int Statement::currentRow() {
+        return st->currentRow();
+    }
+
+    void Statement::advanceRow() {
+        st->advanceRow();
+    }
+
+    bool trace() {
+        return _trace;
+    }
+
+    void trace(bool flag) {
+        _trace = flag;
+    }
+
+    void trace(bool flag, int fd)  {
+        _trace = flag;
+        _trace_fd = fd;
+    }
 
     unsigned int Handle::execute(string sql) {
         if (_trace) logMessage(_trace_fd, sql);
@@ -178,22 +221,26 @@ namespace dbi {
 
     static string inline formatParams(string sql, ResultRow &p) {
         string message(sql);
+
         if (p.size() > 0) message += " : " + p.join(", ");
         return message;
     }
 
     unsigned int Statement::execute() {
-        if (_trace) logMessage(_trace_fd, formatParams(st->command(), params));
+        if (_trace)
+            logMessage(_trace_fd, formatParams(st->command(), params));
         return st->execute(params);
     }
 
     unsigned int Statement::execute(ResultRow &bind) {
-        if (_trace) logMessage(_trace_fd, formatParams(st->command(), bind));
+        if (_trace)
+            logMessage(_trace_fd, formatParams(st->command(), bind));
         return st->execute(bind);
     }
 
     unsigned int Statement::operator,(dbi::execute const &e) {
-        if (_trace) logMessage(_trace_fd, formatParams(st->command(), params));
+        if (_trace)
+            logMessage(_trace_fd, formatParams(st->command(), params));
         return st->execute(params);
     }
 
@@ -210,9 +257,12 @@ namespace dbi {
         struct timezone tz;
 
         gettimeofday(&tv, &tz);
+
         strftime(buffer, 512, "[%FT%H:%M:%S", now_tm);
         n = write(fd, buffer, strlen(buffer));
+
         sprintf(buffer, ".%ld] ", tv.tv_usec);
+
         n += write(fd, buffer, strlen(buffer));
         n += write(fd, msg.data(), msg.length());
         n += write(fd, "\n", 1);
