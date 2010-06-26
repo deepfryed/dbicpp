@@ -33,6 +33,8 @@ namespace dbi {
     }
 
 
+    #define __MYSQL_BIND_BUFFER_LEN 1024*128
+
     class MySqlBind {
         protected:
         bool ro_buffer;
@@ -55,6 +57,21 @@ namespace dbi {
         MySqlBind()  { ro_buffer = false; count = 0; params = 0;  }
         ~MySqlBind() { deallocateBindParams(); }
 
+        void reallocateBindParam(int c, unsigned long length) {
+            if (!ro_buffer) {
+                delete [] (unsigned char*)params[c].buffer;
+                params[c].buffer  = (void*)new unsigned char[length];
+                params[c].buffer_length = length;
+            }
+        }
+
+        void clear() {
+            if (!ro_buffer) {
+                for (int i = 0; i < count; i++)
+                    memset(params[i].buffer, 0, params[i].buffer_length);
+            }
+        }
+
         private:
         void allocateBindParams() {
             params = new MYSQL_BIND[count];
@@ -63,15 +80,15 @@ namespace dbi {
                 for (int i = 0; i < count; i++) {
                     params[i].length  = new unsigned long;
                     params[i].is_null = new char;
-                    params[i].buffer  = (void*)new unsigned char[1024*128];
-                    params[i].buffer_length = 1024*128;
+                    params[i].buffer  = (void*)new unsigned char[__MYSQL_BIND_BUFFER_LEN];
+                    params[i].buffer_length = __MYSQL_BIND_BUFFER_LEN;
                 }
             }
         }
 
         void deallocateBindParams() {
-            for (int i = 0; i < count; i++) {
-                if (!ro_buffer) {
+            if (!ro_buffer) {
+                for (int i = 0; i < count; i++) {
                     delete params[i].length;
                     delete params[i].is_null;
                     delete [] (unsigned char*)params[i].buffer;
@@ -90,6 +107,7 @@ namespace dbi {
         MYSQL_STMT *_stmt;
         MySqlBind *_result;
         vector<string> _result_fields;
+        vector<unsigned long> _buffer_lengths;
         unsigned int _rowno, _rows, _cols;
 
         protected:
@@ -103,11 +121,17 @@ namespace dbi {
         }
 
         unsigned int bindResultAndGetAffectedRows() {
+            unsigned int i;
             MYSQL_RES *res = mysql_stmt_result_metadata(_stmt);
             if (res) {
-                if (!_stmt->bind_result_done && mysql_stmt_bind_result(_stmt, _result->params) != 0) {
-                    mysql_free_result(res);
-                    THROW_MYSQL_STMT_ERROR(_stmt);
+                if (!_stmt->bind_result_done) {
+                    _buffer_lengths.clear();
+                    for (i = 0; i < _cols; i++)
+                        _buffer_lengths.push_back(_result->params[i].buffer_length);
+                    if (mysql_stmt_bind_result(_stmt, _result->params) != 0) {
+                        mysql_free_result(res);
+                        THROW_MYSQL_STMT_ERROR(_stmt);
+                    }
                 }
                 if (mysql_stmt_store_result(_stmt) != 0 ) {
                     mysql_free_result(res);
@@ -137,6 +161,7 @@ namespace dbi {
 
             _cols   = (unsigned int)mysql_stmt_field_count(_stmt);
             _result = new MySqlBind(_cols);
+            _buffer_lengths.reserve(_cols);
         }
 
         void cleanup() {
@@ -189,18 +214,26 @@ namespace dbi {
 
         ResultRow fetchRow() {
             int c, rc;
+            unsigned long length;
             check_ready("fetchRow()");
             ResultRow rs;
             rs.reserve(_cols);
             if (_rowno < _rows) {
                 _rowno++;
+                _result->clear();
                 rc = mysql_stmt_fetch(_stmt);
                 if (rc != 0 && rc != MYSQL_DATA_TRUNCATED)
                     THROW_MYSQL_STMT_ERROR(_stmt);
                 for (c = 0; c < _cols; c++) {
+                    length = *(_result->params[c].length);
+                    if (length > _buffer_lengths[c]) {
+                        if (length > _result->params[c].buffer_length)
+                            _result->reallocateBindParam(c, length);
+                        mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
+                    }
                     rs.push_back(
                         *_result->params[c].is_null ? PARAM(null()) :
-                              PARAM_BINARY((unsigned char*)_result->params[c].buffer, *(_result->params[c].length))
+                              PARAM_BINARY((unsigned char*)_result->params[c].buffer, length)
                     );
                 }
             }
@@ -210,19 +243,27 @@ namespace dbi {
 
         ResultRowHash fetchRowHash() {
             int c, rc;
+            unsigned long length;
             check_ready("fetchRowHash()");
             ResultRowHash rs;
             if (_rowno < _rows) {
                 _rowno++;
                 if (_result_fields.size() == 0) fields();
+                _result->clear();
                 rc = mysql_stmt_fetch(_stmt);
                 if (rc != 0 && rc != MYSQL_DATA_TRUNCATED)
                     THROW_MYSQL_STMT_ERROR(_stmt);
-
-                for (c = 0; c < _cols; c++)
+                for (c = 0; c < _cols; c++) {
+                    length = *(_result->params[c].length);
+                    if (length > _buffer_lengths[c]) {
+                        if (length > _result->params[c].buffer_length)
+                            _result->reallocateBindParam(c, length);
+                        mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
+                    }
                     rs[_result_fields[c]] =
                         *_result->params[c].is_null ? PARAM(null()) :
-                              PARAM_BINARY((unsigned char*)_result->params[c].buffer, *(_result->params[c].length));
+                              PARAM_BINARY((unsigned char*)_result->params[c].buffer, length);
+                }
             }
 
             return rs;

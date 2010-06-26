@@ -6,7 +6,7 @@ require 'pathname'
 DBI.init Pathname.new(__FILE__).dirname + '..' + 'libs'
 DBI.trace true
 
-h = DBI::Handle.new user: 'udbicpp', db: 'dbicpp', driver: 'postgresql'
+h = DBI::Handle.new user: 'udbicpp', db: 'dbicpp', driver: ARGV[0] || 'postgresql'
 
 st = h.prepare "SELECT * FROM users WHERE id > ?"
 

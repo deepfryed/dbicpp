@@ -18,9 +18,11 @@ void printResultRows(Statement &st) {
     }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    string driver(argc > 1 ? argv[1] : "postgresql");
+
     // Handle h ("driver", "user", "password", "database", "host", "port");
-    Handle h ("postgresql", "udbicpp", "", "dbicpp");
+    Handle h (driver, "udbicpp", "", "dbicpp");
 
     // Set trace on and log queries to stderr
     // trace(true, 2);
@@ -88,7 +90,8 @@ int main() {
     cout << "Inserts & Selects inside transaction" << endl;
     cout << "------------------------------------" << endl << endl;
 
-    Statement ins (h, "INSERT INTO users (name, email) VALUES (?, ?) RETURNING id");
+    string sql("INSERT INTO users (name, email) VALUES (?, ?)");
+    Statement ins (h, sql + (driver == "postgresql" ? " RETURNING id" : ""));
     ins % "John Doe", "doe@example.com", execute();
     cout << "Inserted 1 row, last insert id = " << ins.lastInsertID() << endl;
     ins % "Jane Doe", null(), execute();
