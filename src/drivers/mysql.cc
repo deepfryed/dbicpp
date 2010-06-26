@@ -19,8 +19,10 @@ namespace dbi {
         int i, n = 0;
         char repl[128];
         string var;
+
         RE re("(?<!')(%(?:[dsfu]|l[dfu]))(?!')");
-        while (re.PartialMatch(query, &var)) re.Replace("?", &query);
+        while (re.PartialMatch(query, &var))
+            re.Replace("?", &query);
     }
 
     void mysqlProcessBindParams(MYSQL_BIND *params, vector<Param>&bind) {
@@ -54,8 +56,15 @@ namespace dbi {
             allocateBindParams();
         }
 
-        MySqlBind()  { ro_buffer = false; count = 0; params = 0;  }
-        ~MySqlBind() { deallocateBindParams(); }
+        MySqlBind()  {
+            ro_buffer = false;
+            count = 0;
+            params = 0;
+        }
+
+        ~MySqlBind() {
+            deallocateBindParams();
+        }
 
         void reallocateBindParam(int c, unsigned long length) {
             if (!ro_buffer) {
@@ -76,6 +85,7 @@ namespace dbi {
         void allocateBindParams() {
             params = new MYSQL_BIND[count];
             memset(params, 0, sizeof(MYSQL_BIND)*count);
+
             if (!ro_buffer) {
                 for (int i = 0; i < count; i++) {
                     params[i].length  = new unsigned long;
@@ -94,6 +104,7 @@ namespace dbi {
                     delete [] (unsigned char*)params[i].buffer;
                 }
             };
+
             delete [] params;
         }
     };
@@ -109,6 +120,7 @@ namespace dbi {
         vector<string> _result_fields;
         vector<unsigned long> _buffer_lengths;
         unsigned int _rowno, _rows, _cols;
+        ResultRow _rsrow;
 
         protected:
 
@@ -123,20 +135,25 @@ namespace dbi {
         unsigned int bindResultAndGetAffectedRows() {
             unsigned int i;
             MYSQL_RES *res = mysql_stmt_result_metadata(_stmt);
+
             if (res) {
                 if (!_stmt->bind_result_done) {
                     _buffer_lengths.clear();
+
                     for (i = 0; i < _cols; i++)
                         _buffer_lengths.push_back(_result->params[i].buffer_length);
+
                     if (mysql_stmt_bind_result(_stmt, _result->params) != 0) {
                         mysql_free_result(res);
                         THROW_MYSQL_STMT_ERROR(_stmt);
                     }
                 }
+
                 if (mysql_stmt_store_result(_stmt) != 0 ) {
                     mysql_free_result(res);
                     THROW_MYSQL_STMT_ERROR(_stmt);
                 }
+
                 mysql_free_result(res);
             }
 
@@ -155,18 +172,26 @@ namespace dbi {
             _conn  = c;
             _sql   = query;
             _stmt  = mysql_stmt_init(c);
+
             mysqlPreProcessQuery(query);
+
             if (mysql_stmt_prepare(_stmt, query.c_str(), query.length()) != 0)
                 THROW_MYSQL_STMT_ERROR(_stmt);
 
             _cols   = (unsigned int)mysql_stmt_field_count(_stmt);
+
             _result = new MySqlBind(_cols);
+
             _buffer_lengths.reserve(_cols);
+            _rsrow.reserve(_cols);
         }
 
         void cleanup() {
-            if (_stmt) mysql_stmt_close(_stmt);
-            if(_result) delete _result;
+            if (_stmt)
+                mysql_stmt_close(_stmt);
+            if(_result)
+                delete _result;
+
             _stmt = 0;
             _result = 0;
         }
@@ -187,7 +212,10 @@ namespace dbi {
 
         unsigned int execute() {
             _result_fields.clear();
-            if (mysql_stmt_execute(_stmt) != 0) THROW_MYSQL_STMT_ERROR(_stmt);
+
+            if (mysql_stmt_execute(_stmt) != 0)
+                THROW_MYSQL_STMT_ERROR(_stmt);
+
             _rows = bindResultAndGetAffectedRows();
             return _rows;
         }
@@ -197,6 +225,7 @@ namespace dbi {
 
             MySqlBind _bind(bind.size(), MYSQL_BIND_RO);
             mysqlProcessBindParams(_bind.params, bind);
+
             if (mysql_stmt_bind_param(_stmt, _bind.params) != 0 )
                 THROW_MYSQL_STMT_ERROR(_stmt);
 
@@ -216,50 +245,67 @@ namespace dbi {
             int c, rc;
             unsigned long length;
             check_ready("fetchRow()");
-            ResultRow rs;
-            rs.reserve(_cols);
+
             if (_rowno < _rows) {
                 _rowno++;
                 _result->clear();
+                _rsrow.clear();
+
                 rc = mysql_stmt_fetch(_stmt);
+
                 if (rc != 0 && rc != MYSQL_DATA_TRUNCATED)
                     THROW_MYSQL_STMT_ERROR(_stmt);
+
                 for (c = 0; c < _cols; c++) {
                     length = *(_result->params[c].length);
+
                     if (length > _buffer_lengths[c]) {
                         if (length > _result->params[c].buffer_length)
                             _result->reallocateBindParam(c, length);
+
                         mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
                     }
-                    rs.push_back(
+
+                    _rsrow.push_back(
                         *_result->params[c].is_null ? PARAM(null()) :
                               PARAM_BINARY((unsigned char*)_result->params[c].buffer, length)
                     );
                 }
             }
 
-            return rs;
+            return _rsrow;
         }
 
         ResultRowHash fetchRowHash() {
             int c, rc;
             unsigned long length;
             check_ready("fetchRowHash()");
+
             ResultRowHash rs;
+
             if (_rowno < _rows) {
                 _rowno++;
-                if (_result_fields.size() == 0) fields();
+
+                if (_result_fields.size() == 0)
+                    fields();
+
                 _result->clear();
+
                 rc = mysql_stmt_fetch(_stmt);
+
                 if (rc != 0 && rc != MYSQL_DATA_TRUNCATED)
                     THROW_MYSQL_STMT_ERROR(_stmt);
+
                 for (c = 0; c < _cols; c++) {
                     length = *(_result->params[c].length);
+
                     if (length > _buffer_lengths[c]) {
                         if (length > _result->params[c].buffer_length)
                             _result->reallocateBindParam(c, length);
+
                         mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
                     }
+
                     rs[_result_fields[c]] =
                         *_result->params[c].is_null ? PARAM(null()) :
                               PARAM_BINARY((unsigned char*)_result->params[c].buffer, length);
@@ -271,9 +317,13 @@ namespace dbi {
 
         vector<string> fields() {
             check_ready("fields()");
+
             MYSQL_RES *res = mysql_stmt_result_metadata(_stmt);
             MYSQL_FIELD *fields = mysql_fetch_fields(res);
-            for (unsigned int i = 0; i < _cols; i++) _result_fields.push_back(fields[i].name);
+
+            for (unsigned int i = 0; i < _cols; i++)
+                _result_fields.push_back(fields[i].name);
+
             mysql_free_result(res);
             return _result_fields;
         }
@@ -284,33 +334,48 @@ namespace dbi {
 
         bool finish() {
             // free server side resultset, cursor etc.
-            if (_stmt) mysql_stmt_free_result(_stmt);
+            if (_stmt)
+                mysql_stmt_free_result(_stmt);
+
             _rowno = _rows = 0;
             return true;
         }
 
         unsigned char* fetchValue(int r, int c) {
             check_ready("fetchValue()");
+
             mysql_stmt_data_seek(_stmt, r);
-            if (mysql_stmt_fetch(_stmt) != 0) THROW_MYSQL_STMT_ERROR(_stmt);
+            if (mysql_stmt_fetch(_stmt) != 0)
+                THROW_MYSQL_STMT_ERROR(_stmt);
 
             return *_result->params[c].is_null ? 0 : (unsigned char*)_result->params[c].buffer;
         }
 
-        unsigned int currentRow() { return _rowno; }
-        void advanceRow() { _rowno = _rowno <= _rows ? _rowno + 1 : _rowno; }
+        unsigned int currentRow() {
+            return _rowno;
+        }
+
+        void advanceRow() {
+            _rowno = _rowno <= _rows ? _rowno + 1 : _rowno;
+        }
     };
 
     class MySqlHandle : public AbstractHandle {
         protected:
         MYSQL *conn;
         int tr_nesting;
+
         public:
-        MySqlHandle() { tr_nesting = 0; }
+        MySqlHandle() {
+            tr_nesting = 0;
+        }
+
         MySqlHandle(string user, string pass, string dbname, string host, string port) {
             unsigned int _port = atoi(port.c_str());
             tr_nesting = 0;
+
             conn = mysql_init(0);
+
             if(!mysql_real_connect(conn, host.c_str(), user.c_str(), pass.c_str(), dbname.c_str(), _port, 0, 0))
                 throw ConnectionError(mysql_error(conn));
         }
@@ -322,13 +387,15 @@ namespace dbi {
         void cleanup() {
             // This gets called only on dlclose, so the wrapper dbi::Handle
             // closes connections and frees memory.
-            if (conn) mysql_close(conn);
+            if (conn)
+                mysql_close(conn);
             conn = 0;
         }
 
         unsigned int execute(string sql) {
             if (mysql_real_query(conn, sql.c_str(), sql.length()) != 0)
                 throw RuntimeError(mysql_error(conn));
+
             return mysql_affected_rows(conn);
         }
 
@@ -360,7 +427,8 @@ namespace dbi {
         };
 
         bool begin(string name) {
-            if (tr_nesting == 0) begin();
+            if (tr_nesting == 0)
+                begin();
             execute("SAVEPOINT " + name);
             tr_nesting++;
             return true;
@@ -369,14 +437,16 @@ namespace dbi {
         bool commit(string name) {
             execute("RELEASE SAVEPOINT " + name);
             tr_nesting--;
-            if (tr_nesting == 1) commit();
+            if (tr_nesting == 1)
+                commit();
             return true;
         };
 
         bool rollback(string name) {
             execute("ROLLBACK TO SAVEPOINT " + name);
             tr_nesting--;
-            if (tr_nesting == 1) rollback();
+            if (tr_nesting == 1)
+                rollback();
             return true;
         };
 
@@ -397,8 +467,11 @@ using namespace dbi;
 
 extern "C" {
     MySqlHandle* dbdConnect(string user, string pass, string dbname, string host, string port) {
-        if (host == "") host = "127.0.0.1";
-        if (port == "0" || port == "") port = "3306";
+        if (host == "")
+            host = "127.0.0.1";
+        if (port == "0" || port == "")
+            port = "3306";
+
         return new MySqlHandle(user, pass, dbname, host, port);
     }
 

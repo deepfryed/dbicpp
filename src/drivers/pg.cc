@@ -42,6 +42,7 @@ namespace dbi {
         char repl[128];
         string var;
         RE re("(?<!')(%(?:[dsfu]|l[dfu])|\\?)(?!')");
+
         while (re.PartialMatch(query, &var)) {
             for (i = 0; i < (int)(sizeof(typemap)/sizeof(char *)); i += 2) {
                 if (var == typemap[i]) {
@@ -61,6 +62,7 @@ namespace dbi {
     void pgProcessBindParams(const char ***param_v, int **param_l, vector<Param> &bind) {
         *param_v = new const char*[bind.size()];
         *param_l = new int[bind.size()];
+
         for (unsigned int i = 0; i < bind.size(); i++) {
             bool isnull = bind[i].isnull;
             (*param_v)[i] = isnull ? 0 : bind[i].value.data();
@@ -70,12 +72,13 @@ namespace dbi {
 
     class PgStatement : public AbstractStatement {
         private:
-        string sql;
+        string _sql;
         string _uuid;
         PGresult *_result;
         PGconn *conn;
         vector<string> _result_fields;
         unsigned int _rowno, _rows, _cols;
+        ResultRow _rsrow;
 
         void init() {
             _result = 0;
@@ -91,11 +94,14 @@ namespace dbi {
         PgStatement(string query,  PGconn *c) {
             init();
             conn = c;
-            sql = query;
+            _sql = query;
+
             pgPreProcessQuery(query);
             PGresult *result = PQprepare(conn, _uuid.c_str(), query.c_str(), 0, 0);
+
             if (!result) throw RuntimeError("Unable to allocate statement");
-            pgCheckResult(result, sql);
+            pgCheckResult(result, _sql);
+
             PQclear(result);
         }
 
@@ -104,7 +110,7 @@ namespace dbi {
         }
 
         string command() {
-            return sql;
+            return _sql;
         }
 
         void check_ready(string m) {
@@ -119,26 +125,38 @@ namespace dbi {
 
         unsigned int execute() {
             _result_fields.clear();
+
             _result = PQexecPrepared(conn, _uuid.c_str(), 0, 0, 0, 0, 0);
-            pgCheckResult(_result, sql);
+            pgCheckResult(_result, _sql);
+
             _rows = (unsigned int)PQNTUPLES(_result);
             _cols = (unsigned int)PQnfields(_result);
+
+            _rsrow.reserve(_cols);
+
             return _rows;
         }
 
         unsigned int execute(vector<Param> &bind) {
             int *param_l;
             const char **param_v;
+
             _result_fields.clear();
+
             pgProcessBindParams(&param_v, &param_l, bind);
             _result = PQexecPrepared(conn, _uuid.c_str(), bind.size(),
                                        (const char* const *)param_v, (const int*)param_l, 0, 0);
             delete []param_v;
             delete []param_l;
-            pgCheckResult(_result, sql);
+
+            pgCheckResult(_result, _sql);
+
             bind.clear();
             _rows = (unsigned int)PQNTUPLES(_result);
             _cols = (unsigned int)PQnfields(_result);
+
+            _rsrow.reserve(_cols);
+
             return _rows;
         }
 
@@ -150,23 +168,27 @@ namespace dbi {
 
         ResultRow fetchRow() {
             check_ready("fetchRow()");
-            ResultRow rs;
-            rs.reserve(_cols);
+
+            _rsrow.clear();
+
             if (_rowno < _rows) {
                 _rowno++;
                 for (unsigned int i = 0; i < _cols; i++) {
-                    rs.push_back(
+                    _rsrow.push_back(
                         PQgetisnull(_result, _rowno-1, i) ?
                               PARAM(null()) : PARAM(PQgetvalue(_result, _rowno-1, i))
                     );
                 }
             }
-            return rs;
+
+            return _rsrow;
         }
 
         ResultRowHash fetchRowHash() {
             check_ready("fetchRowHash()");
+
             ResultRowHash rs;
+
             if (_rowno < _rows) {
                 _rowno++;
                 if (_result_fields.size() == 0) fields();
@@ -174,12 +196,16 @@ namespace dbi {
                     rs[_result_fields[i]] =
                         PQgetisnull(_result, _rowno-1, i) ? PARAM(null()) : PARAM(PQgetvalue(_result, _rowno-1, i));
             }
+
             return rs;
         }
 
         vector<string> fields() {
             check_ready("fields()");
-            for (unsigned int i = 0; i < _cols; i++) _result_fields.push_back(PQfname(_result, i));
+
+            for (unsigned int i = 0; i < _cols; i++)
+                _result_fields.push_back(PQfname(_result, i));
+
             return _result_fields;
         }
 
@@ -188,9 +214,13 @@ namespace dbi {
         }
 
         bool finish() {
-            _rowno = _rows = _cols = 0;
+            _rowno = 0;
+            _rows  = 0;
+            _cols  = 0;
+
             if (_result) PQclear(_result);
             _result = 0;
+
             return true;
         }
 
@@ -199,8 +229,13 @@ namespace dbi {
             return PQgetisnull(_result, r, c) ? 0 : (unsigned char*)PQgetvalue(_result, r, c);
         }
 
-        unsigned int currentRow() { return _rowno; }
-        void advanceRow() { _rowno = _rowno <= _rows ? _rowno + 1 : _rowno; }
+        unsigned int currentRow() {
+            return _rowno;
+        }
+
+        void advanceRow() {
+            _rowno = _rowno <= _rows ? _rowno + 1 : _rowno;
+        }
     };
 
     class PgHandle : public AbstractHandle {
@@ -212,14 +247,18 @@ namespace dbi {
         PgHandle(string user, string pass, string dbname, string h, string p) {
             tr_nesting = 0;
             string conninfo;
+
             string host = h;
             string port = p;
+
             conninfo += "host='" + host + "' ";
             conninfo += "port='" + port + "' ";
             conninfo += "user='" + user + "' ";
             conninfo += "password='" + pass + "' ";
             conninfo += "dbname='" + dbname + "' ";
+
             conn = PQconnectdb(conninfo.c_str());
+
             if (!conn)
                 throw ConnectionError("Unable to allocate db handle");
             else if (PQstatus(conn) == CONNECTION_BAD)
@@ -233,15 +272,19 @@ namespace dbi {
         void cleanup() {
             // This gets called only on dlclose, so the wrapper dbi::Handle
             // closes connections and frees memory.
-            if (conn) PQfinish(conn);
+            if (conn)
+                PQfinish(conn);
             conn = 0;
         }
 
         unsigned int execute(string sql) {
             unsigned int rows;
+
             PGresult *result = PQexec(conn, sql.c_str());
             pgCheckResult(result, sql);
+
             rows = (unsigned int)PQNTUPLES(result);
+
             PQclear(result);
             return rows;
         }
@@ -250,13 +293,17 @@ namespace dbi {
             int *param_l;
             const char **param_v;
             unsigned int rows;
+
             pgProcessBindParams(&param_v, &param_l, bind);
             PGresult *result = PQexecParams(conn, sql.c_str(), bind.size(),
                                             0, (const char* const *)param_v, param_l, 0, 0);
             delete []param_v;
             delete []param_l;
+
             pgCheckResult(result, sql);
+
             rows = (unsigned int)PQNTUPLES(result);
+
             PQclear(result);
             return rows;
         }
@@ -284,7 +331,8 @@ namespace dbi {
         };
 
         bool begin(string name) {
-            if (tr_nesting == 0) begin();
+            if (tr_nesting == 0)
+                begin();
             execute("SAVEPOINT " + name);
             tr_nesting++;
             return true;
@@ -293,14 +341,16 @@ namespace dbi {
         bool commit(string name) {
             execute("RELEASE SAVEPOINT " + name);
             tr_nesting--;
-            if (tr_nesting == 1) commit();
+            if (tr_nesting == 1)
+                commit();
             return true;
         };
 
         bool rollback(string name) {
             execute("ROLLBACK TO SAVEPOINT " + name);
             tr_nesting--;
-            if (tr_nesting == 1) rollback();
+            if (tr_nesting == 1)
+                rollback();
             return true;
         };
 
@@ -321,8 +371,11 @@ using namespace dbi;
 
 extern "C" {
     PgHandle* dbdConnect(string user, string pass, string dbname, string host, string port) {
-        if (host == "") host = "127.0.0.1";
-        if (port == "0" || port == "") port = "5432";
+        if (host == "")
+            host = "127.0.0.1";
+        if (port == "0" || port == "")
+            port = "5432";
+
         return new PgHandle(user, pass, dbname, host, port);
     }
 
