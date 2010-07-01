@@ -1,6 +1,6 @@
 DBICPP=dbicpp-test
 PQEXEC=pq-test
-ITER=25000
+ITER=20000
 
 bench: $(DBICPP) $(PQEXEC)
 	@echo -n "C libpq    "; time -f 'cpu:%P sys:%S user:%U wall:%E' ./pq-test $(ITER) > /dev/null

@@ -56,8 +56,8 @@ namespace dbi {
         virtual vector<string> fields() = 0;
         virtual unsigned int execute() = 0;
         virtual unsigned int execute(vector<Param> &bind) = 0;
-        virtual ResultRow fetchRow() = 0;
-        virtual ResultRowHash fetchRowHash() = 0;
+        virtual ResultRow& fetchRow() = 0;
+        virtual ResultRowHash& fetchRowHash() = 0;
         virtual bool finish() = 0;
         virtual unsigned char* fetchValue(int, int) = 0;
         virtual string command() = 0;
@@ -131,8 +131,8 @@ namespace dbi {
         Statement& operator,(dbi::null const &e);
         Statement& operator%(dbi::null const &e);
         unsigned int  operator,(dbi::execute const &);
-        ResultRow fetchRow();
-        ResultRowHash fetchRowHash();
+        ResultRow& fetchRow();
+        ResultRowHash& fetchRowHash();
         unsigned int columns();
         vector<string> fields();
         unsigned char* fetchValue(int r, int c);

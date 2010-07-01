@@ -121,6 +121,7 @@ namespace dbi {
         vector<unsigned long> _buffer_lengths;
         unsigned int _rowno, _rows, _cols;
         ResultRow _rsrow;
+        ResultRowHash _rsrowhash;
 
         protected:
 
@@ -241,15 +242,15 @@ namespace dbi {
             return mysql_stmt_insert_id(_stmt);
         }
 
-        ResultRow fetchRow() {
+        ResultRow& fetchRow() {
             int c, rc;
             unsigned long length;
             check_ready("fetchRow()");
+            _rsrow.clear();
 
             if (_rowno < _rows) {
                 _rowno++;
                 _result->clear();
-                _rsrow.clear();
 
                 rc = mysql_stmt_fetch(_stmt);
 
@@ -276,12 +277,12 @@ namespace dbi {
             return _rsrow;
         }
 
-        ResultRowHash fetchRowHash() {
+        ResultRowHash& fetchRowHash() {
             int c, rc;
             unsigned long length;
             check_ready("fetchRowHash()");
 
-            ResultRowHash rs;
+            _rsrowhash.clear();
 
             if (_rowno < _rows) {
                 _rowno++;
@@ -306,13 +307,13 @@ namespace dbi {
                         mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
                     }
 
-                    rs[_result_fields[c]] =
+                    _rsrowhash[_result_fields[c]] =
                         *_result->params[c].is_null ? PARAM(null()) :
                               PARAM_BINARY((unsigned char*)_result->params[c].buffer, length);
                 }
             }
 
-            return rs;
+            return _rsrowhash;
         }
 
         vector<string> fields() {

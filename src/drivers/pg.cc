@@ -5,6 +5,12 @@
 #define DRIVER_NAME     "postgresql"
 #define DRIVER_VERSION  "1.0.1"
 
+typedef unsigned char uchar;
+
+#define PG2PARAM(res, r, c) _result_field_types[c] > 0 ? \
+                            PARAM_BINARY((uchar*)PQgetvalue(res, r, c), PQgetlength(res, r, c)) : \
+                            PARAM(PQgetvalue(res, r, c))
+
 namespace dbi {
 
     const char *typemap[] = {
@@ -77,8 +83,10 @@ namespace dbi {
         PGresult *_result;
         PGconn *conn;
         vector<string> _result_fields;
+        vector<int> _result_field_types;
         unsigned int _rowno, _rows, _cols;
         ResultRow _rsrow;
+        ResultRowHash _rsrowhash;
 
         void init() {
             _result = 0;
@@ -125,6 +133,7 @@ namespace dbi {
 
         unsigned int execute() {
             _result_fields.clear();
+            _result_field_types.clear();
 
             _result = PQexecPrepared(conn, _uuid.c_str(), 0, 0, 0, 0, 0);
             pgCheckResult(_result, _sql);
@@ -133,6 +142,10 @@ namespace dbi {
             _cols = (unsigned int)PQnfields(_result);
 
             _rsrow.reserve(_cols);
+            _result_field_types.reserve(_cols);
+
+            for (int i = 0; i < (int)_cols; i++)
+                _result_field_types.push_back(PQfformat(_result, i));
 
             return _rows;
         }
@@ -142,6 +155,7 @@ namespace dbi {
             const char **param_v;
 
             _result_fields.clear();
+            _result_field_types.clear();
 
             pgProcessBindParams(&param_v, &param_l, bind);
             _result = PQexecPrepared(conn, _uuid.c_str(), bind.size(),
@@ -156,6 +170,10 @@ namespace dbi {
             _cols = (unsigned int)PQnfields(_result);
 
             _rsrow.reserve(_cols);
+            _result_field_types.reserve(_cols);
+
+            for (int i = 0; i < (int)_cols; i++)
+                _result_field_types.push_back(PQfformat(_result, i));
 
             return _rows;
         }
@@ -166,38 +184,35 @@ namespace dbi {
             return r.size() > 0 ? atol(r[0].value.c_str()) : 0;
         }
 
-        ResultRow fetchRow() {
+        ResultRow& fetchRow() {
             check_ready("fetchRow()");
 
             _rsrow.clear();
 
             if (_rowno < _rows) {
                 _rowno++;
-                for (unsigned int i = 0; i < _cols; i++) {
-                    _rsrow.push_back(
-                        PQgetisnull(_result, _rowno-1, i) ?
-                              PARAM(null()) : PARAM(PQgetvalue(_result, _rowno-1, i))
-                    );
-                }
+                for (unsigned int i = 0; i < _cols; i++)
+                    _rsrow.push_back(PQgetisnull(_result, _rowno-1, i) ?
+                        PARAM(null()) : PG2PARAM(_result, _rowno-1, i));
             }
 
             return _rsrow;
         }
 
-        ResultRowHash fetchRowHash() {
+        ResultRowHash& fetchRowHash() {
             check_ready("fetchRowHash()");
 
-            ResultRowHash rs;
+            _rsrowhash.clear();
 
             if (_rowno < _rows) {
                 _rowno++;
                 if (_result_fields.size() == 0) fields();
                 for (unsigned int i = 0; i < _cols; i++)
-                    rs[_result_fields[i]] =
-                        PQgetisnull(_result, _rowno-1, i) ? PARAM(null()) : PARAM(PQgetvalue(_result, _rowno-1, i));
+                    _rsrowhash[_result_fields[i]] = PQgetisnull(_result, _rowno-1, i) ?
+                        PARAM(null()) : PG2PARAM(_result, _rowno-1, i);
             }
 
-            return rs;
+            return _rsrowhash;
         }
 
         vector<string> fields() {
@@ -306,6 +321,49 @@ namespace dbi {
 
             PQclear(result);
             return rows;
+        }
+
+        void asyncExecute(string sql) {
+            if(PQsendQuery(conn, sql.c_str()) == 0)
+                throw RuntimeError(PQerrorMessage(conn) + string(" in query - ") + sql);
+        }
+
+
+        void asyncExecute(string sql, vector<Param> &bind) {
+            int *param_l, rc;
+            const char **param_v;
+            unsigned int rows;
+
+            pgProcessBindParams(&param_v, &param_l, bind);
+            rc = PQsendQueryParams(conn, sql.c_str(), bind.size(),
+                                   0, (const char* const *)param_v, param_l, 0, 0);
+
+            delete []param_v;
+            delete []param_l;
+
+            if (rc == 0)
+                throw RuntimeError(PQerrorMessage(conn) + string(" in query - ") + sql);
+        }
+
+        bool isBusy() {
+            return PQisBusy(conn) ? true : false;
+        }
+
+        bool cancel() {
+            int rc;
+            char error[512];
+
+            PGcancel *cancel = PQgetCancel(conn);
+            if (!cancel)
+                throw RuntimeError("Invalid handle or nothing to cancel");
+
+            rc = PQcancel(cancel, error, 512);
+            PQfreeCancel(cancel);
+
+            if (rc != 1)
+                throw RuntimeError(error);
+            else
+                return true;
         }
 
         PgStatement* prepare(string sql) {

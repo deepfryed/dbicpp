@@ -134,8 +134,8 @@ namespace dbi {
     Statement::Statement(Handle *handle, string sql)         { h = handle->h; st = h->prepare(sql); }
     Statement::~Statement()                                  { finish(); if (st != NULL) { st->cleanup(); delete st; } }
     unsigned int Statement::rows()                           { return st->rows(); }
-    ResultRow Statement::fetchRow()                          { return st->fetchRow(); }
-    ResultRowHash Statement::fetchRowHash()                  { return st->fetchRowHash(); }
+    ResultRow& Statement::fetchRow()                         { return st->fetchRow(); }
+    ResultRowHash& Statement::fetchRowHash()                 { return st->fetchRowHash(); }
     bool Statement::finish()                                 { params.clear(); return st->finish(); }
 
 
