@@ -165,7 +165,7 @@ static VALUE rb_statement_each(VALUE self) {
             VALUE row = rb_hash_new();
             for (c = 0; c < fields.size(); c++) {
                 vptr = (const char*)st->fetchValue(r,c);
-                rb_hash_aset(row, rb_str_new2(fields[c].c_str()), vptr ? rb_str_new2(vptr) : Qnil);
+                rb_hash_aset(row, ID2SYM(rb_intern(fields[c].c_str())), vptr ? rb_str_new2(vptr) : Qnil);
             }
             rb_yield(row);
         }
