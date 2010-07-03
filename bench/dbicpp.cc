@@ -10,11 +10,11 @@ int main(int argc, char *argv[]) {
     max = argc == 2 ? atoi(argv[1]) : 10000;
     Handle h("postgresql", "udbicpp", "", "dbicpp");
 
-    Statement st(h, "SELECT id, name, email FROM users");
+    Statement st(h, "SELECT id, name, email FROM users WHERE id IN (?, ?)");
     ResultRow r;
 
     for (int n = 0; n < max; n++) {
-        st.execute();
+        st % 1L, 2L, execute();
         while ((r = st.fetchRow()).size() > 0)
             printf("%s\t%s\t%s\n", r[0].value.c_str(), r[1].value.c_str(), r[2].value.c_str());
         st.finish();

@@ -44,7 +44,10 @@ h.transaction {
   end
 }
 
-puts "\nSELECT and print results"
-puts "------------------------\n"
+puts "\nSELECT and print results one by one"
+puts "-----------------------------------\n"
 
-st.execute(0) {|r| p r }
+st.execute(0)
+while r = st.next
+   p r
+end

@@ -3,11 +3,13 @@
 namespace dbi {
 
     string ResultRow::join(string delim) {
+        unsigned i;
         stringstream out;
 
         if (size() > 0) {
-            for (unsigned int i = 0; i < size(); i++)
-                out << at(i) << ( (i >= 0 && i < size() - 1) ? delim : "");
+            for (i = 0; i < size() - 1; i++)
+                out << at(i) << delim;
+            out << at(size()-1);
         }
 
         return out.str();

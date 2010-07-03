@@ -35,7 +35,7 @@ namespace dbi {
             case PGRES_BAD_RESPONSE:
             case PGRES_FATAL_ERROR:
             case PGRES_NONFATAL_ERROR:
-                throw RuntimeError(PQresultErrorMessage(result) + string(" - in query: ") + sql);
+                throw RuntimeError(PQresultErrorMessage(result));
                 break;
             default:
                 throw RuntimeError("Unknown error, check logs." + string(" - in query: ") + sql);

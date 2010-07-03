@@ -34,9 +34,9 @@ class Connection < PGconn
 end
 
 conn = Connection.connect "host=127.0.0.1 dbname=dbicpp user=udbicpp"
-st = conn.prepare "query_bench", "SELECT id, name, email FROM users"
+st = conn.prepare "query_bench", "SELECT id, name, email FROM users WHERE id IN ($1, $2)"
 (ARGV[0] || 10000).to_i.times do
-  st.execute
+  st.execute(1,2)
   while r = st.fetchrow
     puts r.join("\t")
   end

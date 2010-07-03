@@ -143,8 +143,8 @@ namespace dbi {
     Statement Handle::operator<<(string sql)                 { return Statement(h->prepare(sql)); }
     Statement& Statement::operator,(string v)                { bind(PARAM(v)); return *this; }
     Statement& Statement::operator%(string v)                { bind(PARAM(v)); return *this; }
-    Statement& Statement::operator,(long   v)                { bind(v); return *this; }
-    Statement& Statement::operator%(long   v)                { bind(v); return *this; }
+    Statement& Statement::operator,(long v)                  { bind(v); return *this; }
+    Statement& Statement::operator%(long v)                  { bind(v); return *this; }
     Statement& Statement::operator,(double v)                { bind(v); return *this; }
     Statement& Statement::operator%(double v)                { bind(v); return *this; }
     Statement& Statement::operator,(dbi::null const &e)      { bind(PARAM(e)); return *this; }

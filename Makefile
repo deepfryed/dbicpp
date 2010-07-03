@@ -6,7 +6,7 @@ LIBDIR=libs
 INCDIR=inc
 CFLAGS=-ggdb -Wunused-function -Wunused-value -Wunused-label -I$(INCDIR) -O3 -fPIC
 
-DBILIB_SFILES=dbic++.cc container.cc param.cc
+DBILIB_SFILES=dbic++.cc container.cc param.cc error.cc
 DBILIB_OFILES=$(DBILIB_SFILES:.cc=.o)
 DBILIB_SOURCES=$(patsubst %,$(SRCDIR)/%,$(DBILIB_SFILES))
 DBILIB_OBJECTS=$(patsubst %,$(OBJDIR)/%,$(DBILIB_OFILES))
