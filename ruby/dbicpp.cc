@@ -37,7 +37,8 @@ static void free_connection(dbi::Handle *self) {
 static void free_statement(dbi::Statement *self) {
     VALUE attrs = fieldset[self];
     fieldset.erase(self);
-    rb_gc_force_recycle(attrs);
+    if ((void*)attrs != 0)
+        rb_gc_force_recycle(attrs);
     delete self;
 }
 
@@ -193,6 +194,8 @@ VALUE rb_statement_execute(int argc, VALUE *argv, VALUE self) {
         for (int c = 0; c < fields.size(); c++) {
             rb_ary_push(attrs, ID2SYM(rb_intern(fields[c].c_str())));
         }
+        VALUE _old = fieldset[st];
+        if ((void *)_old != 0) rb_gc_force_recycle(_old);
         fieldset[st] = attrs;
         rb_gc_mark(attrs);
     } catch EXCEPTION("Runtime");

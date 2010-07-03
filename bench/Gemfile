@@ -1,0 +1,6 @@
+bundle_path '.gems'
+disable_rubygems
+disable_system_gems
+
+gem 'do_mysql'
+gem 'mysql2'

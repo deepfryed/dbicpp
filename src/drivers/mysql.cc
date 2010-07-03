@@ -317,15 +317,13 @@ namespace dbi {
         }
 
         vector<string> fields() {
-            check_ready("fields()");
-
             MYSQL_RES *res = mysql_stmt_result_metadata(_stmt);
-            MYSQL_FIELD *fields = mysql_fetch_fields(res);
-
-            for (unsigned int i = 0; i < _cols; i++)
-                _result_fields.push_back(fields[i].name);
-
-            mysql_free_result(res);
+            if (res) {
+                MYSQL_FIELD *fields = mysql_fetch_fields(res);
+                for (unsigned int i = 0; i < _cols; i++)
+                    _result_fields.push_back(fields[i].name);
+                mysql_free_result(res);
+            }
             return _result_fields;
         }
 

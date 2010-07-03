@@ -4,7 +4,7 @@ require_relative '../ruby/dbicpp'
 
 DBI.init File.dirname(__FILE__) + '/../libs'
 
-h = DBI::Handle.new user: 'udbicpp', db: 'dbicpp', driver: 'postgresql'
+h = DBI::Handle.new user: 'udbicpp', db: 'dbicpp', driver: ARGV[0] || 'postgresql'
 
 h.execute "DROP TABLE IF EXISTS users"
 h.execute "CREATE TABLE users (id serial, name text, email text)"

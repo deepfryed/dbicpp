@@ -9,3 +9,7 @@ bench/*-test
 !ruby/*.cc
 !ruby/*.rb
 ruby/*
+!bench/.gems/ruby
+bench/.gems/ruby/*/*
+bench/.gems/env*
+!bench/.gems/ruby/*/cache
