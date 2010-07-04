@@ -18,6 +18,8 @@ static VALUE fStringify;
 
 std::map<dbi::Statement*, VALUE> fieldset;
 
+static VALUE rb_statement_each(VALUE self);
+
 static dbi::Handle* DBI_HANDLE(VALUE self) {
     dbi::Handle *h;
     Data_Get_Struct(self, dbi::Handle, h);
@@ -161,23 +163,6 @@ VALUE rb_statement_new(VALUE klass, VALUE hl, VALUE sql) {
     return rv;
 }
 
-static VALUE rb_statement_each(VALUE self) {
-    unsigned int r, c;
-    const char *vptr;
-    dbi::Statement *st = DBI_STATEMENT(self);
-    VALUE attrs = fieldset[st];
-    try {
-        VALUE row = rb_hash_new();
-        for (r = 0; r < st->rows(); r++) {
-            for (c = 0; c < st->columns(); c++) {
-                vptr = (const char*)st->fetchValue(r,c);
-                rb_hash_aset(row, rb_ary_entry(attrs, c), vptr ? rb_str_new2(vptr) : Qnil);
-            }
-            rb_yield(row);
-        }
-    } catch EXCEPTION("Runtime");
-}
-
 VALUE rb_statement_execute(int argc, VALUE *argv, VALUE self) {
     dbi::Statement *st = DBI_STATEMENT(self);
     try {
@@ -204,11 +189,35 @@ VALUE rb_statement_execute(int argc, VALUE *argv, VALUE self) {
     return self;
 }
 
+VALUE rb_statement_finish(VALUE self) {
+    dbi::Statement *st = DBI_STATEMENT(self);
+    try {
+        st->finish();
+    } catch EXCEPTION("Runtime");
+}
+
 VALUE rb_statement_rows(VALUE self) {
     unsigned int rows;
     dbi::Statement *st = DBI_STATEMENT(self);
     try { rows = st->rows(); } catch EXCEPTION("Runtime");
     return INT2NUM(rows);
+}
+
+static VALUE rb_statement_each(VALUE self) {
+    unsigned int r, c;
+    const char *vptr;
+    dbi::Statement *st = DBI_STATEMENT(self);
+    VALUE attrs = fieldset[st];
+    try {
+        VALUE row = rb_hash_new();
+        for (r = 0; r < st->rows(); r++) {
+            for (c = 0; c < st->columns(); c++) {
+                vptr = (const char*)st->fetchValue(r,c);
+                rb_hash_aset(row, rb_ary_entry(attrs, c), vptr ? rb_str_new2(vptr) : Qnil);
+            }
+            rb_yield(row);
+        }
+    } catch EXCEPTION("Runtime");
 }
 
 VALUE rb_statement_fetchrow(VALUE self) {
@@ -302,6 +311,7 @@ extern "C" {
         rb_define_method(cStatement, "rows",     RUBY_METHOD_FUNC(rb_statement_rows), 0);
         rb_define_method(cStatement, "fetchrow", RUBY_METHOD_FUNC(rb_statement_fetchrow), 0);
         rb_define_method(cStatement, "next",     RUBY_METHOD_FUNC(rb_statement_next), 0);
+        rb_define_method(cStatement, "finish",   RUBY_METHOD_FUNC(rb_statement_finish), 0);
 
         rb_include_module(cStatement, CONST_GET(rb_mKernel, "Enumerable"));
 

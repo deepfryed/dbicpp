@@ -134,6 +134,7 @@ namespace dbi {
         unsigned int execute() {
             _result_fields.clear();
             _result_field_types.clear();
+            finish();
 
             _result = PQexecPrepared(conn, _uuid.c_str(), 0, 0, 0, 0, 0);
             pgCheckResult(_result, _sql);
@@ -156,6 +157,7 @@ namespace dbi {
 
             _result_fields.clear();
             _result_field_types.clear();
+            finish();
 
             pgProcessBindParams(&param_v, &param_l, bind);
             _result = PQexecPrepared(conn, _uuid.c_str(), bind.size(),

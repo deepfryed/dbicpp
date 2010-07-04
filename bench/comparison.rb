@@ -32,15 +32,7 @@ Benchmark.bm(14) do |bm|
       res.each {|r| $stderr.puts r.inspect }
     end
   end
-  bm.report("dbicpp#next") do
-    n.times do
-      dbicpp_sth.execute
-      while r = dbicpp_sth.next
-        $stderr.puts r.inspect
-      end
-    end
-  end
-  bm.report("dbicpp#each") do
+  bm.report("dbicpp") do
     n.times do
       dbicpp_sth.execute {|r| $stderr.puts r.inspect }
     end

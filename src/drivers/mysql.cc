@@ -213,6 +213,7 @@ namespace dbi {
 
         unsigned int execute() {
             _result_fields.clear();
+            finish();
 
             if (mysql_stmt_execute(_stmt) != 0)
                 THROW_MYSQL_STMT_ERROR(_stmt);
@@ -223,6 +224,7 @@ namespace dbi {
 
         unsigned int execute(vector<Param> &bind) {
             _result_fields.clear();
+            finish();
 
             MySqlBind _bind(bind.size(), MYSQL_BIND_RO);
             mysqlProcessBindParams(_bind.params, bind);
