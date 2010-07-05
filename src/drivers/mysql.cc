@@ -77,13 +77,6 @@ namespace dbi {
             }
         }
 
-        void clear() {
-            if (!ro_buffer) {
-                for (int i = 0; i < count; i++)
-                    memset(params[i].buffer, 0, params[i].buffer_length);
-            }
-        }
-
         private:
         void allocateBindParams() {
             params = new MYSQL_BIND[count];
@@ -254,7 +247,6 @@ namespace dbi {
 
             if (_rowno < _rows) {
                 _rowno++;
-                _result->clear();
 
                 rc = mysql_stmt_fetch(_stmt);
 
@@ -275,6 +267,7 @@ namespace dbi {
                         *_result->params[c].is_null ? PARAM(null()) :
                               PARAM_BINARY((unsigned char*)_result->params[c].buffer, length)
                     );
+                    _rsrow.push_back(PARAM(null()));
                 }
             }
 
@@ -293,8 +286,6 @@ namespace dbi {
 
                 if (_result_fields.size() == 0)
                     fields();
-
-                _result->clear();
 
                 rc = mysql_stmt_fetch(_stmt);
 
@@ -344,13 +335,14 @@ namespace dbi {
             return true;
         }
 
-        unsigned char* fetchValue(int r, int c) {
+        unsigned char* fetchValue(int r, int c, unsigned long *l = 0) {
             check_ready("fetchValue()");
 
             mysql_stmt_data_seek(_stmt, r);
             if (mysql_stmt_fetch(_stmt) != 0)
                 THROW_MYSQL_STMT_ERROR(_stmt);
 
+            if (l) *l = *(_result->params[c].length);
             return *_result->params[c].is_null ? 0 : (unsigned char*)_result->params[c].buffer;
         }
 

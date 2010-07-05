@@ -185,12 +185,12 @@ namespace dbi {
         return st->columns();
     }
 
-    unsigned char* Statement::fetchValue(int r, int c) {
-        return st->fetchValue(r, c);
+    unsigned char* Statement::fetchValue(int r, int c, unsigned long *l = 0) {
+        return st->fetchValue(r, c, l);
     }
 
     unsigned char* Statement::operator()(int r, int c) {
-        return st->fetchValue(r, c);
+        return st->fetchValue(r, c, 0);
     }
 
     unsigned int Statement::currentRow() {
@@ -242,9 +242,12 @@ namespace dbi {
     }
 
     unsigned int Statement::operator,(dbi::execute const &e) {
+        unsigned int rc;
         if (_trace)
             logMessage(_trace_fd, formatParams(st->command(), params));
-        return st->execute(params);
+        rc = st->execute(params);
+        params.clear();
+        return rc;
     }
 
     unsigned long Statement::lastInsertID() {

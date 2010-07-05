@@ -59,7 +59,7 @@ namespace dbi {
         virtual ResultRow& fetchRow() = 0;
         virtual ResultRowHash& fetchRowHash() = 0;
         virtual bool finish() = 0;
-        virtual unsigned char* fetchValue(int, int) = 0;
+        virtual unsigned char* fetchValue(int, int, unsigned long*) = 0;
         virtual string command() = 0;
         virtual unsigned int currentRow() = 0;
         virtual void advanceRow() = 0;
@@ -135,7 +135,7 @@ namespace dbi {
         ResultRowHash& fetchRowHash();
         unsigned int columns();
         vector<string> fields();
-        unsigned char* fetchValue(int r, int c);
+        unsigned char* fetchValue(int r, int c, unsigned long*);
         unsigned char* operator()(int r, int c);
         unsigned int currentRow();
         void advanceRow();

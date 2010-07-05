@@ -22,5 +22,5 @@ end
 
 Dir["lib/*.rb"].each {|file| require file }
 
-Benchmarks.run :mysql,      "SELECT SQL_NO_CACHE * FROM users WHERE id IN (?, ?, ?, ?, ?)", 20000, 1, 2, 3, 4, 5
-#Benchmarks.run :postgresql, "SELECT              * FROM users WHERE id IN (?, ?, ?, ?, ?)", 20000, 1, 2, 3, 4, 5
+Benchmarks.run :mysql,      "SELECT SQL_NO_CACHE * FROM users", 5000
+Benchmarks.run :postgresql, "SELECT              * FROM users", 5000

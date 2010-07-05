@@ -242,8 +242,9 @@ namespace dbi {
             return true;
         }
 
-        unsigned char* fetchValue(int r, int c) {
+        unsigned char* fetchValue(int r, int c, unsigned long *l = 0) {
             check_ready("fetchValue()");
+            if (l) *l = PQgetlength(_result, r, c);
             return PQgetisnull(_result, r, c) ? 0 : (unsigned char*)PQgetvalue(_result, r, c);
         }
 

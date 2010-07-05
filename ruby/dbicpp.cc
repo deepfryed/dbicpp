@@ -190,6 +190,7 @@ VALUE rb_statement_rows(VALUE self) {
 
 static VALUE rb_statement_each(VALUE self) {
     unsigned int r, c;
+    unsigned long l;
     const char *vptr;
     dbi::Statement *st = DBI_STATEMENT(self);
     try {
@@ -201,8 +202,8 @@ static VALUE rb_statement_each(VALUE self) {
         }
         for (r = 0; r < st->rows(); r++) {
             for (c = 0; c < st->columns(); c++) {
-                vptr = (const char*)st->fetchValue(r,c);
-                rb_hash_aset(row, rb_ary_entry(attrs, c), vptr ? rb_str_new2(vptr) : Qnil);
+                vptr = (const char*)st->fetchValue(r,c, &l);
+                rb_hash_aset(row, rb_ary_entry(attrs, c), vptr ? rb_str_new(vptr, l) : Qnil);
             }
             rb_yield(row);
         }
@@ -212,6 +213,7 @@ static VALUE rb_statement_each(VALUE self) {
 VALUE rb_statement_fetchrow(VALUE self) {
     const char *vptr;
     unsigned int r, c;
+    unsigned long l;
     VALUE row = Qnil;
     dbi::Statement *st = DBI_STATEMENT(self);
     try {
@@ -219,8 +221,8 @@ VALUE rb_statement_fetchrow(VALUE self) {
         if (r < st->rows()) {
             row = rb_ary_new();
             for (c = 0; c < st->columns(); c++) {
-                vptr = (const char*)st->fetchValue(r, c);
-                rb_ary_push(row, vptr ? rb_str_new2(vptr) : Qnil);
+                vptr = (const char*)st->fetchValue(r, c, &l);
+                rb_ary_push(row, vptr ? rb_str_new(vptr, l) : Qnil);
             }
             st->advanceRow();
         }

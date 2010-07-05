@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     Statement st(h, sql);
     ResultRow r;
 
-    for (long n = 0; n < max_iter; n++) {
+    for (int n = 0; n < max_iter; n++) {
         st.execute(bind);
         while ((r = st.fetchRow()).size() > 0)
             printf("%s\t%s\t%s\n", r[0].value.c_str(), r[1].value.c_str(), r[2].value.c_str());
