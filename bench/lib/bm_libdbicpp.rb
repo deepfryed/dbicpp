@@ -6,7 +6,7 @@ class Benchmarks
 
     def initialize driver, sql
       @driver, @sql = driver, sql
-      @exec = File.dirname(__FILE__) + '/../dbicpp'
+      @exec = File.dirname(__FILE__) + '/../bin/dbicpp'
     end
 
     def run n, *args

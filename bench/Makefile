@@ -1,17 +1,20 @@
-DBICPP=dbicpp
-PQEXEC=pq
+DBICPP_SRC=src/dbicpp.cc
+PQ_SRC=src/pq.cc
 
-all: $(DBICPP) $(PQEXEC)
+DBICPP_EXEC=bin/dbicpp
+PQ_EXEC=bin/pq
 
-$(DBICPP) : $(DBICPP).cc Makefile
-	g++ -O3 -o $(DBICPP) -rdynamic -I../inc -L../libs $(DBICPP).cc -lpcrecpp -luuid -ldl -ldbic++ -lpq
+all: $(DBICPP_EXEC) $(PQ_EXEC)
 
-$(PQEXEC) : $(PQEXEC).cc Makefile
-	g++ -O3 -o $(PQEXEC) $(PQEXEC).cc -I /usr/include/postgresql -lpq -lpcrecpp
+$(DBICPP_EXEC) : $(DBICPP_SRC) Makefile
+	g++ -O3 -o $(DBICPP_EXEC) -rdynamic -I../inc -L../libs $(DBICPP_SRC) -lpcrecpp -luuid -ldl -ldbic++ -lpq
+
+$(PQ_EXEC) : $(PQEXEC_SRC) Makefile
+	g++ -O3 -o $(PQ_EXEC) $(PQ_SRC) -I /usr/include/postgresql -lpq -lpcrecpp
 
 clean: rm all
-	./insert_data.rb mysql 50
-	./insert_data.rb postgresql 50
+	./setup.rb mysql 500
+	./setup.rb postgresql 500
 
 rm:
-	rm -f pq dbicpp
+	rm -f bin/*

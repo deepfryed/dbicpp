@@ -4,7 +4,7 @@ libs
 !libs/.keepthis
 *.o
 example
-bench/*-test
+bench/bin/*
 !ruby/*.c
 !ruby/*.cc
 !ruby/*.rb
