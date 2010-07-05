@@ -51,7 +51,9 @@ class Benchmarks
     end
 
     def run n, *args
-      n.times { @sth.execute(*args) {|r| r } }
+      open("/dev/null", "w") do |fh|
+        n.times { @sth.execute(*args) {|r| fh.puts r.inspect } }
+      end
     end
 
     def self.name

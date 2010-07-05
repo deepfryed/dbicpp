@@ -12,8 +12,10 @@ class Benchmarks
     end
 
     def run n, *args
-      n.times do
-        @sth.execute_reader(*args).each {|r| r }
+      open("/dev/null", "w") do |fh|
+        n.times do
+          @sth.execute_reader(*args).each {|r| fh.puts "#{r['id']} #{r['name']} #{r['email']}" }
+        end
       end
     end
 

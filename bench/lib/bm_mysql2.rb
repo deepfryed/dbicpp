@@ -11,8 +11,10 @@ class Benchmarks
 
     def run n, *args
       sql = process_command(sql, args)
-      n.times do
-        @h.query(sql).each {|r| r }
+      open("/dev/null", "w") do |fh|
+        n.times do
+          @h.query(sql).each {|r| fh.puts "#{r['id']} #{r['name']} #{r['email']}" }
+        end
       end
     end
 
