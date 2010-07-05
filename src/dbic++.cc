@@ -227,9 +227,12 @@ namespace dbi {
     }
 
     unsigned int Statement::execute() {
+        unsigned int rc;
         if (_trace)
             logMessage(_trace_fd, formatParams(st->command(), params));
-        return st->execute(params);
+        rc = st->execute(params);
+        params.clear();
+        return rc;
     }
 
     unsigned int Statement::execute(ResultRow &bind) {

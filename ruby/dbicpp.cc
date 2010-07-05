@@ -16,8 +16,6 @@ static VALUE fStringify;
 #define CSTRING(v) RSTRING_PTR(TYPE(v) == T_STRING ? v : rb_funcall(v, fStringify, 0))
 #define EXCEPTION(type) (std::exception &e) { rb_raise(eRuntimeError, "%s Error: %s", type, e.what()); }
 
-std::map<dbi::Statement*, VALUE> fieldset;
-
 static VALUE rb_statement_each(VALUE self);
 
 static dbi::Handle* DBI_HANDLE(VALUE self) {
@@ -37,10 +35,6 @@ static void free_connection(dbi::Handle *self) {
 }
 
 static void free_statement(dbi::Statement *self) {
-    VALUE attrs = fieldset[self];
-    fieldset.erase(self);
-    if ((void*)attrs != 0)
-        rb_gc_force_recycle(attrs);
     delete self;
 }
 
@@ -174,15 +168,6 @@ VALUE rb_statement_execute(int argc, VALUE *argv, VALUE self) {
             rb_extract_bind_params(argc, argv, bind);
             st->execute(bind);
         }
-        VALUE attrs = rb_ary_new();
-        std::vector<string> fields = st->fields();
-        for (int c = 0; c < fields.size(); c++) {
-            rb_ary_push(attrs, ID2SYM(rb_intern(fields[c].c_str())));
-        }
-        VALUE _old = fieldset[st];
-        if ((void *)_old != 0) rb_gc_force_recycle(_old);
-        fieldset[st] = attrs;
-        rb_gc_mark(attrs);
     } catch EXCEPTION("Runtime");
 
     if (rb_block_given_p()) return rb_statement_each(self);
@@ -207,9 +192,13 @@ static VALUE rb_statement_each(VALUE self) {
     unsigned int r, c;
     const char *vptr;
     dbi::Statement *st = DBI_STATEMENT(self);
-    VALUE attrs = fieldset[st];
     try {
         VALUE row = rb_hash_new();
+        VALUE attrs = rb_ary_new();
+        std::vector<string> fields = st->fields();
+        for (c = 0; c < fields.size(); c++) {
+            rb_ary_push(attrs, ID2SYM(rb_intern(fields[c].c_str())));
+        }
         for (r = 0; r < st->rows(); r++) {
             for (c = 0; c < st->columns(); c++) {
                 vptr = (const char*)st->fetchValue(r,c);
@@ -232,27 +221,6 @@ VALUE rb_statement_fetchrow(VALUE self) {
             for (c = 0; c < st->columns(); c++) {
                 vptr = (const char*)st->fetchValue(r, c);
                 rb_ary_push(row, vptr ? rb_str_new2(vptr) : Qnil);
-            }
-            st->advanceRow();
-        }
-    } catch EXCEPTION("Runtime");
-
-    return row;
-}
-
-static VALUE rb_statement_next(VALUE self) {
-    unsigned int r, c;
-    const char *vptr;
-    VALUE row = Qnil;
-    dbi::Statement *st = DBI_STATEMENT(self);
-    VALUE attrs = fieldset[st];
-    try {
-        r = st->currentRow();
-        if (r < st->rows()) {
-            row = rb_hash_new();
-            for (c = 0; c < st->columns(); c++) {
-                vptr = (const char*)st->fetchValue(r,c);
-                rb_hash_aset(row, rb_ary_entry(attrs, c), vptr ? rb_str_new2(vptr) : Qnil);
             }
             st->advanceRow();
         }
@@ -310,10 +278,8 @@ extern "C" {
         rb_define_method(cStatement, "each",     RUBY_METHOD_FUNC(rb_statement_each), 0);
         rb_define_method(cStatement, "rows",     RUBY_METHOD_FUNC(rb_statement_rows), 0);
         rb_define_method(cStatement, "fetchrow", RUBY_METHOD_FUNC(rb_statement_fetchrow), 0);
-        rb_define_method(cStatement, "next",     RUBY_METHOD_FUNC(rb_statement_next), 0);
         rb_define_method(cStatement, "finish",   RUBY_METHOD_FUNC(rb_statement_finish), 0);
 
         rb_include_module(cStatement, CONST_GET(rb_mKernel, "Enumerable"));
-
     }
 }

@@ -6,7 +6,10 @@
 #define DRIVER_NAME     "mysql"
 #define DRIVER_VERSION  "1.0.1"
 
-#define THROW_MYSQL_STMT_ERROR(s) {string _err(mysql_stmt_error(s)); throw RuntimeError(_err + " - in query: " + _sql);}
+#define THROW_MYSQL_STMT_ERROR(s) {\
+    fprintf(stderr, "In SQL: %s\n\n", _sql.c_str());\
+    throw RuntimeError(mysql_stmt_error(s));\
+}
 
 namespace dbi {
 
@@ -236,7 +239,6 @@ namespace dbi {
                 THROW_MYSQL_STMT_ERROR(_stmt);
             _rows = bindResultAndGetAffectedRows();
 
-            bind.clear();
             return _rows;
         }
 

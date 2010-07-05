@@ -5,7 +5,7 @@ require 'mkmf'
 Config::CONFIG['CC']  = 'g++'
 Config::CONFIG['CPP'] = 'g++'
 
-$CFLAGS  = '-I../inc -fPIC'
+$CFLAGS  = '-I../inc -fPIC -O3'
 $LDFLAGS = '-L../libs -ldbic++'
 
 def apt_install_hint pkg

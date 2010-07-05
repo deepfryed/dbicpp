@@ -35,10 +35,12 @@ namespace dbi {
             case PGRES_BAD_RESPONSE:
             case PGRES_FATAL_ERROR:
             case PGRES_NONFATAL_ERROR:
+                fprintf(stderr, "In SQL: %s\n\n", sql.c_str());
                 throw RuntimeError(PQresultErrorMessage(result));
                 break;
             default:
-                throw RuntimeError("Unknown error, check logs." + string(" - in query: ") + sql);
+                fprintf(stderr, "In SQL: %s\n\n", sql.c_str());
+                throw RuntimeError("Unknown error, check logs.");
         }
     }
 
@@ -167,7 +169,6 @@ namespace dbi {
 
             pgCheckResult(_result, _sql);
 
-            bind.clear();
             _rows = (unsigned int)PQNTUPLES(_result);
             _cols = (unsigned int)PQnfields(_result);
 

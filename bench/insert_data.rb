@@ -11,4 +11,6 @@ h.execute "CREATE TABLE users (id serial, name text, email text)"
 
 st = h.prepare "INSERT INTO users (name, email) VALUES (?, ?)"
 
-500.times {|n| st.execute("Username #{n}", "email_#{n}@example.com") }
+size = (ARGV[1] || 500).to_i
+
+size.times {|n| st.execute("Username #{n}", "email_#{n}@example.com") }
