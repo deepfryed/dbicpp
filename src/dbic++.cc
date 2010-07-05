@@ -94,7 +94,7 @@ namespace dbi {
 
     void init_and_check(string driver_name) {
         if (!drivers.size()) {
-            dbiInitialize("./libs");
+            dbiInitialize("./lib/dbic++");
             dbiInitialize();
         }
 

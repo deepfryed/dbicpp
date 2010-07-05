@@ -13,3 +13,10 @@ ruby/*
 bench/.gems/ruby/*/*
 bench/.gems/env*
 !bench/.gems/ruby/*/cache
+cmake_install.cmake
+CMakeFiles/
+CMakeCache.txt
+*.so*
+*.a
+cmake_*
+install_manifest*

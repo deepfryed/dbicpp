@@ -18,7 +18,7 @@ namespace dbi {
 #include "dbic++/error.h"
 #include "dbic++/container.h"
 
-#define DEFAULT_DRIVER_PATH "/usr/lib/dbi++"
+#define DEFAULT_DRIVER_PATH "/usr/lib/dbic++"
 #define OPTIONAL_ARG(a, v) a ? a : v
 
 namespace dbi {

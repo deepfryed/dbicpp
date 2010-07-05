@@ -6,7 +6,7 @@ Config::CONFIG['CC']  = 'g++'
 Config::CONFIG['CPP'] = 'g++'
 
 $CFLAGS  = '-I../inc -fPIC -O3'
-$LDFLAGS = '-L../libs -ldbic++'
+$LDFLAGS = '-L../lib -ldbic++'
 
 def apt_install_hint pkg
   "sudo apt-get install #{pkg}"
