@@ -51,6 +51,14 @@ int main(int argc, char *argv[]) {
                 printf("%s\t", row[c].value.c_str());
             printf("\n");
         }
+
+        // Speed: fetchValue() > fetchRow() > fetchRowHash()
+        /*for (r = 0; r < rows; r++) {
+            for (c = 0; c < cols; c++) {
+                printf("%s\t", st.fetchValue(r, c , 0));
+            }
+            printf("\n");
+        }*/
         st.finish();
     }
 }

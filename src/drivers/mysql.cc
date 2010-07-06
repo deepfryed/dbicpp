@@ -113,7 +113,7 @@ namespace dbi {
         MYSQL *_conn;
         MYSQL_STMT *_stmt;
         MySqlBind *_result;
-        vector<string> _result_fields;
+        vector<string> _rsfields;
         vector<unsigned long> _buffer_lengths;
         unsigned int _rowno, _rows, _cols;
         ResultRow _rsrow;
@@ -181,6 +181,10 @@ namespace dbi {
 
             _buffer_lengths.reserve(_cols);
             _rsrow.reserve(_cols);
+            if (_stmt->fields) {
+                for (int i = 0; i < (int)_cols; i++)
+                    _rsfields.push_back(_stmt->fields[i].name);
+            }
         }
 
         void cleanup() {
@@ -208,7 +212,6 @@ namespace dbi {
         }
 
         unsigned int execute() {
-            _result_fields.clear();
             finish();
 
             if (mysql_stmt_execute(_stmt) != 0)
@@ -219,7 +222,6 @@ namespace dbi {
         }
 
         unsigned int execute(vector<Param> &bind) {
-            _result_fields.clear();
             finish();
 
             MySqlBind _bind(bind.size(), MYSQL_BIND_RO);
@@ -282,9 +284,6 @@ namespace dbi {
             if (_rowno < _rows) {
                 _rowno++;
 
-                if (_result_fields.size() == 0)
-                    fields();
-
                 rc = mysql_stmt_fetch(_stmt);
 
                 if (rc != 0 && rc != MYSQL_DATA_TRUNCATED)
@@ -292,7 +291,7 @@ namespace dbi {
 
                 for (c = 0; c < _cols; c++) {
                     if (*_result->params[c].is_null) {
-                        _rsrowhash[_result_fields[c]] = PARAM(null());
+                        _rsrowhash[_rsfields[c]] = PARAM(null());
                     }
                     else {
                         length = *(_result->params[c].length);
@@ -301,7 +300,7 @@ namespace dbi {
                                 _result->reallocateBindParam(c, length);
                             mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
                         }
-                        _rsrowhash[_result_fields[c]] =
+                        _rsrowhash[_rsfields[c]] =
                               PARAM_BINARY((unsigned char*)_result->params[c].buffer, length);
                     }
                 }
@@ -311,14 +310,7 @@ namespace dbi {
         }
 
         vector<string> fields() {
-            MYSQL_RES *res = mysql_stmt_result_metadata(_stmt);
-            if (res) {
-                MYSQL_FIELD *fields = mysql_fetch_fields(res);
-                for (unsigned int i = 0; i < _cols; i++)
-                    _result_fields.push_back(fields[i].name);
-                mysql_free_result(res);
-            }
-            return _result_fields;
+            return _rsfields;
         }
 
         unsigned int columns() {

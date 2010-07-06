@@ -7,9 +7,14 @@
 
 typedef unsigned char uchar;
 
-#define PG2PARAM(res, r, c) _result_field_types[c] > 0 ? \
+#define PG2PARAM(res, r, c) PARAM_BINARY((uchar*)PQgetvalue(res, r, c), PQgetlength(res, r, c))
+
+/*
+
+#define PG2PARAM(res, r, c) _rsfield_types[c] > 0 ? \
                             PARAM_BINARY((uchar*)PQgetvalue(res, r, c), PQgetlength(res, r, c)) : \
                             PARAM(PQgetvalue(res, r, c))
+*/
 
 namespace dbi {
 
@@ -84,8 +89,8 @@ namespace dbi {
         string _uuid;
         PGresult *_result;
         PGconn *conn;
-        vector<string> _result_fields;
-        vector<int> _result_field_types;
+        vector<string> _rsfields;
+        vector<int> _rsfield_types;
         unsigned int _rowno, _rows, _cols;
         ResultRow _rsrow;
         ResultRowHash _rsrowhash;
@@ -102,6 +107,8 @@ namespace dbi {
         PgStatement() {}
         ~PgStatement() { cleanup(); }
         PgStatement(string query,  PGconn *c) {
+            int i;
+
             init();
             conn = c;
             _sql = query;
@@ -111,7 +118,17 @@ namespace dbi {
 
             if (!result) throw RuntimeError("Unable to allocate statement");
             pgCheckResult(result, _sql);
+            PQclear(result);
 
+            result = PQdescribePrepared(conn, _uuid.c_str());
+            _cols  = (unsigned int)PQnfields(result);
+
+            for (i = 0; i < (int)_cols; i++)
+                _rsfields.push_back(PQfname(result, i));
+            for (i = 0; i < (int)_cols; i++)
+                _rsfield_types.push_back(PQfformat(result, i));
+
+            _rsrow.reserve(_cols);
             PQclear(result);
         }
 
@@ -134,22 +151,12 @@ namespace dbi {
         }
 
         unsigned int execute() {
-            _result_fields.clear();
-            _result_field_types.clear();
             finish();
 
             _result = PQexecPrepared(conn, _uuid.c_str(), 0, 0, 0, 0, 0);
             pgCheckResult(_result, _sql);
 
             _rows = (unsigned int)PQNTUPLES(_result);
-            _cols = (unsigned int)PQnfields(_result);
-
-            _rsrow.reserve(_cols);
-            _result_field_types.reserve(_cols);
-
-            for (int i = 0; i < (int)_cols; i++)
-                _result_field_types.push_back(PQfformat(_result, i));
-
             return _rows;
         }
 
@@ -157,8 +164,6 @@ namespace dbi {
             int *param_l;
             const char **param_v;
 
-            _result_fields.clear();
-            _result_field_types.clear();
             finish();
 
             pgProcessBindParams(&param_v, &param_l, bind);
@@ -170,14 +175,6 @@ namespace dbi {
             pgCheckResult(_result, _sql);
 
             _rows = (unsigned int)PQNTUPLES(_result);
-            _cols = (unsigned int)PQnfields(_result);
-
-            _rsrow.reserve(_cols);
-            _result_field_types.reserve(_cols);
-
-            for (int i = 0; i < (int)_cols; i++)
-                _result_field_types.push_back(PQfformat(_result, i));
-
             return _rows;
         }
 
@@ -209,9 +206,8 @@ namespace dbi {
 
             if (_rowno < _rows) {
                 _rowno++;
-                if (_result_fields.size() == 0) fields();
                 for (unsigned int i = 0; i < _cols; i++)
-                    _rsrowhash[_result_fields[i]] = PQgetisnull(_result, _rowno-1, i) ?
+                    _rsrowhash[_rsfields[i]] = PQgetisnull(_result, _rowno-1, i) ?
                         PARAM(null()) : PG2PARAM(_result, _rowno-1, i);
             }
 
@@ -219,12 +215,7 @@ namespace dbi {
         }
 
         vector<string> fields() {
-            check_ready("fields()");
-
-            for (unsigned int i = 0; i < _cols; i++)
-                _result_fields.push_back(PQfname(_result, i));
-
-            return _result_fields;
+            return _rsfields;
         }
 
         unsigned int columns() {
@@ -232,11 +223,11 @@ namespace dbi {
         }
 
         bool finish() {
-            _rowno = 0;
-            _rows  = 0;
-            _cols  = 0;
+            if (_result)
+                PQclear(_result);
 
-            if (_result) PQclear(_result);
+            _rowno  = 0;
+            _rows   = 0;
             _result = 0;
 
             return true;
