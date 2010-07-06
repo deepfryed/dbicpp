@@ -18,7 +18,7 @@ SET_TARGET_PROPERTIES(dbdmysql PROPERTIES VERSION 1.0.1 SOVERSION 1)
 ADD_EXECUTABLE(example src/example.cc)
 TARGET_LINK_LIBRARIES(example dbic++ uuid pcrecpp dl)
 
-SET(CMAKE_CXX_FLAGS "-ggdb -Wunused-function -Wunused-value -Wunused-label -rdynamic -fPIC")
+SET(CMAKE_CXX_FLAGS "-Wunused-function -Wunused-value -Wunused-label -rdynamic -fPIC")
 
 # Use -DCMAKE_INSTALL_PREFIX:PATH=<path> to override /usr/local
 # SET(CMAKE_INSTALL_PREFIX /usr CACHE INTERNAL "")

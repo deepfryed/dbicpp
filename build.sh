@@ -4,7 +4,6 @@ OPERATION="local-build"
 
 cleanup() {
   make clean
-  rm -rf lib/*
   rm -rf cmake_install.cmake CMakeFiles/ CMakeCache.txt install_manifest.txt Makefile
   rm -rf debian/dbicpp-dev.debhelper.log
   rm -rf debian/dbicpp-dev.substvars
