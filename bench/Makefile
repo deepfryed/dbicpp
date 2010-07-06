@@ -13,8 +13,8 @@ $(PQ_EXEC) : $(PQEXEC_SRC) Makefile
 	g++ -O3 -o $(PQ_EXEC) $(PQ_SRC) -I /usr/include/postgresql -lpq -lpcrecpp
 
 clean: rm all
-	./setup.rb mysql 500
-	./setup.rb postgresql 500
+	./setup.rb mysql 50
+	./setup.rb postgresql 50
 
 rm:
 	rm -f bin/*

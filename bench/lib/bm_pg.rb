@@ -22,6 +22,7 @@ class Benchmarks
         end
       end
       def clear
+        @row = 0
         @res.clear
       end
     end
@@ -52,7 +53,13 @@ class Benchmarks
 
     def run n, *args
       open("/dev/null", "w") do |fh|
-        n.times { @sth.execute(*args) {|r| fh.puts r.inspect } }
+        n.times do
+          @sth.execute(*args)
+          while r = @sth.fetchrow
+            fh.puts r.inspect
+          end
+          @sth.clear
+        end
       end
     end
 
