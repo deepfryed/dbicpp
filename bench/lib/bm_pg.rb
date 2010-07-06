@@ -56,7 +56,7 @@ class Benchmarks
         n.times do
           @sth.execute(*args)
           while r = @sth.fetchrow
-            fh.puts r.inspect
+            fh.puts "#{r[0]} #{r[1]} #{r[2]}"
           end
           @sth.clear
         end
