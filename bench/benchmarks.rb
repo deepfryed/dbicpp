@@ -22,5 +22,5 @@ end
 
 Dir["lib/*.rb"].each {|file| require file }
 
-Benchmarks.run :mysql,      "SELECT SQL_NO_CACHE * FROM users", 10000
-Benchmarks.run :postgresql, "SELECT              * FROM users", 10000
+Benchmarks.run :mysql,      "SELECT SQL_NO_CACHE * FROM users", 5000
+Benchmarks.run :postgresql, "SELECT              * FROM users", 5000

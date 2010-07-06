@@ -335,13 +335,23 @@ namespace dbi {
         }
 
         unsigned char* fetchValue(int r, int c, unsigned long *l = 0) {
+            int rc;
+            unsigned long length;
             check_ready("fetchValue()");
 
             mysql_stmt_data_seek(_stmt, r);
-            if (mysql_stmt_fetch(_stmt) != 0)
+            rc = mysql_stmt_fetch(_stmt);
+            if (rc != 0 && rc != MYSQL_DATA_TRUNCATED)
                 THROW_MYSQL_STMT_ERROR(_stmt);
 
-            if (l) *l = *(_result->params[c].length);
+            length = *(_result->params[c].length);
+
+            if (l) *l = length;
+            if (length > _buffer_lengths[c]) {
+                if (length > _result->params[c].buffer_length)
+                    _result->reallocateBindParam(c, length);
+                mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
+            }
             return *_result->params[c].is_null ? 0 : (unsigned char*)_result->params[c].buffer;
         }
 
