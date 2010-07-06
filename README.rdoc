@@ -64,16 +64,25 @@ See src/example.cc for more specific examples.
   end
 
 
+== INSTALL
+
+=== Local Install
+
+  ./build
+
+=== Debian packages
+
+  ./build -d
+  sudo dpkg -i ../dbicpp*.deb
+
 == TODO
 
 === Database Features
 
-* CURSOR, function calls, async queries, result iterators and a lot more.
+* cursor support, function calls, async queries and a lot more.
 
 === Distribution
 
-* automake and configure files for libs.
-* deb specs and packages for base and driver libs.
 * proper extconf.rb and gemspec for ruby bindings.
 
 == LICENSE
