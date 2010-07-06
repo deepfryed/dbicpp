@@ -1,13 +1,13 @@
-= C++ DBI style database interface
+= C++ database interface
 
 dbic++ is a Perl DBI style database client library abstraction which comes with support for
 the following databases.
 
 * PostgreSQL >= 8.0
+* MySQL      >= 5.0
 
 I'm working on drivers for the following, which will be available soon.
 
-* MySQL  >= 5.0
 * SQLite >= 3
 
 == Examples
