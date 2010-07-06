@@ -1,0 +1,35 @@
+Source: dbicpp
+Section: devel
+Priority: optional
+Maintainer: Bharanee Rathna <dbicpp@gmail.com>
+Build-Depends: debhelper (>> 4.0.0), pcre3-dev, uuid-dev, libmysqlclient-dev, libpq-dev
+Standards-Version: 0.1.0
+
+Package: dbicpp-dev
+Section: libdevel
+Architecture: any
+Description: C++ Database Interface (development)
+ dbicpp offers a simple DBI style database API. It currently supports MySQL >= 5.1
+ and PostgreSQL >= 8.0. Support for SQLite3 is planned.
+ .
+ This package contains files used for development with dbicpp.
+
+Package: dbicpp-pg
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: C++ Database Interface (library)
+ dbicpp offers a simple DBI style database API. It currently supports MySQL >= 5.1
+ and PostgreSQL >= 8.0. Support for SQLite3 is planned.
+ .
+ This package contains driver for PostgreSQL.
+
+Package: dbicpp-mysql
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: C++ Database Interface (library)
+ dbicpp offers a simple DBI style database API. It currently supports MySQL >= 5.1
+ and PostgreSQL >= 8.0. Support for SQLite3 is planned.
+ .
+ This package contains driver for MySQL.
