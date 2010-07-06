@@ -17,9 +17,7 @@ namespace dbi {
     }
 
     Param PARAM_BINARY(unsigned char *data, unsigned long l) {
-        stringstream ss;
-        ss.write((char*)data, l);
-        Param p = { false, ss.str() };
+        Param p = { false, string((const char*)data, l) };
         return p;
     }
 

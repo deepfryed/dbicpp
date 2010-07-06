@@ -254,19 +254,18 @@ namespace dbi {
                     THROW_MYSQL_STMT_ERROR(_stmt);
 
                 for (c = 0; c < _cols; c++) {
-                    length = *(_result->params[c].length);
-
-                    if (length > _buffer_lengths[c]) {
-                        if (length > _result->params[c].buffer_length)
-                            _result->reallocateBindParam(c, length);
-
-                        mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
+                    if (*_result->params[c].is_null) {
+                        _rsrow.push_back(PARAM(null()));
                     }
-
-                    _rsrow.push_back(
-                        *_result->params[c].is_null ? PARAM(null()) :
-                              PARAM_BINARY((unsigned char*)_result->params[c].buffer, length)
-                    );
+                    else {
+                        length = *(_result->params[c].length);
+                        if (length > _buffer_lengths[c]) {
+                            if (length > _result->params[c].buffer_length)
+                                _result->reallocateBindParam(c, length);
+                            mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
+                        }
+                        _rsrow.push_back(PARAM_BINARY((unsigned char*)_result->params[c].buffer, length));
+                    }
                 }
             }
 
@@ -292,18 +291,19 @@ namespace dbi {
                     THROW_MYSQL_STMT_ERROR(_stmt);
 
                 for (c = 0; c < _cols; c++) {
-                    length = *(_result->params[c].length);
-
-                    if (length > _buffer_lengths[c]) {
-                        if (length > _result->params[c].buffer_length)
-                            _result->reallocateBindParam(c, length);
-
-                        mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
+                    if (*_result->params[c].is_null) {
+                        _rsrowhash[_result_fields[c]] = PARAM(null());
                     }
-
-                    _rsrowhash[_result_fields[c]] =
-                        *_result->params[c].is_null ? PARAM(null()) :
+                    else {
+                        length = *(_result->params[c].length);
+                        if (length > _buffer_lengths[c]) {
+                            if (length > _result->params[c].buffer_length)
+                                _result->reallocateBindParam(c, length);
+                            mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
+                        }
+                        _rsrowhash[_result_fields[c]] =
                               PARAM_BINARY((unsigned char*)_result->params[c].buffer, length);
+                    }
                 }
             }
 
@@ -345,14 +345,18 @@ namespace dbi {
                 THROW_MYSQL_STMT_ERROR(_stmt);
 
             length = *(_result->params[c].length);
-
-            if (l) *l = length;
-            if (length > _buffer_lengths[c]) {
-                if (length > _result->params[c].buffer_length)
-                    _result->reallocateBindParam(c, length);
-                mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
+            if (*_result->params[c].is_null) {
+                return 0;
             }
-            return *_result->params[c].is_null ? 0 : (unsigned char*)_result->params[c].buffer;
+            else {
+                if (l) *l = length;
+                if (length > _buffer_lengths[c]) {
+                    if (length > _result->params[c].buffer_length)
+                        _result->reallocateBindParam(c, length);
+                    mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
+                }
+                return (unsigned char*)_result->params[c].buffer;
+            }
         }
 
         unsigned int currentRow() {

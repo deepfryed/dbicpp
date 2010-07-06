@@ -59,7 +59,7 @@ void error (const char *msg) {
 }
 
 int main(int argc, char*argv[]) {
-    int i, c, n, cols, rows;
+    int i, c, n, rc, cols, rows;
     unsigned long length;
     parseOptions(argc, argv);
     MYSQL *conn;
@@ -123,11 +123,15 @@ int main(int argc, char*argv[]) {
         rows = (int)mysql_stmt_num_rows(stmt);
 
         for (i = 0; i < rows; i++) {
-            mysql_stmt_fetch(stmt);
+            rc = mysql_stmt_fetch(stmt);
+            if (rc != 0 && rc != MYSQL_DATA_TRUNCATED)
+                MYSQL_STMT_ERROR(stmt);
+
             for (c = 0; c < cols; c++) {
                 length = *result[c].length;
                 if (length >= bs[c]) {
                     if (result[c].buffer_length <= length) {
+                        delete [] (unsigned char*)result[c].buffer;
                         result[c].buffer = new unsigned char[length + 1];
                         result[c].buffer_length = length + 1;
                     }

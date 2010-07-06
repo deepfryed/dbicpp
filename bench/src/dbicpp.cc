@@ -35,17 +35,22 @@ void parseOptions(int argc, char **argv) {
 }
 
 int main(int argc, char *argv[]) {
+    int n, r, c, rows, cols;
     dbiInitialize("../lib/dbic++");
     parseOptions(argc, argv);
 
     Handle h(driver, "udbicpp", "", "dbicpp");
     Statement st(h, sql);
-    ResultRow r;
+    ResultRow row;
 
-    for (int n = 0; n < max_iter; n++) {
-        st.execute(bind);
-        while ((r = st.fetchRow()).size() > 0)
-            printf("%s\t%s\t%s\n", r[0].value.c_str(), r[1].value.c_str(), r[2].value.c_str());
+    for (n = 0; n < max_iter; n++) {
+        rows = (int) st.execute(bind);
+        cols = (int) st.columns();
+        while ((row = st.fetchRow()).size() > 0) {
+            for (c = 0; c < row.size(); c++)
+                printf("%s\t", row[c].value.c_str());
+            printf("\n");
+        }
         st.finish();
     }
 }

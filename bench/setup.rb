@@ -13,4 +13,4 @@ st = h.prepare "INSERT INTO users (name, email) VALUES (?, ?)"
 
 size = (ARGV[1] || 500).to_i
 
-size.times {|n| st.execute("Username #{n}", "email_#{n}@example.com") }
+size.times {|n| st.execute("Username #{n + 1}", "email_#{n + 1}@example.com") }
