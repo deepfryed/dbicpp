@@ -35,7 +35,7 @@ void parseOptions(int argc, char **argv) {
 }
 
 int main(int argc, char *argv[]) {
-    dbiInitialize("../libs");
+    dbiInitialize("../lib/dbic++");
     parseOptions(argc, argv);
 
     Handle h(driver, "udbicpp", "", "dbicpp");

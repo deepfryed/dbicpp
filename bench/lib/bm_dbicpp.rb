@@ -4,7 +4,7 @@ class Benchmarks
 
   class DBICPP
     attr_reader :driver
-    DBI.init File.dirname(__FILE__) + '/../../libs'
+    DBI.init File.dirname(__FILE__) + '/../../lib/dbic++'
 
     def initialize driver, sql
       @driver = driver

@@ -2,7 +2,7 @@
 
 require_relative '../ruby/dbicpp'
 
-DBI.init File.dirname(__FILE__) + '/../libs'
+DBI.init File.dirname(__FILE__) + '/../lib/dbic++'
 
 h = DBI::Handle.new user: 'udbicpp', db: 'dbicpp', driver: ARGV[0] || 'postgresql'
 

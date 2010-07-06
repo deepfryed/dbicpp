@@ -267,7 +267,6 @@ namespace dbi {
                         *_result->params[c].is_null ? PARAM(null()) :
                               PARAM_BINARY((unsigned char*)_result->params[c].buffer, length)
                     );
-                    _rsrow.push_back(PARAM(null()));
                 }
             }
 
