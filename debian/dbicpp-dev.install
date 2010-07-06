@@ -1,0 +1,4 @@
+debian/tmp/usr/include/*.h
+debian/tmp/usr/include/dbic++
+debian/tmp/usr/include/dbic++/*.h
+debian/tmp/usr/lib/libdbicpp.{la,a}
