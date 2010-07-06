@@ -20,7 +20,7 @@ class Benchmarks
     end
 
     def self.name
-      "DO"
+      "ruby: DO"
     end
   end
 

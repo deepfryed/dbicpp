@@ -17,7 +17,7 @@ class Benchmarks
     end
 
     def self.name
-      "C libpq"
+      "c: libpq"
     end
   end
 

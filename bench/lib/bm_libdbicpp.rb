@@ -17,7 +17,7 @@ class Benchmarks
     end
 
     def self.name
-      "C++ DBICPP"
+      "c++: DBICPP"
     end
   end
 

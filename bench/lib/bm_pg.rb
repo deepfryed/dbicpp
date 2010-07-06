@@ -64,7 +64,7 @@ class Benchmarks
     end
 
     def self.name
-      "Ruby libpq"
+      "ruby: libpq"
     end
   end
 

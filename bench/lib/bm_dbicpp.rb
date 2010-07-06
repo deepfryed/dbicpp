@@ -21,7 +21,7 @@ class Benchmarks
     end
 
     def self.name
-      "Ruby DBICPP"
+      "ruby: DBICPP"
     end
   end
 

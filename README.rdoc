@@ -75,6 +75,36 @@ See src/example.cc for more specific examples.
   ./build -d
   sudo dpkg -i ../dbicpp*.deb
 
+== Benchmarks
+
+You can run these yourself. Just create a database called 'dbicpp' and
+a user 'udbicpp' on your local MySQL and PostgreSQL server.
+
+  cd bench/
+  make clean
+  ./benchmarks.rb
+
+The following results were obtained on a Core2DUO 2.53GHz, 4GB, 5200rpm drive
+with stock database configs.
+
+  mysql
+  =====
+                                      user     system      total        real
+  ruby: DO                        3.230000   0.110000   3.340000 (  4.376652)
+  ruby: DBICPP                    1.200000   0.100000   1.300000 (  2.001337)
+  c: libmysql                     0.000000   0.010000   0.370000 (  0.939907)
+  c++: DBICPP                     0.000000   0.000000   0.550000 (  1.171987)
+  ruby: mysql2                    2.060000   0.050000   2.110000 (  2.956997)
+
+  postgresql
+  ==========
+                                      user     system      total        real
+  ruby: DO                        3.440000   0.050000   3.490000 (  4.442539)
+  ruby: DBICPP                    1.300000   0.040000   1.340000 (  2.029717)
+  ruby: libpq                     1.950000   0.040000   1.990000 (  2.749515)
+  c++: DBICPP                     0.000000   0.000000   0.570000 (  1.369260)
+  c: libpq                        0.000000   0.000000   0.340000 (  1.111824)
+
 == TODO
 
 === Database Features

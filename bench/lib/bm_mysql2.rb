@@ -27,7 +27,7 @@ class Benchmarks
     end
 
     def self.name
-      "mysql2"
+      "ruby: mysql2"
     end
   end
 

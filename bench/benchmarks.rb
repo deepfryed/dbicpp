@@ -11,10 +11,11 @@ class Benchmarks
   end
 
   def self.run driver, sql, n, *args
+    puts "\n#{driver}"
+    puts "="*driver.to_s.length + "\n"
     Benchmark.bm(30) do |bm|
       @@registry[driver].each do |klass|
-        name = klass.name
-        bm.report("#{name}/#{driver}") { klass.new(driver, sql).run(n, *args) }
+        bm.report(klass.name) { klass.new(driver, sql).run(n, *args) }
       end
     end
   end

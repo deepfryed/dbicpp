@@ -17,7 +17,7 @@ class Benchmarks
     end
 
     def self.name
-      "C libmysql"
+      "c: libmysql"
     end
   end
 
