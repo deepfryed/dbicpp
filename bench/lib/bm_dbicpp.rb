@@ -1,5 +1,5 @@
-require 'swift'
-require 'swift/ext/dbi'
+module Swift; end
+require 'swift/ext/swift/dbi'
 
 class Benchmarks
 
