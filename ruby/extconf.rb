@@ -23,6 +23,10 @@ def library_installed? name, hint
 
       #{hint}
 
+      You may have to add the following ppa to your sources,
+
+      sudo add-apt-repository ppa:deepfryed
+
     ERROR
     false
   end
@@ -30,5 +34,6 @@ end
 
 exit 1 unless library_installed? 'pcrecpp', apt_install_hint('libpcre3-dev')
 exit 1 unless library_installed? 'uuid',    apt_install_hint('uuid-dev')
+exit 1 unless library_installed? 'dbicpp',  apt_install_hint('dbicpp-dev')
 
 create_makefile 'dbicpp'
