@@ -1,14 +1,15 @@
-require_relative '../../ruby/dbicpp'
+require 'swift'
+require 'swift/ext/dbi'
 
 class Benchmarks
 
   class DBICPP
     attr_reader :driver
-    DBI.init File.dirname(__FILE__) + '/../../lib/dbic++'
+    Swift::DBI.init File.dirname(__FILE__) + '/../../lib/dbic++'
 
     def initialize driver, sql
       @driver = driver
-      @h = DBI::Handle.new user: 'udbicpp', db: 'dbicpp', driver: driver
+      @h = Swift::DBI::Handle.new user: 'udbicpp', db: 'dbicpp', driver: driver
       @sth = @h.prepare sql
     end
 

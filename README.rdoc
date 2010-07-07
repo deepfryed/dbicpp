@@ -38,9 +38,12 @@ See src/example.cc for more specific examples.
 
 === Ruby
 
-  require 'dbicpp'
+You need to install the swift gem. It includes ruby bindings to dbicpp and is also
+a funky minimal ORM.
 
-  h = DBI::Handle.new user: "udbicpp", driver: "postgresql", database: "dbicpp"
+  require 'swift'
+
+  h = Swift::DBI::Handle.new user: "udbicpp", driver: "postgresql", database: "dbicpp"
 
   st = h.prepare "SELECT name, email FROM users where id > ? AND id < ?"
 
