@@ -3,7 +3,7 @@
 #include <libpq/libpq-fs.h>
 
 #define DRIVER_NAME     "postgresql"
-#define DRIVER_VERSION  "1.0.1"
+#define DRIVER_VERSION  "1.1"
 
 typedef unsigned char uchar;
 

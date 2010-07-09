@@ -1,6 +1,8 @@
 #!/bin/bash
 
 OPERATION="local-build"
+export PG_VERSION=$(cat src/drivers/pg.cc | grep "VERSION \+" | sed 's/^.*VERSION *//' | sed 's/"//g')
+export MYSQL_VERSION=$(cat src/drivers/mysql.cc | grep "VERSION \+" | sed 's/^.*VERSION *//' | sed 's/"//g')
 
 cleanup() {
   make clean
@@ -44,7 +46,7 @@ debian_build() {
 }
 
 local_build() {
-  cmake -DCMAKE_INSTALL_PREFIX:PATH=tmp/
+  cmake -DCMAKE_PG_VERSION=$PG_VERSION -DCMAKE_MYSQL_VERSION=$MYSQL_VERSION -DCMAKE_INSTALL_PREFIX:PATH=tmp/
   make
   make install
   rm -rf lib/*

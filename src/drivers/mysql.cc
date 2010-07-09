@@ -4,7 +4,7 @@
 #include <mysql/mysql_com.h>
 
 #define DRIVER_NAME     "mysql"
-#define DRIVER_VERSION  "1.0.1"
+#define DRIVER_VERSION  "1.1"
 
 #define THROW_MYSQL_STMT_ERROR(s) {\
     fprintf(stderr, "In SQL: %s\n\n", _sql.c_str());\
