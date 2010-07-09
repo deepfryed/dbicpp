@@ -57,7 +57,15 @@ namespace dbi {
                     if (driver->connect == NULL)
                         throw InvalidDriverError(dlerror());
 
-                    drivers[driver->name] = driver;
+                    if (drivers[driver->name]) {
+                        cout << "[WARNING] Already initialized " << driver->name << " driver."
+                             << " Ignoring: " << filename << endl;
+                        dlclose(handle);
+                        delete driver;
+                    }
+                    else {
+                        drivers[driver->name] = driver;
+                    }
                 }
                 else {
                     cout << "[WARNING] Ignoring " << filename << ":" << dlerror() << endl;

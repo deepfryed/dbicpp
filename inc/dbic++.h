@@ -33,7 +33,6 @@ namespace dbi {
 
     class AbstractHandle {
         public:
-        AbstractHandle() {};
         virtual unsigned int execute(string sql) = 0;
         virtual unsigned int execute(string sql, vector<Param> &bind) = 0;
         virtual AbstractStatement* prepare(string sql) = 0;
@@ -50,7 +49,6 @@ namespace dbi {
 
     class AbstractStatement {
         public:
-        AbstractStatement() {};
         virtual unsigned int rows() = 0;
         virtual unsigned int columns() = 0;
         virtual vector<string> fields() = 0;
