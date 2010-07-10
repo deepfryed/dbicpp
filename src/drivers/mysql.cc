@@ -112,7 +112,6 @@ namespace dbi {
         private:
         string _sql;
         string _uuid;
-        MYSQL *_conn;
         MYSQL_STMT *_stmt;
         MySqlBind *_result;
         vector<string> _rsfields;
@@ -122,6 +121,7 @@ namespace dbi {
         ResultRowHash _rsrowhash;
 
         protected:
+        MYSQL *conn;
 
         void init() {
             _result = 0;
@@ -168,9 +168,9 @@ namespace dbi {
 
         MySqlStatement(string query,  MYSQL *c) {
             init();
-            _conn  = c;
-            _sql   = query;
-            _stmt  = mysql_stmt_init(c);
+            conn  = c;
+            _sql  = query;
+            _stmt = mysql_stmt_init(c);
 
             mysqlPreProcessQuery(query);
 
@@ -237,13 +237,6 @@ namespace dbi {
             _rows = bindResultAndGetAffectedRows();
 
             return _rows;
-        }
-
-        bool consumeResult() {
-            return false;
-        }
-
-        void prepareResult() {
         }
 
         unsigned long lastInsertID() {
@@ -335,7 +328,7 @@ namespace dbi {
             return true;
         }
 
-        unsigned char* fetchValue(int r, int c, unsigned long *l = 0) {
+        unsigned char* fetchValue(unsigned int r, unsigned int c, unsigned long *l = 0) {
             int rc;
             unsigned long length;
             checkReady("fetchValue()");
@@ -366,6 +359,148 @@ namespace dbi {
 
         void advanceRow() {
             _rowno = _rowno <= _rows ? _rowno + 1 : _rowno;
+        }
+
+        bool consumeResult() {
+            throw RuntimeError("Incorrect API call. Use the Async API");
+            return false;
+        }
+
+        void prepareResult() {
+            throw RuntimeError("Incorrect API call. Use the Async API");
+        }
+    };
+
+    class MySqlResultSet : public AbstractResultSet {
+        protected:
+        MYSQL *conn;
+        MYSQL_RES *result;
+        private:
+        unsigned int _rows;
+        unsigned int _cols;
+        unsigned int _rowno;
+        vector<string> _rsfields;
+        ResultRow _rsrow;
+        ResultRowHash _rsrowhash;
+        public:
+        MySqlResultSet(MYSQL *c) {
+            _rows  = 0;
+            _cols  = 0;
+            _rowno = 0;
+            conn   = c;
+
+            result = 0;
+        }
+
+        void checkReady(string m) {
+            if (!result)
+                throw RuntimeError((m + " cannot be called yet. ").c_str());
+        }
+
+        unsigned int rows() {
+            checkReady("rows()");
+            return _rows;
+        }
+
+        unsigned int columns() {
+            checkReady("columns()");
+            return _cols;
+        }
+
+        vector<string> fields() {
+            checkReady("fields()");
+            return _rsfields;
+        }
+
+        ResultRow& fetchRow() {
+            int n;
+            checkReady("fetchRow()");
+            _rsrow.clear();
+
+            if (_rowno < _rows) {
+                _rowno++;
+                MYSQL_ROW row = mysql_fetch_row(result);
+                unsigned long* lengths = mysql_fetch_lengths(result);
+                for (n = 0; n < _cols; n++)
+                    _rsrow.push_back(row[n] == 0 ? PARAM(null()) : PARAM_BINARY((unsigned char*)row[n], lengths[n]));
+            }
+
+            return _rsrow;
+        }
+
+        ResultRowHash& fetchRowHash() {
+            int n;
+            checkReady("fetchRowHash()");
+            _rsrowhash.clear();
+            if (_rowno < _rows) {
+                _rowno++;
+                MYSQL_ROW row = mysql_fetch_row(result);
+                unsigned long* lengths = mysql_fetch_lengths(result);
+                for (n = 0; n < _cols; n++)
+                    _rsrowhash[_rsfields[n]] = (
+                        row[n] == 0 ? PARAM(null()) : PARAM_BINARY((unsigned char*)row[n], lengths[n])
+                    );
+            }
+
+            return _rsrowhash;
+        }
+
+        bool finish() {
+            if (result)
+                mysql_free_result(result);
+            result = 0;
+            return true;
+        }
+
+        unsigned char* fetchValue(unsigned int r, unsigned int c, unsigned long *l) {
+            checkReady("fetchValue()");
+            if (r < _rows) {
+                mysql_data_seek(result, r);
+                MYSQL_ROW row = mysql_fetch_row(result);
+                unsigned long* lengths = mysql_fetch_lengths(result);
+                if (l) *l = lengths[c];
+                return (unsigned char*)row[c];
+            }
+            else {
+                return 0;
+            }
+        }
+
+        unsigned int currentRow() {
+            return _rowno;
+        }
+
+        void advanceRow() {
+            _rowno++;
+        }
+
+        void cleanup() {
+            finish();
+        }
+
+        unsigned long lastInsertID() {
+            checkReady("lastInsertID()");
+            return mysql_insert_id(conn);
+        }
+
+        bool consumeResult() {
+            if (mysql_read_query_result(conn) != 0)
+                throw RuntimeError(mysql_error(conn));
+            return false;
+        }
+
+        void prepareResult() {
+            int n;
+            MYSQL_FIELD *fields;
+
+            result = mysql_store_result(conn);
+            _rows  = mysql_num_rows(result);
+            _rows  = _rows > 0 ? _rows : mysql_affected_rows(conn);
+            _cols  = mysql_num_fields(result);
+
+            fields = mysql_fetch_fields(result);
+            for (n = 0; n < _cols; n++)
+                _rsfields.push_back(fields[n].name);
         }
     };
 
@@ -414,18 +549,30 @@ namespace dbi {
         }
 
         int socket() {
-            return 0;
+            return conn->net.fd;
         }
 
-        MySqlStatement* aexecute(string sql, vector<Param> &bind) {
-            return 0;
+        MySqlResultSet* aexecute(string sql, vector<Param> &bind) {
+            MYSQL_BIND* params = 0;
+            if (bind.size() > 0) {
+                params = new MYSQL_BIND[bind.size()];
+                mysqlProcessBindParams(params, bind);
+            }
+
+            mysql_send_query(conn, sql.c_str(), sql.length());
+
+            if (params)
+                delete [] params;
+
+            return new MySqlResultSet(conn);
         }
 
         void initAsync() {
+            // NOP
         }
 
         bool isBusy() {
-            return true;
+            return false;
         }
 
         bool cancel() {

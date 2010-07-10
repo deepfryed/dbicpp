@@ -32,6 +32,7 @@ namespace dbi {
     static int  _trace_fd;
 
     class AbstractStatement;
+    class AbstractResultSet;
     class ConnectionPool;
 
     class AbstractHandle {
@@ -54,7 +55,7 @@ namespace dbi {
         // ASYNC API
         protected:
         virtual int socket() = 0;
-        virtual AbstractStatement* aexecute(string sql, vector<Param> &bind) = 0;
+        virtual AbstractResultSet* aexecute(string sql, vector<Param> &bind) = 0;
         virtual void initAsync() = 0;
         virtual bool isBusy() = 0;
         virtual bool cancel() = 0;
@@ -68,18 +69,11 @@ namespace dbi {
         virtual ResultRow& fetchRow() = 0;
         virtual ResultRowHash& fetchRowHash() = 0;
         virtual bool finish() = 0;
-        virtual unsigned char* fetchValue(int, int, unsigned long*) = 0;
-        virtual string command() = 0;
+        virtual unsigned char* fetchValue(unsigned int, unsigned int, unsigned long*) = 0;
         virtual unsigned int currentRow() = 0;
         virtual void advanceRow() = 0;
         virtual void cleanup() = 0;
         virtual unsigned long lastInsertID() = 0;
-    };
-
-    class AbstractStatement : public AbstractResultSet {
-        public:
-        virtual unsigned int execute() = 0;
-        virtual unsigned int execute(vector<Param> &bind) = 0;
 
         // ASYNC API
         // Returns false if done, true is still more probably yet to consume
@@ -87,6 +81,13 @@ namespace dbi {
         // Once all available data has been consumed, prepare results for
         // access.
         virtual void prepareResult() = 0;
+    };
+
+    class AbstractStatement : public AbstractResultSet {
+        public:
+        virtual string command() = 0;
+        virtual unsigned int execute() = 0;
+        virtual unsigned int execute(vector<Param> &bind) = 0;
     };
 
     class Driver {
@@ -157,8 +158,8 @@ namespace dbi {
         ResultRowHash& fetchRowHash();
         unsigned int columns();
         vector<string> fields();
-        unsigned char* fetchValue(int r, int c, unsigned long*);
-        unsigned char* operator()(int r, int c);
+        unsigned char* fetchValue(unsigned int r, unsigned int c, unsigned long*);
+        unsigned char* operator()(unsigned int r, unsigned int c);
         unsigned int currentRow();
         void advanceRow();
         bool finish();
@@ -185,7 +186,7 @@ namespace dbi {
         struct Query {
             ConnectionPool *target;
             AbstractHandle *handle;
-            AbstractStatement *statement;
+            AbstractResultSet *result;
             struct event *ev;
             void (*callback)(AbstractResultSet *r);
         };

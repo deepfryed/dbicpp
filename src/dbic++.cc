@@ -192,11 +192,11 @@ namespace dbi {
         return st->columns();
     }
 
-    unsigned char* Statement::fetchValue(int r, int c, unsigned long *l = 0) {
+    unsigned char* Statement::fetchValue(unsigned int r, unsigned int c, unsigned long *l = 0) {
         return st->fetchValue(r, c, l);
     }
 
-    unsigned char* Statement::operator()(int r, int c) {
+    unsigned char* Statement::operator()(unsigned int r, unsigned int c) {
         return st->fetchValue(r, c, 0);
     }
 
@@ -311,11 +311,11 @@ namespace dbi {
             if (!pool[n].busy) {
 
                 AbstractHandle *h = pool[n].handle;
-                AbstractStatement *st = h->aexecute(sql, bind);
+                AbstractResultSet *rs = h->aexecute(sql, bind);
 
                 struct event *ev = new struct event;
                 struct Query *q  = new struct Query;
-                *q = { this, h, st, ev, callback };
+                *q = { this, h, rs, ev, callback };
 
                 event_set(ev, h->socket(), EV_READ | EV_PERSIST, eventCallback, q);
                 event_add(ev, 0);
@@ -340,10 +340,10 @@ namespace dbi {
     }
 
     void ConnectionPool::process(struct Query *q) {
-        AbstractStatement *st = q->statement;
+        AbstractResultSet *rs = q->result;
         void (*callback)(AbstractResultSet *r) = q->callback;
-        if(!st->consumeResult()) {
-            st->prepareResult();
+        if(!rs->consumeResult()) {
+            rs->prepareResult();
             event_del(q->ev);
             for (int n = 0; n < pool.size(); n++) {
                 if (q->handle == pool[n].handle) {
@@ -353,7 +353,7 @@ namespace dbi {
             }
             delete q->ev;
             delete q;
-            callback(st);
+            callback(rs);
         }
     }
 
