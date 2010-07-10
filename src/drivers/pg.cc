@@ -1,22 +1,16 @@
 #include "dbic++.h"
 #include <libpq-fe.h>
 #include <libpq/libpq-fs.h>
+#include <unistd.h>
 
 #define DRIVER_NAME     "postgresql"
 #define DRIVER_VERSION  "1.1"
 
-typedef unsigned char uchar;
-
-#define PG2PARAM(res, r, c) PARAM_BINARY((uchar*)PQgetvalue(res, r, c), PQgetlength(res, r, c))
-
-/*
-
-#define PG2PARAM(res, r, c) _rsfield_types[c] > 0 ? \
-                            PARAM_BINARY((uchar*)PQgetvalue(res, r, c), PQgetlength(res, r, c)) : \
-                            PARAM(PQgetvalue(res, r, c))
-*/
+#define PG2PARAM(res, r, c) PARAM_BINARY((unsigned char*)PQgetvalue(res, r, c), PQgetlength(res, r, c))
 
 namespace dbi {
+
+    char errormsg[8192];
 
     const char *typemap[] = {
         "%d", "int", "%u", "int", "%lu", "int", "%ld", "int",
@@ -40,12 +34,13 @@ namespace dbi {
             case PGRES_BAD_RESPONSE:
             case PGRES_FATAL_ERROR:
             case PGRES_NONFATAL_ERROR:
-                fprintf(stderr, "In SQL: %s\n\n", sql.c_str());
-                throw RuntimeError(PQresultErrorMessage(result));
+                snprintf(errormsg, 8192, "In SQL: %s\n\n %s", sql.c_str(), PQresultErrorMessage(result));
+                throw RuntimeError((const char*)errormsg);
                 break;
             default:
-                fprintf(stderr, "In SQL: %s\n\n", sql.c_str());
-                throw RuntimeError("Unknown error, check logs.");
+                snprintf(errormsg, 8192, "In SQL: %s\n\n Unknown error, check logs.", sql.c_str());
+                throw RuntimeError(errormsg);
+                break;
         }
     }
 
@@ -84,16 +79,18 @@ namespace dbi {
     }
 
     class PgStatement : public AbstractStatement {
+        protected:
+        PGconn *conn;
         private:
         string _sql;
         string _uuid;
         PGresult *_result;
-        PGconn *conn;
         vector<string> _rsfields;
         vector<int> _rsfield_types;
         unsigned int _rowno, _rows, _cols;
         ResultRow _rsrow;
         ResultRowHash _rsrowhash;
+        bool _async;
 
         void init() {
             _result = 0;
@@ -101,12 +98,13 @@ namespace dbi {
             _rows   = 0;
             _cols   = 0;
             _uuid   = generateCompactUUID();
+            _async  = false;
         }
 
         public:
         PgStatement() {}
         ~PgStatement() { cleanup(); }
-        PgStatement(string query,  PGconn *c) {
+        PgStatement(string query,  PGconn *c, bool async = false) {
             int i;
 
             init();
@@ -114,22 +112,55 @@ namespace dbi {
             _sql = query;
 
             pgPreProcessQuery(query);
-            PGresult *result = PQprepare(conn, _uuid.c_str(), query.c_str(), 0, 0);
+            PGresult *result;
 
-            if (!result) throw RuntimeError("Unable to allocate statement");
-            pgCheckResult(result, _sql);
-            PQclear(result);
+            // prepare is always sync - only execute is really async.
+            if (async) {
+                _async = true;
+                result = asyncPrepare();
+            }
+            else {
+                result = PQprepare(conn, _uuid.c_str(), query.c_str(), 0, 0);
 
-            result = PQdescribePrepared(conn, _uuid.c_str());
+                if (!result) throw RuntimeError("Unable to allocate statement");
+                pgCheckResult(result, _sql);
+                PQclear(result);
+
+                result = PQdescribePrepared(conn, _uuid.c_str());
+            }
+
             _cols  = (unsigned int)PQnfields(result);
 
             for (i = 0; i < (int)_cols; i++)
                 _rsfields.push_back(PQfname(result, i));
+
             for (i = 0; i < (int)_cols; i++)
                 _rsfield_types.push_back(PQfformat(result, i));
 
             _rsrow.reserve(_cols);
             PQclear(result);
+        }
+
+        PGresult* asyncPrepare() {
+            int rc;
+            PGresult *response, *result;
+
+            rc = PQsendPrepare(conn, _uuid.c_str(), _sql.c_str(), 0, 0);
+            if (rc == 0) throw RuntimeError(PQerrorMessage(conn));
+            while (PQisBusy(conn)) PQconsumeInput(conn);
+            result = PQgetResult(conn);
+            while ((response = PQgetResult(conn))) PQclear(response);
+
+            pgCheckResult(result, _sql);
+            PQclear(result);
+
+            rc = PQsendDescribePrepared(conn, _uuid.c_str());
+            if (rc == 0) throw RuntimeError(PQerrorMessage(conn));
+            while (PQisBusy(conn)) PQconsumeInput(conn);
+            result = PQgetResult(conn);
+            while ((response = PQgetResult(conn))) PQclear(response);
+
+            return result;
         }
 
         void cleanup() {
@@ -140,52 +171,84 @@ namespace dbi {
             return _sql;
         }
 
-        void check_ready(string m) {
+        void checkReady(string m) {
             if (!_result)
                 throw RuntimeError((m + " cannot be called yet. call execute() first").c_str());
         }
 
         unsigned int rows() {
-            check_ready("rows()");
+            checkReady("rows()");
             return _rows;
         }
 
         unsigned int execute() {
+            int rc;
             finish();
 
-            _result = PQexecPrepared(conn, _uuid.c_str(), 0, 0, 0, 0, 0);
-            pgCheckResult(_result, _sql);
+            if (_async) {
+                rc = PQsendQueryPrepared(conn, _uuid.c_str(), 0, 0, 0, 0, 0);
+                if (rc == 0) throw RuntimeError(PQerrorMessage(conn));
+            }
+            else {
+                _result = PQexecPrepared(conn, _uuid.c_str(), 0, 0, 0, 0, 0);
+                pgCheckResult(_result, _sql);
+                _rows = (unsigned int)PQNTUPLES(_result);
+            }
 
-            _rows = (unsigned int)PQNTUPLES(_result);
+            // will return 0 for async queries.
             return _rows;
         }
 
         unsigned int execute(vector<Param> &bind) {
-            int *param_l;
+            int *param_l, rc;
             const char **param_v;
 
             finish();
-
             pgProcessBindParams(&param_v, &param_l, bind);
-            _result = PQexecPrepared(conn, _uuid.c_str(), bind.size(),
-                                       (const char* const *)param_v, (const int*)param_l, 0, 0);
-            delete []param_v;
-            delete []param_l;
 
-            pgCheckResult(_result, _sql);
+            if (_async) {
+                rc = PQsendQueryPrepared(conn, _uuid.c_str(), bind.size(),
+                                           (const char* const *)param_v, (const int*)param_l, 0, 0);
+                delete []param_v;
+                delete []param_l;
 
-            _rows = (unsigned int)PQNTUPLES(_result);
+                if (rc == 0) throw RuntimeError(PQerrorMessage(conn));
+            }
+            else {
+                _result = PQexecPrepared(conn, _uuid.c_str(), bind.size(),
+                                           (const char* const *)param_v, (const int*)param_l, 0, 0);
+                delete []param_v;
+                delete []param_l;
+
+                pgCheckResult(_result, _sql);
+                _rows = (unsigned int)PQNTUPLES(_result);
+            }
+
+            // will return 0 for async queries.
             return _rows;
         }
 
+        bool consumeResult() {
+            PQconsumeInput(conn);
+            return (PQisBusy(conn) ? true : false);
+        }
+
+        void prepareResult() {
+            PGresult *response;
+            _result = PQgetResult(conn);
+            _rows   = (unsigned int)PQNTUPLES(_result);
+            while ((response = PQgetResult(conn))) PQclear(response);
+            pgCheckResult(_result, _sql);
+        }
+
         unsigned long lastInsertID() {
-            check_ready("lastInsertID()");
+            checkReady("lastInsertID()");
             ResultRow r = fetchRow();
             return r.size() > 0 ? atol(r[0].value.c_str()) : 0;
         }
 
         ResultRow& fetchRow() {
-            check_ready("fetchRow()");
+            checkReady("fetchRow()");
 
             _rsrow.clear();
 
@@ -200,7 +263,7 @@ namespace dbi {
         }
 
         ResultRowHash& fetchRowHash() {
-            check_ready("fetchRowHash()");
+            checkReady("fetchRowHash()");
 
             _rsrowhash.clear();
 
@@ -234,7 +297,7 @@ namespace dbi {
         }
 
         unsigned char* fetchValue(int r, int c, unsigned long *l = 0) {
-            check_ready("fetchValue()");
+            checkReady("fetchValue()");
             if (l) *l = PQgetlength(_result, r, c);
             return PQgetisnull(_result, r, c) ? 0 : (unsigned char*)PQgetvalue(_result, r, c);
         }
@@ -318,26 +381,18 @@ namespace dbi {
             return rows;
         }
 
-        void asyncExecute(string sql) {
-            if(PQsendQuery(conn, sql.c_str()) == 0)
-                throw RuntimeError(PQerrorMessage(conn) + string(" in query - ") + sql);
+        int socket() {
+            return PQsocket(conn);
         }
 
+        PgStatement* aexecute(string sql, vector<Param> &bind) {
+            PgStatement *st = new PgStatement(sql, this->conn, true);
+            st->execute(bind);
+            return st;
+        }
 
-        void asyncExecute(string sql, vector<Param> &bind) {
-            int *param_l, rc;
-            const char **param_v;
-            unsigned int rows;
-
-            pgProcessBindParams(&param_v, &param_l, bind);
-            rc = PQsendQueryParams(conn, sql.c_str(), bind.size(),
-                                   0, (const char* const *)param_v, param_l, 0, 0);
-
-            delete []param_v;
-            delete []param_l;
-
-            if (rc == 0)
-                throw RuntimeError(PQerrorMessage(conn) + string(" in query - ") + sql);
+        void initAsync() {
+            if(!PQisnonblocking(conn)) PQsetnonblocking(conn, 1);
         }
 
         bool isBusy() {

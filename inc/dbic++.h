@@ -9,6 +9,8 @@
 #include <dlfcn.h>
 #include <pcrecpp.h>
 #include <sys/time.h>
+#include <uuid/uuid.h>
+#include <event.h>
 
 namespace dbi {
     struct null {};
@@ -30,6 +32,7 @@ namespace dbi {
     static int  _trace_fd;
 
     class AbstractStatement;
+    class ConnectionPool;
 
     class AbstractHandle {
         public:
@@ -45,15 +48,23 @@ namespace dbi {
         virtual void* call(string name, void*) = 0;
         virtual bool close() = 0;
         virtual void cleanup() = 0;
+
+        friend class ConnectionPool;
+
+        // ASYNC API
+        protected:
+        virtual int socket() = 0;
+        virtual AbstractStatement* aexecute(string sql, vector<Param> &bind) = 0;
+        virtual void initAsync() = 0;
+        virtual bool isBusy() = 0;
+        virtual bool cancel() = 0;
     };
 
-    class AbstractStatement {
+    class AbstractResultSet {
         public:
         virtual unsigned int rows() = 0;
         virtual unsigned int columns() = 0;
         virtual vector<string> fields() = 0;
-        virtual unsigned int execute() = 0;
-        virtual unsigned int execute(vector<Param> &bind) = 0;
         virtual ResultRow& fetchRow() = 0;
         virtual ResultRowHash& fetchRowHash() = 0;
         virtual bool finish() = 0;
@@ -63,6 +74,19 @@ namespace dbi {
         virtual void advanceRow() = 0;
         virtual void cleanup() = 0;
         virtual unsigned long lastInsertID() = 0;
+    };
+
+    class AbstractStatement : public AbstractResultSet {
+        public:
+        virtual unsigned int execute() = 0;
+        virtual unsigned int execute(vector<Param> &bind) = 0;
+
+        // ASYNC API
+        // Returns false if done, true is still more probably yet to consume
+        virtual bool consumeResult() = 0;
+        // Once all available data has been consumed, prepare results for
+        // access.
+        virtual void prepareResult() = 0;
     };
 
     class Driver {
@@ -139,6 +163,35 @@ namespace dbi {
         void advanceRow();
         bool finish();
         unsigned long lastInsertID();
+    };
+
+    class ConnectionPool {
+        public:
+        ConnectionPool(int size, string driver, string user, string pass, string dbname, string host, string port);
+        ConnectionPool(int size, string driver_name, string user, string pass, string dbname);
+        ~ConnectionPool();
+
+        bool execute(string sql, vector<Param> &bind, void (*callback)(AbstractResultSet *r));
+        bool execute(string sql, void (*callback)(AbstractResultSet *r));
+        static void eventCallback(int fd, short type, void *arg);
+
+        protected:
+
+        struct Connection {
+            AbstractHandle* handle;
+            bool busy;
+        };
+
+        struct Query {
+            ConnectionPool *target;
+            AbstractHandle *handle;
+            AbstractStatement *statement;
+            struct event *ev;
+            void (*callback)(AbstractResultSet *r);
+        };
+
+        vector<struct Connection> pool;
+        void process(struct Query *q);
     };
 
     bool dbiInitialize(string path);

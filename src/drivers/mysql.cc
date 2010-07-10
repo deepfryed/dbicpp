@@ -7,11 +7,13 @@
 #define DRIVER_VERSION  "1.1"
 
 #define THROW_MYSQL_STMT_ERROR(s) {\
-    fprintf(stderr, "In SQL: %s\n\n", _sql.c_str());\
-    throw RuntimeError(mysql_stmt_error(s));\
+    snprintf(errormsg, 8192, "In SQL: %s\n\n %s", _sql.c_str(), mysql_stmt_error(s));\
+    throw RuntimeError(errormsg);\
 }
 
 namespace dbi {
+
+    char errormsg[8192];
 
     char MYSQL_BOOL_TRUE  = 1;
     char MYSQL_BOOL_FALSE = 0;
@@ -201,13 +203,13 @@ namespace dbi {
             return _sql;
         }
 
-        void check_ready(string m) {
+        void checkReady(string m) {
             if (!_stmt->bind_result_done)
                 throw RuntimeError((m + " cannot be called yet. call execute() first").c_str());
         }
 
         unsigned int rows() {
-            check_ready("rows()");
+            checkReady("rows()");
             return _rows;
         }
 
@@ -237,6 +239,13 @@ namespace dbi {
             return _rows;
         }
 
+        bool consumeResult() {
+            return false;
+        }
+
+        void prepareResult() {
+        }
+
         unsigned long lastInsertID() {
             return mysql_stmt_insert_id(_stmt);
         }
@@ -244,7 +253,7 @@ namespace dbi {
         ResultRow& fetchRow() {
             int c, rc;
             unsigned long length;
-            check_ready("fetchRow()");
+            checkReady("fetchRow()");
             _rsrow.clear();
 
             if (_rowno < _rows) {
@@ -277,7 +286,7 @@ namespace dbi {
         ResultRowHash& fetchRowHash() {
             int c, rc;
             unsigned long length;
-            check_ready("fetchRowHash()");
+            checkReady("fetchRowHash()");
 
             _rsrowhash.clear();
 
@@ -329,7 +338,7 @@ namespace dbi {
         unsigned char* fetchValue(int r, int c, unsigned long *l = 0) {
             int rc;
             unsigned long length;
-            check_ready("fetchValue()");
+            checkReady("fetchValue()");
 
             mysql_stmt_data_seek(_stmt, r);
             rc = mysql_stmt_fetch(_stmt);
@@ -402,6 +411,25 @@ namespace dbi {
         unsigned int execute(string sql, vector<Param> &bind) {
             MySqlStatement st(sql, conn);
             return st.execute(bind);
+        }
+
+        int socket() {
+            return 0;
+        }
+
+        MySqlStatement* aexecute(string sql, vector<Param> &bind) {
+            return 0;
+        }
+
+        void initAsync() {
+        }
+
+        bool isBusy() {
+            return true;
+        }
+
+        bool cancel() {
+            return true;
         }
 
         MySqlStatement* prepare(string sql) {

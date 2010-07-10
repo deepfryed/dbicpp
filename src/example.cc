@@ -1,12 +1,12 @@
 #include "dbic++.h"
 
-/*-------------------------------------------------------------------------
+/*----------------------------------------------------------------------------------
 
    To compile:
 
-   g++ -Iinc -Llibs -rdynamic -o example example.cc -ldbic++ -ldl -lpcrecpp
+   g++ -Iinc -Llibs -rdynamic -o example example.cc -ldbic++ -ldl -lpcrecpp -levent
 
--------------------------------------------------------------------------*/
+----------------------------------------------------------------------------------*/
 
 using namespace std;
 using namespace dbi;
@@ -16,6 +16,14 @@ void printResultRows(Statement &st) {
     while ((r = st.fetchRow()).size() > 0) {
         cout << r.join("\t") << endl;
     }
+}
+
+void callback(AbstractResultSet *r) {
+    for (int i = 0; i < r->rows(); i++) {
+        cout << r->fetchRowHash() << endl;
+    }
+    r->cleanup();
+    delete r;
 }
 
 int main(int argc, char *argv[]) {
@@ -101,6 +109,20 @@ int main(int argc, char *argv[]) {
     st << "SELECT id, name, email FROM users WHERE id > %d", 0L, execute();
     printResultRows(st);
     st.finish();
+
+    // async querying.
+    cout << endl;
+    cout << "Asynchronous query" << endl;
+    cout << "------------------" << endl << endl;
+
+    string sleep_sql = (driver == "mysql" ? "select sleep" : "select pg_sleep");
+
+    event_init();
+    ConnectionPool pool(5, driver, "udbicpp", "", "dbicpp");
+    pool.execute(sleep_sql + "(5), 1 AS id", callback);
+    pool.execute(sleep_sql + "(3), 2 AS id", callback);
+    pool.execute(sleep_sql + "(1), 3 AS id", callback);
+    event_loop(0);
 
     cout << endl;
 }

@@ -12,7 +12,8 @@ namespace dbi {
         char *demangled_klass = __cxxabiv1::__cxa_demangle(typeid(*this).name(), 0, 0, 0);
         string klass = string(demangled_klass);
         delete demangled_klass;
-        return ("[ " + klass + " ] " + message).c_str();
+        snprintf((char*)msgbuffer, 8192, "%s", ("[ " + klass + " ] " + message).c_str());
+        return (const char *)msgbuffer;
     }
 
     Error::~Error() throw() {}

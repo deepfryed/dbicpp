@@ -52,6 +52,7 @@ local_build() {
   rm -rf lib/*
   mv tmp/lib/* lib/
   rm -rf tmp/*
+  rm -f install_manifest.txt
 }
 
 while getopts "dlchp:" OPTION

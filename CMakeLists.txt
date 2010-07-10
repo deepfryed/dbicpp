@@ -16,9 +16,9 @@ TARGET_LINK_LIBRARIES(dbdmysql mysqlclient)
 SET_TARGET_PROPERTIES(dbdmysql PROPERTIES VERSION ${CMAKE_MYSQL_VERSION} SOVERSION 1)
 
 ADD_EXECUTABLE(example src/example.cc)
-TARGET_LINK_LIBRARIES(example dbic++ uuid pcrecpp dl)
+TARGET_LINK_LIBRARIES(example dbic++ uuid pcrecpp dl event)
 
-SET(CMAKE_CXX_FLAGS "-Wunused-function -Wunused-value -Wunused-label -rdynamic -fPIC")
+SET(CMAKE_CXX_FLAGS "-Wunused-function -Wunused-value -Wunused-label -rdynamic -fPIC -std=c++0x")
 
 # Use -DCMAKE_INSTALL_PREFIX:PATH=<path> to override /usr/local
 # SET(CMAKE_INSTALL_PREFIX /usr CACHE INTERNAL "")
