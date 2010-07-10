@@ -35,10 +35,12 @@ namespace dbi {
             case PGRES_FATAL_ERROR:
             case PGRES_NONFATAL_ERROR:
                 snprintf(errormsg, 8192, "In SQL: %s\n\n %s", sql.c_str(), PQresultErrorMessage(result));
+                PQclear(result);
                 throw RuntimeError((const char*)errormsg);
                 break;
             default:
                 snprintf(errormsg, 8192, "In SQL: %s\n\n Unknown error, check logs.", sql.c_str());
+                PQclear(result);
                 throw RuntimeError(errormsg);
                 break;
         }

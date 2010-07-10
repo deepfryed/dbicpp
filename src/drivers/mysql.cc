@@ -8,6 +8,8 @@
 
 #define THROW_MYSQL_STMT_ERROR(s) {\
     snprintf(errormsg, 8192, "In SQL: %s\n\n %s", _sql.c_str(), mysql_stmt_error(s));\
+    mysql_stmt_free_result(s); \
+    mysql_stmt_close(s); \
     throw RuntimeError(errormsg);\
 }
 
