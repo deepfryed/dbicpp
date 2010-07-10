@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 #define DRIVER_NAME     "postgresql"
-#define DRIVER_VERSION  "1.1"
+#define DRIVER_VERSION  "1.2"
 
 #define PG2PARAM(res, r, c) PARAM_BINARY((unsigned char*)PQgetvalue(res, r, c), PQgetlength(res, r, c))
 
