@@ -1,4 +1,10 @@
-dbicpp (0.1.0) unstable; urgency=low
+dbic++ (0.1.1) unstable; urgency=low
+
+  * Async API.
+
+ -- Bharanee Rathna <dbicpp@gmail.com>  Sun, 11 Jul 2010 08:30:00 +1000
+
+dbic++ (0.1.0) unstable; urgency=low
 
   * Initial build.
 

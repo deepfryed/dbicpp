@@ -23,3 +23,13 @@ install_manifest*
 Makefile
 tmp/*
 !tmp/.keepthis
+debian/*.log
+debian/*.substvars
+debian/*.debhelper
+debian/dbic++-dev/
+debian/dbic++-mysql/
+debian/dbic++-pg/
+debian/files
+debian/stamp-autotools-files
+debian/stamp-makefile-build
+debian/tmp/

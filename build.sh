@@ -7,19 +7,19 @@ export MYSQL_VERSION=$(cat src/drivers/mysql.cc | grep "VERSION \+" | sed 's/^.*
 cleanup() {
   make clean
   rm -rf cmake_install.cmake CMakeFiles/ CMakeCache.txt install_manifest.txt Makefile
-  rm -rf debian/dbicpp-dev.debhelper.log
-  rm -rf debian/dbicpp-dev.substvars
-  rm -rf debian/dbicpp-dev/
-  rm -rf debian/dbicpp-mysql.debhelper.log
-  rm -rf debian/dbicpp-mysql.postinst.debhelper
-  rm -rf debian/dbicpp-mysql.postrm.debhelper
-  rm -rf debian/dbicpp-mysql.substvars
-  rm -rf debian/dbicpp-mysql/
-  rm -rf debian/dbicpp-pg.debhelper.log
-  rm -rf debian/dbicpp-pg.postinst.debhelper
-  rm -rf debian/dbicpp-pg.postrm.debhelper
-  rm -rf debian/dbicpp-pg.substvars
-  rm -rf debian/dbicpp-pg/
+  rm -rf debian/dbic++-dev.debhelper.log
+  rm -rf debian/dbic++-dev.substvars
+  rm -rf debian/dbic++-dev/
+  rm -rf debian/dbic++-mysql.debhelper.log
+  rm -rf debian/dbic++-mysql.postinst.debhelper
+  rm -rf debian/dbic++-mysql.postrm.debhelper
+  rm -rf debian/dbic++-mysql.substvars
+  rm -rf debian/dbic++-mysql/
+  rm -rf debian/dbic++-pg.debhelper.log
+  rm -rf debian/dbic++-pg.postinst.debhelper
+  rm -rf debian/dbic++-pg.postrm.debhelper
+  rm -rf debian/dbic++-pg.substvars
+  rm -rf debian/dbic++-pg/
   rm -rf debian/files
   rm -rf debian/stamp-autotools-files
   rm -rf debian/stamp-makefile-build

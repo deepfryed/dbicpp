@@ -389,12 +389,12 @@ namespace dbi {
         }
 
         bool consumeResult() {
-            throw RuntimeError("Incorrect API call. Use the Async API");
+            throw RuntimeError("consumeResult(): Incorrect API call. Use the Async API");
             return false;
         }
 
         void prepareResult() {
-            throw RuntimeError("Incorrect API call. Use the Async API");
+            throw RuntimeError("prepareResult(): Incorrect API call. Use the Async API");
         }
     };
 
