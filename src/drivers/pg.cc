@@ -146,8 +146,10 @@ namespace dbi {
         PGresult* asyncPrepare() {
             int rc;
             PGresult *response, *result;
+            string query = _sql;
+            pgPreProcessQuery(query);
 
-            rc = PQsendPrepare(conn, _uuid.c_str(), _sql.c_str(), 0, 0);
+            rc = PQsendPrepare(conn, _uuid.c_str(), query.c_str(), 0, 0);
             if (rc == 0) throw RuntimeError(PQerrorMessage(conn));
             while (PQisBusy(conn)) PQconsumeInput(conn);
             result = PQgetResult(conn);

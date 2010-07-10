@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
     cout << "Asynchronous query" << endl;
     cout << "------------------" << endl << endl;
 
-    string sleep_sql = (driver == "mysql" ? "select sleep" : "select pg_sleep");
+    string sleep_sql = (driver == "mysql" ? "SELECT sleep" : "SELECT pg_sleep");
 
     event_init();
     ConnectionPool pool(5, driver, "udbicpp", "", "dbicpp");

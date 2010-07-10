@@ -32,6 +32,31 @@ namespace dbi {
             re.Replace("?", &query);
     }
 
+    void mysqlInterpolateBindParams(MYSQL *conn, string &query, vector<Param> &bind) {
+        int n = 0;
+        string orig = query;
+        char repl[8192];
+        string var;
+
+        RE re("(?<!')(\\?)(?!')");
+        while (re.PartialMatch(query, &var)) {
+            if (n >= bind.size()) {
+                sprintf(errormsg, "Only %d parameters provided for query: %s", (int)bind.size(), orig.c_str());
+                throw RuntimeError(errormsg);
+            }
+            if (bind[n].isnull) {
+                strcpy(repl, "NULL");
+            }
+            else {
+                mysql_real_escape_string(conn, repl+1, bind[n].value.c_str(), bind[n].value.length());
+                repl[0] = '\'';
+                repl[bind[n].value.length() + 1] = '\'';
+                repl[bind[n].value.length() + 2] = 0;
+                re.Replace(repl, &query);
+            }
+        }
+    }
+
     void mysqlProcessBindParams(MYSQL_BIND *params, vector<Param>&bind) {
         for (int i = 0; i < bind.size(); i++) {
             params[i].buffer        = (void *)bind[i].value.data();
@@ -555,17 +580,8 @@ namespace dbi {
         }
 
         MySqlResultSet* aexecute(string sql, vector<Param> &bind) {
-            MYSQL_BIND* params = 0;
-            if (bind.size() > 0) {
-                params = new MYSQL_BIND[bind.size()];
-                mysqlProcessBindParams(params, bind);
-            }
-
+            mysqlInterpolateBindParams(conn, sql, bind);
             mysql_send_query(conn, sql.c_str(), sql.length());
-
-            if (params)
-                delete [] params;
-
             return new MySqlResultSet(conn);
         }
 
