@@ -119,9 +119,9 @@ int main(int argc, char *argv[]) {
 
     event_init();
     ConnectionPool pool(5, driver, "udbicpp", "", "dbicpp");
-    pool.execute(sleep_sql + "(5), 1 AS id", callback);
-    pool.execute(sleep_sql + "(3), 2 AS id", callback);
-    pool.execute(sleep_sql + "(1), 3 AS id", callback);
+    pool.execute(sleep_sql + "(0.5), 1 AS id", callback);
+    pool.execute(sleep_sql + "(0.3), 2 AS id", callback);
+    pool.execute(sleep_sql + "(0.1), 3 AS id", callback);
     event_loop(0);
 
     cout << endl;
