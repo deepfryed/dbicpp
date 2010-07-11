@@ -63,6 +63,7 @@ namespace dbi {
 
     class AbstractResultSet {
         public:
+        void *context;
         virtual unsigned int rows() = 0;
         virtual unsigned int columns() = 0;
         virtual vector<string> fields() = 0;
@@ -172,8 +173,8 @@ namespace dbi {
         ConnectionPool(int size, string driver_name, string user, string pass, string dbname);
         ~ConnectionPool();
 
-        bool execute(string sql, vector<Param> &bind, void (*callback)(AbstractResultSet *r));
-        bool execute(string sql, void (*callback)(AbstractResultSet *r));
+        bool execute(string sql, vector<Param> &bind, void (*callback)(AbstractResultSet *r), void *context = 0);
+        bool execute(string sql, void (*callback)(AbstractResultSet *r), void *context = 0);
         static void eventCallback(int fd, short type, void *arg);
 
         protected:

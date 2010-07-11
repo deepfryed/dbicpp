@@ -306,12 +306,15 @@ namespace dbi {
         }
     }
 
-    bool ConnectionPool::execute(string sql, vector<Param> &bind, void (*callback)(AbstractResultSet *r)) {
+    bool ConnectionPool::execute(
+        string sql, vector<Param> &bind, void (*callback)(AbstractResultSet *r), void *context
+    ) {
         for (int n = 0; n < pool.size(); n++) {
             if (!pool[n].busy) {
 
                 AbstractHandle *h = pool[n].handle;
                 AbstractResultSet *rs = h->aexecute(sql, bind);
+                rs->context = context;
 
                 struct event *ev = new struct event;
                 struct Query *q  = new struct Query;
@@ -326,9 +329,9 @@ namespace dbi {
         return false;
     }
 
-    bool ConnectionPool::execute(string sql, void (*callback)(AbstractResultSet *r)) {
+    bool ConnectionPool::execute(string sql, void (*callback)(AbstractResultSet *r), void *context) {
         vector<Param> bind;
-        return execute(sql, bind, callback);
+        return execute(sql, bind, callback, context);
     }
 
     ConnectionPool::~ConnectionPool() {
