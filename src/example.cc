@@ -1,4 +1,5 @@
 #include "dbic++.h"
+#include "dbic++/reactor.h"
 
 /*----------------------------------------------------------------------------------
 
@@ -22,8 +23,6 @@ void callback(AbstractResultSet *r) {
     for (int i = 0; i < r->rows(); i++) {
         cout << r->fetchRowHash() << endl;
     }
-    r->cleanup();
-    delete r;
 }
 
 int main(int argc, char *argv[]) {
@@ -117,12 +116,12 @@ int main(int argc, char *argv[]) {
 
     string sleep_sql = (driver == "mysql" ? "SELECT sleep" : "SELECT pg_sleep");
 
-    event_init();
     ConnectionPool pool(5, driver, "udbicpp", "", "dbicpp");
-    pool.execute(sleep_sql + "(0.5), 1 AS id", callback);
-    pool.execute(sleep_sql + "(0.3), 2 AS id", callback);
-    pool.execute(sleep_sql + "(0.1), 3 AS id", callback);
-    event_loop(0);
+    Reactor::initialize();
+    Reactor::watch(pool.execute(sleep_sql + "(0.5), 1 AS id", callback));
+    Reactor::watch(pool.execute(sleep_sql + "(0.3), 2 AS id", callback));
+    Reactor::watch(pool.execute(sleep_sql + "(0.1), 3 AS id", callback));
+    Reactor::run();
 
     cout << endl;
 }

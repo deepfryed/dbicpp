@@ -5,8 +5,6 @@
 #include <vector>
 #include <sstream>
 
-#include "dbic++/param.h"
-
 namespace dbi {
 
     using namespace std;

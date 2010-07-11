@@ -10,7 +10,6 @@
 #include <pcrecpp.h>
 #include <sys/time.h>
 #include <uuid/uuid.h>
-#include <event.h>
 
 namespace dbi {
     struct null {};
@@ -18,7 +17,9 @@ namespace dbi {
 }
 
 #include "dbic++/error.h"
+#include "dbic++/param.h"
 #include "dbic++/container.h"
+#include "dbic++/cpool.h"
 
 #define DEFAULT_DRIVER_PATH "/usr/lib/dbic++"
 #define OPTIONAL_ARG(a, v) a ? a : v
@@ -33,7 +34,6 @@ namespace dbi {
 
     class AbstractStatement;
     class AbstractResultSet;
-    class ConnectionPool;
 
     class AbstractHandle {
         public:
@@ -51,6 +51,7 @@ namespace dbi {
         virtual void cleanup() = 0;
 
         friend class ConnectionPool;
+        friend class Request;
 
         // ASYNC API
         protected:
@@ -165,35 +166,6 @@ namespace dbi {
         void advanceRow();
         bool finish();
         unsigned long lastInsertID();
-    };
-
-    class ConnectionPool {
-        public:
-        ConnectionPool(int size, string driver, string user, string pass, string dbname, string host, string port);
-        ConnectionPool(int size, string driver_name, string user, string pass, string dbname);
-        ~ConnectionPool();
-
-        bool execute(string sql, vector<Param> &bind, void (*callback)(AbstractResultSet *r), void *context = 0);
-        bool execute(string sql, void (*callback)(AbstractResultSet *r), void *context = 0);
-        static void eventCallback(int fd, short type, void *arg);
-
-        protected:
-
-        struct Connection {
-            AbstractHandle* handle;
-            bool busy;
-        };
-
-        struct Query {
-            ConnectionPool *target;
-            AbstractHandle *handle;
-            AbstractResultSet *result;
-            struct event *ev;
-            void (*callback)(AbstractResultSet *r);
-        };
-
-        vector<struct Connection> pool;
-        void process(struct Query *q);
     };
 
     bool dbiInitialize(string path);

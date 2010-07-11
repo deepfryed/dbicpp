@@ -99,7 +99,7 @@ namespace dbi {
         return list;
     }
 
-    void init_and_check(string driver_name) {
+    void initCheck(string driver_name) {
         if (!drivers.size()) {
             dbiInitialize("./lib/dbic++");
             dbiInitialize();
@@ -110,12 +110,12 @@ namespace dbi {
     }
 
     Handle::Handle(string driver_name, string user, string pass, string dbname, string host, string port) {
-        init_and_check(driver_name);
+        initCheck(driver_name);
         h = drivers[driver_name]->connect(user, pass, dbname, host, port);
     }
 
     Handle::Handle(string driver_name, string user, string pass, string dbname) {
-        init_and_check(driver_name);
+        initCheck(driver_name);
         h = drivers[driver_name]->connect(user, pass, dbname, "", "");
     }
 
@@ -281,86 +281,4 @@ namespace dbi {
         n += write(fd, "\n", 1);
     }
 
-
-    ConnectionPool::ConnectionPool(
-        int size, string driver_name, string user, string pass, string dbname, string host, string port
-    ) {
-        init_and_check(driver_name);
-        struct Connection c;
-        for (int n = 0; n < size; n++) {
-            AbstractHandle *h = drivers[driver_name]->connect(user, pass, dbname, host, port);
-            h->initAsync();
-            c.handle = h; c.busy = false;
-            pool.push_back(c);
-        }
-    }
-
-    ConnectionPool::ConnectionPool (int size, string driver_name, string user, string pass, string dbname) {
-        init_and_check(driver_name);
-        struct Connection c;
-        for (int n = 0; n < size; n++) {
-            AbstractHandle *h = drivers[driver_name]->connect(user, pass, dbname, "", "");
-            h->initAsync();
-            c.handle = h; c.busy = false;
-            pool.push_back(c);
-        }
-    }
-
-    bool ConnectionPool::execute(
-        string sql, vector<Param> &bind, void (*callback)(AbstractResultSet *r), void *context
-    ) {
-        for (int n = 0; n < pool.size(); n++) {
-            if (!pool[n].busy) {
-
-                AbstractHandle *h = pool[n].handle;
-                AbstractResultSet *rs = h->aexecute(sql, bind);
-                rs->context = context;
-
-                struct event *ev = new struct event;
-                struct Query *q  = new struct Query;
-                *q = { this, h, rs, ev, callback };
-
-                event_set(ev, h->socket(), EV_READ | EV_PERSIST, eventCallback, q);
-                event_add(ev, 0);
-                pool[n].busy = true;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool ConnectionPool::execute(string sql, void (*callback)(AbstractResultSet *r), void *context) {
-        vector<Param> bind;
-        return execute(sql, bind, callback, context);
-    }
-
-    ConnectionPool::~ConnectionPool() {
-        for (int n = 0; n < pool.size(); n++) {
-            pool[n].handle->close();
-            pool[n].handle->cleanup();
-            delete pool[n].handle;
-        }
-    }
-
-    void ConnectionPool::process(struct Query *q) {
-        AbstractResultSet *rs = q->result;
-        void (*callback)(AbstractResultSet *r) = q->callback;
-        if(!rs->consumeResult()) {
-            rs->prepareResult();
-            event_del(q->ev);
-            for (int n = 0; n < pool.size(); n++) {
-                if (q->handle == pool[n].handle) {
-                    pool[n].busy = false;
-                    break;
-                }
-            }
-            delete q->ev;
-            delete q;
-            callback(rs);
-        }
-    }
-
-    void ConnectionPool::eventCallback(int fd, short type, void *arg) {
-        ((struct Query*)arg)->target->process((struct Query*)arg);
-    }
 }
