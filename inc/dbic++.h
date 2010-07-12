@@ -105,9 +105,10 @@ namespace dbi {
     class Statement;
     class Handle {
         protected:
-        AbstractHandle *h;
         vector<string> trx;
+        AbstractHandle *h;
         public:
+        AbstractHandle* conn();
         Handle(string driver, string user, string pass, string dbname, string host, string port);
         Handle(string driver, string user, string pass, string dbname);
         Handle(AbstractHandle *ah);

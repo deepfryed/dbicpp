@@ -1,5 +1,6 @@
 #include "dbic++.h"
 #include "dbic++/reactor.h"
+#include <unistd.h>
 
 /*----------------------------------------------------------------------------------
 
@@ -29,7 +30,7 @@ int main(int argc, char *argv[]) {
     string driver(argc > 1 ? argv[1] : "postgresql");
 
     // Handle h ("driver", "user", "password", "database", "host", "port");
-    Handle h (driver, "udbicpp", "", "dbicpp");
+    Handle h (driver, getlogin(), "", "dbicpp");
 
     // Set trace on and log queries to stderr
     // trace(true, 2);
@@ -116,7 +117,7 @@ int main(int argc, char *argv[]) {
 
     string sleep_sql = (driver == "mysql" ? "SELECT sleep" : "SELECT pg_sleep");
 
-    ConnectionPool pool(5, driver, "udbicpp", "", "dbicpp");
+    ConnectionPool pool(5, driver, getlogin(), "", "dbicpp");
     Reactor::initialize();
     Reactor::watch(pool.execute(sleep_sql + "(0.5), 1 AS id", callback));
     Reactor::watch(pool.execute(sleep_sql + "(0.3), 2 AS id", callback));

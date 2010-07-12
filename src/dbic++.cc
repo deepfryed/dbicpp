@@ -120,6 +120,7 @@ namespace dbi {
     }
 
 
+    AbstractHandle* Handle::conn()                           { return h; }
     Handle::Handle(AbstractHandle *ah)                       { h = ah; }
     Handle::~Handle()                                        { close(); h->cleanup(); delete h; }
     Statement Handle::prepare(string sql)                    { return Statement(h->prepare(sql)); }
