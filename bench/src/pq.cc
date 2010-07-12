@@ -7,6 +7,7 @@
 #include <cstring>
 #include <vector>
 #include <pcrecpp.h>
+#include <unistd.h>
 
 #define PQVALUE(res, r, c) PQgetisnull(res, r, c) ? NULL : PQgetvalue(res, r, c)
 
@@ -79,8 +80,10 @@ void pgPreProcessQuery(string &query) {
 
 int main(int argc, char*argv[]) {
     int i, n;
+    char connectstr[1024];
     parseOptions(argc, argv);
-    PGconn *conn = PQconnectdb("host=127.0.0.1 user=udbicpp dbname=dbicpp");
+    snprintf(connectstr, 1024, "host=127.0.0.1 user=%s dbname=dbicpp", getlogin());
+    PGconn *conn = PQconnectdb(connectstr);
     if (conn == NULL)
         error("Unable to allocate connection");
     else if (PQstatus(conn) == CONNECTION_BAD)

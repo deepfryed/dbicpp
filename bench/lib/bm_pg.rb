@@ -1,4 +1,5 @@
 require 'pg'
+require 'etc'
 
 class Benchmarks
   class Pg
@@ -38,7 +39,7 @@ class Benchmarks
 
     def initialize driver, sql
       @driver, @sql = driver, process_command(sql)
-      @h = Connection.connect "host=127.0.0.1 dbname=dbicpp user=udbicpp"
+      @h = Connection.connect "host=127.0.0.1 dbname=dbicpp user=#{Etc.getlogin}"
       @sth = @h.prepare "qbench", @sql
     end
 

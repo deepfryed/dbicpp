@@ -7,6 +7,7 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include <unistd.h>
 
 using namespace std;
 
@@ -72,7 +73,7 @@ int main(int argc, char*argv[]) {
 
     conn = mysql_init(0);
 
-    if (!mysql_real_connect(conn, "127.0.0.1", "udbicpp", "", "dbicpp", 3306, 0, 0))
+    if (!mysql_real_connect(conn, "127.0.0.1", getlogin(), "", "dbicpp", 3306, 0, 0))
         MYSQL_ERROR(conn);
 
     stmt = mysql_stmt_init(conn);

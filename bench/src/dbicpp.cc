@@ -1,6 +1,7 @@
 #include "dbic++.h"
 #include <cstdio>
 #include <getopt.h>
+#include <unistd.h>
 
 using namespace std;
 using namespace dbi;
@@ -39,7 +40,7 @@ int main(int argc, char *argv[]) {
     dbiInitialize("../lib/dbic++");
     parseOptions(argc, argv);
 
-    Handle h(driver, "udbicpp", "", "dbicpp");
+    Handle h(driver, getlogin(), "", "dbicpp");
     Statement st(h, sql);
     ResultRow row;
 

@@ -1,4 +1,5 @@
 require 'swift'
+require 'etc'
 
 class Benchmarks
 
@@ -8,7 +9,7 @@ class Benchmarks
 
     def initialize driver, sql
       @driver = driver
-      @h = Swift::DBI::Handle.new user: 'udbicpp', db: 'dbicpp', driver: driver
+      @h = Swift::DBI::Handle.new user: Etc.getlogin, db: 'dbicpp', driver: driver
       @sth = @h.prepare sql
     end
 

@@ -1,10 +1,11 @@
 #!/usr/bin/ruby
 
 require 'swift'
+require 'etc'
 
 Swift::DBI.init File.dirname(__FILE__) + '/../../dbicpp/lib/dbic++'
 
-h = Swift::DBI::Handle.new user: 'udbicpp', db: 'dbicpp', driver: ARGV[0] || 'postgresql'
+h = Swift::DBI::Handle.new user: Etc.getlogin, db: 'dbicpp', driver: ARGV[0] || 'postgresql'
 
 h.execute "DROP TABLE IF EXISTS users"
 h.execute "CREATE TABLE users (id serial, name text, email text)"
