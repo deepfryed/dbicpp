@@ -1,3 +1,9 @@
+dbic++ (0.1.2) unstable; urgency=low
+
+  * Cleanup and reactor fixes.
+
+ -- Bharanee Rathna <dbicpp@gmail.com>  Tue, 13 Jul 2010 12:10:00 +1000
+
 dbic++ (0.1.1) unstable; urgency=low
 
   * Async API.
