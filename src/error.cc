@@ -1,4 +1,5 @@
 #include "dbic++.h"
+#include <cstdio>
 
 namespace dbi {
 

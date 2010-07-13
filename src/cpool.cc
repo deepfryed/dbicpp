@@ -12,7 +12,8 @@ namespace dbi {
         for (int n = 0; n < size; n++) {
             AbstractHandle *h = drivers[driver_name]->connect(user, pass, dbname, host, port);
             h->initAsync();
-            c = { h, false };
+            c.handle = h;
+            c.busy   = false;
             pool.push_back(c);
         }
     }
@@ -23,7 +24,8 @@ namespace dbi {
         for (int n = 0; n < size; n++) {
             AbstractHandle *h = drivers[driver_name]->connect(user, pass, dbname, "", "");
             h->initAsync();
-            c = { h, false };
+            c.handle = h;
+            c.busy   = false;
             pool.push_back(c);
         }
     }
