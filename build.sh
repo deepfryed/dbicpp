@@ -1,6 +1,5 @@
 #!/bin/bash
 
-OPERATION="local-build"
 export PG_VERSION=$(cat src/drivers/pg.cc | grep "VERSION \+" | sed 's/^.*VERSION *//' | sed 's/"//g')
 export MYSQL_VERSION=$(cat src/drivers/mysql.cc | grep "VERSION \+" | sed 's/^.*VERSION *//' | sed 's/"//g')
 
@@ -27,7 +26,7 @@ cleanup() {
 }
 
 usage() {
-echo <<-EOF
+  echo "
 
     $0 [options]
     
@@ -35,9 +34,23 @@ echo <<-EOF
     -d builds debian packages.
     -l builds and install libraries locally into lib (default).
     -c cleanup all temporary files.
+    -i builds and installs dbic++ under /usr (root)
+    -u uninstall dbic++ stuff from /usr (root)
 
-EOF
-  exit
+  "
+}
+
+_uninstall() {
+  rm -rf /usr/lib/libdbic++.a
+  rm -rf /usr/lib/dbic++
+  rm -rf /usr/include/dbic++*
+}
+
+_install() {
+  uninstall
+  cmake -DCMAKE_PG_VERSION=$PG_VERSION -DCMAKE_MYSQL_VERSION=$MYSQL_VERSION -DCMAKE_INSTALL_PREFIX:PATH=/usr
+  make
+  make install
 }
 
 debian_build() {
@@ -55,20 +68,17 @@ local_build() {
   rm -f install_manifest.txt
 }
 
-while getopts "dlchp:" OPTION
+while getopts "cdhilu" OPTION
 do
   case $OPTION in
-    h) usage;;
-    d) OPERATION="debian-build";;
-    c) OPERATION="cleanup";;
-    ?) usage;;
+    c) cleanup; exit 0;;
+    d) debian_build; exit 0;;
+    i) local_build; exit 0;;
+    i) _install; exit 0;;
+    u) _uninstall; exit 0;;
+    h) usage; exit 0;;
+    ?) usage; exit 0;;
   esac
 done
 
-case $OPERATION in
-  "debian-build") debian_build;;
-  "local-build") local_build;;
-  "cleanup") cleanup;;
-  ?) usage;;
-esac
-exit 0
+local_build
