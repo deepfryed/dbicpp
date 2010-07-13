@@ -140,11 +140,12 @@ namespace dbi {
     Statement::Statement(Handle &handle, string sql)         { h = handle.h; st = h->prepare(sql); }
     Statement::Statement(Handle *handle)                     { st = NULL; h = handle->h; }
     Statement::Statement(Handle *handle, string sql)         { h = handle->h; st = h->prepare(sql); }
-    Statement::~Statement()                                  { finish(); if (st != NULL) { st->cleanup(); delete st; } }
+    Statement::~Statement()                                  { finish(); if (st) { st->cleanup(); delete st; } }
     unsigned int Statement::rows()                           { return st->rows(); }
     ResultRow& Statement::fetchRow()                         { return st->fetchRow(); }
     ResultRowHash& Statement::fetchRowHash()                 { return st->fetchRowHash(); }
     bool Statement::finish()                                 { params.clear(); return st->finish(); }
+    void Statement::cleanup()                                { if (st) st->cleanup(); }
 
 
     // syntactic sugar.
@@ -230,7 +231,7 @@ namespace dbi {
     static string inline formatParams(string sql, ResultRow &p) {
         string message(sql);
 
-        if (p.size() > 0) message += " : " + p.join(", ");
+        if (p.size() > 0) message += " ~ " + p.join(", ");
         return message;
     }
 
@@ -272,10 +273,10 @@ namespace dbi {
 
         gettimeofday(&tv, &tz);
 
-        strftime(buffer, 512, "[%FT%H:%M:%S", now_tm);
+        strftime(buffer, 512, "[%FT%H:%M:", now_tm);
         n = write(fd, buffer, strlen(buffer));
 
-        sprintf(buffer, ".%ld] ", tv.tv_usec);
+        sprintf(buffer, "%02.3f] ", (float)now_tm->tm_sec + (float)tv.tv_usec/1000000.0);
 
         n += write(fd, buffer, strlen(buffer));
         n += write(fd, msg.data(), msg.length());

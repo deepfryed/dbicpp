@@ -166,6 +166,7 @@ namespace dbi {
         unsigned int currentRow();
         void advanceRow();
         bool finish();
+        void cleanup();
         unsigned long lastInsertID();
     };
 
