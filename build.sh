@@ -73,7 +73,7 @@ do
   case $OPTION in
     c) cleanup; exit 0;;
     d) debian_build; exit 0;;
-    i) local_build; exit 0;;
+    l) local_build; exit 0;;
     i) _install; exit 0;;
     u) _uninstall; exit 0;;
     h) usage; exit 0;;
