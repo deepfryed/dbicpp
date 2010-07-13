@@ -6,6 +6,9 @@
 
 namespace dbi {
 
+    bool _trace;
+    int  _trace_fd;
+
     map<string, Driver *> drivers;
     vector<string> available_drivers();
 
@@ -228,7 +231,7 @@ namespace dbi {
         return h->execute(sql);
     }
 
-    static string inline formatParams(string sql, ResultRow &p) {
+    string formatParams(string sql, ResultRow &p) {
         string message(sql);
 
         if (p.size() > 0) message += " ~ " + p.join(", ");

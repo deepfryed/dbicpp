@@ -29,8 +29,8 @@ namespace dbi {
     using namespace std;
     using namespace pcrecpp;
 
-    static bool _trace;
-    static int  _trace_fd;
+    extern bool _trace;
+    extern int  _trace_fd;
 
     class AbstractStatement;
     class AbstractResultSet;
@@ -177,6 +177,7 @@ namespace dbi {
     void trace(bool flag);
     void trace(bool flag, int fd);
     void logMessage(int fd, string msg);
+    string formatParams(string sql, ResultRow &p);
 
     string generateCompactUUID();
 }
