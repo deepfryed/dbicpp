@@ -61,9 +61,12 @@ int main(int argc, char *argv[]) {
     cout << "-------------" << endl << endl;
 
     Statement st (h, "SELECT id, name, email FROM users WHERE id >= ? AND id < ?");
-    cout << "pausing... and trying to kill connection for an auto-reconnect" << endl;
-    system("sudo kill `pgrep -U postgres -f postgres.*dbicpp`");
-    sleep(1);
+
+    if (driver == "postgresql") {
+        cout << "pausing... and trying to kill connection for an auto-reconnect" << endl;
+        system("sudo kill `pgrep -U postgres -f postgres.*dbicpp`");
+        sleep(1);
+    }
 
     // bind and execute the statement in one go.
     st % 1L, 10L, execute();
