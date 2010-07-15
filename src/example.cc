@@ -80,10 +80,21 @@ int main(int argc, char *argv[]) {
     // bind and execute the statement later.
     st % 1L, 10L;
     st.execute();
+
     ResultRowHash rh;
     while (rh = st.fetchRowHash()) {
         cout << rh["name"] << endl;
     }
+
+    cout << endl;
+    cout << "Rewind" << endl;
+    cout << "------" << endl << endl;
+
+    st.rewind();
+    while (rh = st.fetchRowHash()) {
+        cout << rh["name"] << endl;
+    }
+
     st.finish();
 
     // nested transaction

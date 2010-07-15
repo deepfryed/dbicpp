@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 #define DRIVER_NAME     "postgresql"
-#define DRIVER_VERSION  "1.2"
+#define DRIVER_VERSION  "1.3"
 
 #define PG2PARAM(res, r, c) PARAM_BINARY((unsigned char*)PQgetvalue(res, r, c), PQgetlength(res, r, c))
 
@@ -101,6 +101,7 @@ namespace dbi {
         unsigned char* fetchValue(unsigned int r, unsigned int c, unsigned long *l = 0);
         unsigned int currentRow();
         void advanceRow();
+        void rewind();
     };
 
     class PgHandle : public AbstractHandle {
@@ -397,6 +398,10 @@ namespace dbi {
             throw ConnectionError(m);
         else
             throw RuntimeError(m);
+    }
+
+    void PgStatement::rewind() {
+        _rowno = 0;
     }
 
     PgHandle::PgHandle() { tr_nesting = 0; }

@@ -5,7 +5,7 @@
 #include <mysql/errmsg.h>
 
 #define DRIVER_NAME     "mysql"
-#define DRIVER_VERSION  "1.2"
+#define DRIVER_VERSION  "1.3"
 #define __MYSQL_BIND_BUFFER_LEN 1024*128
 
 #define THROW_MYSQL_STMT_ERROR(s) {\
@@ -180,6 +180,7 @@ namespace dbi {
         void advanceRow();
         bool consumeResult();
         void prepareResult();
+        void rewind();
     };
 
 
@@ -210,6 +211,7 @@ namespace dbi {
         unsigned long lastInsertID();
         bool consumeResult();
         void prepareResult();
+        void rewind();
     };
 
 
@@ -522,6 +524,10 @@ namespace dbi {
             throw RuntimeError(m);
     }
 
+    void MySqlStatement::rewind() {
+        _rowno = 0;
+        mysql_stmt_data_seek(_stmt, 0);
+    }
 
     // ----------------------------------------------------------------------
     // MySqlResultSet
@@ -647,6 +653,10 @@ namespace dbi {
             _rsfields.push_back(fields[n].name);
     }
 
+    void MySqlResultSet::rewind() {
+        _rowno = 0;
+        mysql_data_seek(result, 0);
+    }
 
     // ----------------------------------------------------------------------
     // MySqlHandle

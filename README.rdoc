@@ -37,10 +37,19 @@ I'm working on drivers for the following, which will be available soon.
       // bind and execute the statement.
       st % 1L, 10L;
       st.execute();
+
       ResultRow r;
-      while ((r = st.fetchRow()).size() > 0) {
+      while (r = st.fetchRow())
           cout << r.join("\t") << endl;
-      }
+
+      // or you can do
+      st.rewind();
+      ResultRowHash rh;
+      while (rh = st.fetchRowHash())
+          cout << rh["id"]    << "\t"
+               << rh["name"]  << "\t"
+               << rh["email"] << endl;
+
       st.finish();
   }
 

@@ -78,6 +78,7 @@ namespace dbi {
         virtual void advanceRow() = 0;
         virtual void cleanup() = 0;
         virtual unsigned long lastInsertID() = 0;
+        virtual void rewind() = 0;
 
         // ASYNC API
         // Returns false if done, true is still more probably yet to consume
@@ -170,6 +171,7 @@ namespace dbi {
         bool finish();
         void cleanup();
         unsigned long lastInsertID();
+        void rewind();
     };
 
     bool dbiInitialize(string path);

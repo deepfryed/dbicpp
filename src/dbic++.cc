@@ -266,6 +266,10 @@ namespace dbi {
         return st->lastInsertID();
     }
 
+    void Statement::rewind() {
+        st->rewind();
+    }
+
     void logMessage(int fd, string msg) {
         long n;
         char buffer[512];
