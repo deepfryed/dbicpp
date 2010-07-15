@@ -10,6 +10,13 @@ I'm working on drivers for the following, which will be available soon.
 
 * SQLite >= 3
 
+== Main Features
+
+* Simple API to maximize cross database support.
+* Supports nested transactions.
+* Auto reconnect, re-prepare & execute statements again unless inside a transaction.
+* Provides APIs for async queries and a simple reactor API built on libevent.
+
 == Examples
 
 === C++
@@ -112,11 +119,11 @@ with stock database configs.
 
 === Database Features
 
-* cursor support, function calls, async queries and a lot more.
+* cursor support, function calls and a lot more.
 
 === Distribution
 
-* proper extconf.rb and gemspec for ruby bindings.
+* upload stuff to ppa .
 
 == LICENSE
 
