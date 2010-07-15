@@ -23,7 +23,7 @@ namespace dbi {
     bool MYSQL_BIND_RO    = true;
 
     // MYSQL does not support type specific binding
-    void mysqlPreProcessQuery(string &query) {
+    void MYSQL_PREPROCESS_QUERY(string &query) {
         int i, n = 0;
         char repl[128];
         string var;
@@ -33,7 +33,7 @@ namespace dbi {
             re.Replace("?", &query);
     }
 
-    void mysqlInterpolateBindParams(MYSQL *conn, string &query, vector<Param> &bind) {
+    void MYSQL_INTERPOLATE_BIND(MYSQL *conn, string &query, vector<Param> &bind) {
         int n = 0;
         string orig = query;
         char repl[8192];
@@ -58,7 +58,7 @@ namespace dbi {
         }
     }
 
-    void mysqlProcessBindParams(MYSQL_BIND *params, vector<Param>&bind) {
+    void MYSQL_PROCESS_BIND(MYSQL_BIND *params, vector<Param>&bind) {
         for (int i = 0; i < bind.size(); i++) {
             params[i].buffer        = (void *)bind[i].value.data();
             params[i].buffer_length = bind[i].value.length();
@@ -67,7 +67,7 @@ namespace dbi {
         }
     }
 
-    bool mysqlConnectionError(int error) {
+    bool MYSQL_CONNECTION_ERROR(int error) {
         return (error == CR_SERVER_GONE_ERROR || error == CR_SERVER_LOST ||
             error == CR_SERVER_LOST_EXTENDED || error == CR_COMMANDS_OUT_OF_SYNC);
     }
@@ -307,7 +307,7 @@ namespace dbi {
         _sql   = query;
         _stmt  = mysql_stmt_init(handle->conn);
 
-        mysqlPreProcessQuery(query);
+        MYSQL_PREPROCESS_QUERY(query);
 
         if (mysql_stmt_prepare(_stmt, query.c_str(), query.length()) != 0)
             THROW_MYSQL_STMT_ERROR(_stmt);
@@ -363,7 +363,7 @@ namespace dbi {
         finish();
 
         MySqlBind _bind(bind.size(), MYSQL_BIND_RO);
-        mysqlProcessBindParams(_bind.params, bind);
+        MYSQL_PROCESS_BIND(_bind.params, bind);
 
         if (mysql_stmt_bind_param(_stmt, _bind.params) != 0 )
             THROW_MYSQL_STMT_ERROR(_stmt);
@@ -372,7 +372,7 @@ namespace dbi {
         do {
             tries++;
             failed = mysql_stmt_execute(_stmt);
-            if (failed && mysqlConnectionError(mysql_stmt_errno(_stmt))) {
+            if (failed && MYSQL_CONNECTION_ERROR(mysql_stmt_errno(_stmt))) {
                 //TODO: Do we need to re-prepare here ?
                 handle->reconnect();
                 failed = mysql_stmt_execute(_stmt);
@@ -517,7 +517,7 @@ namespace dbi {
     }
 
     void MySqlStatement::boom(const char *m) {
-        if (mysqlConnectionError(mysql_errno(handle->conn)))
+        if (MYSQL_CONNECTION_ERROR(mysql_errno(handle->conn)))
             throw ConnectionError(m);
         else
             throw RuntimeError(m);
@@ -684,16 +684,15 @@ namespace dbi {
 
     unsigned int MySqlHandle::execute(string sql) {
         int failed, tries;
-        string query = sql;
-        mysqlPreProcessQuery(query);
 
+        MYSQL_PREPROCESS_QUERY(sql);
         failed = tries = 0;
         do {
             tries++;
-            failed = mysql_real_query(conn, query.c_str(), query.length());
-            if (failed && mysqlConnectionError(mysql_errno(conn))) {
+            failed = mysql_real_query(conn, sql.c_str(), sql.length());
+            if (failed && MYSQL_CONNECTION_ERROR(mysql_errno(conn))) {
                 reconnect();
-                failed = mysql_real_query(conn, query.c_str(), query.length());
+                failed = mysql_real_query(conn, sql.c_str(), sql.length());
             }
         } while (failed && tries < 2);
 
@@ -711,7 +710,8 @@ namespace dbi {
     }
 
     MySqlResultSet* MySqlHandle::aexecute(string sql, vector<Param> &bind) {
-        mysqlInterpolateBindParams(conn, sql, bind);
+        MYSQL_PREPROCESS_QUERY(sql);
+        MYSQL_INTERPOLATE_BIND(conn, sql, bind);
         mysql_send_query(conn, sql.c_str(), sql.length());
         return new MySqlResultSet(this);
     }
@@ -797,7 +797,7 @@ namespace dbi {
     }
 
     void MySqlHandle::boom(const char *m) {
-        if (mysqlConnectionError(mysql_errno(conn)))
+        if (MYSQL_CONNECTION_ERROR(mysql_errno(conn)))
             throw ConnectionError(m);
         else
             throw RuntimeError(m);
