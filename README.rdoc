@@ -22,13 +22,14 @@ I'm working on drivers for the following, which will be available soon.
 === C++
 
   #include "dbic++.h"
+  #include <unistd.h>
 
   using namespace std;
   using namespace dbi;
 
   int main() {
       // Handle h ("driver", "user", "password", "database", "host", "port");
-      Handle h ("postgresql", "udbicpp", "", "dbicpp");
+      Handle h ("postgresql", getlogin(), "", "dbicpp");
       Statement st (h, "SELECT id, name, email FROM users WHERE id >= ? AND id < ?");
 
       // bind and execute the statement.
@@ -48,28 +49,37 @@ See src/example.cc for more specific examples.
 You need to install the swift gem. It includes ruby bindings to dbicpp and is also
 a funky minimal ORM.
 
+
   require 'swift'
+  require 'etc'
 
-  h = Swift::DBI::Handle.new user: "udbicpp", driver: "postgresql", database: "dbicpp"
+  Swift.setup user: Etc.getlogin, driver: 'postgresql', db: 'dbicpp'
+  Swift.trace true
 
-  st = h.prepare "SELECT name, email FROM users where id > ? AND id < ?"
+  Swift.db do
+    st = prepare "select id, name, email from users where id > ? AND id < ?"
 
-  st.execute(0, 10) do |row|
-    puts row["name"]
-    puts row["email"]
-  end
+    st.execute(0, 10) do |row|
+      puts row.values_at(:id, :name, :email).join("\t")
+    end
 
-  # Named save point.
-  h.transaction 'delete_stuff' do
-    h.execute "DELETE FROM users WHERE id = ?", 2
-    begin
-      # UUID save point.
-      h.transaction do
-        h.execute "DELETE FROM users"
-        raise "changed my mind"
+    # Named save point.
+    transaction 'delete_stuff' do
+      execute "delete from users where id = ?", 2
+      begin
+        # UUID save point.
+        transaction do
+          execute "delete from users"
+          raise "changed my mind"
+        end
+      rescue => e
+        # nop
+        p e
       end
-    rescue => e
-      # nop
+    end
+
+    st.execute(0, 10) do |row|
+      puts row.values_at(:id, :name, :email).join("\t")
     end
   end
 

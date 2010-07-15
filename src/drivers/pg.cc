@@ -298,7 +298,7 @@ namespace dbi {
                     done = handle->checkResult(_result, _sql);
                     if (!done) prepare();
                 }
-            } catch (exception &e) {
+            } catch (Error &e) {
                 delete []param_v;
                 delete []param_l;
                 throw e;
@@ -473,7 +473,7 @@ namespace dbi {
                 done = checkResult(result, sql);
             }
         }
-        catch (exception &e) {
+        catch (Error &e) {
             delete []param_v;
             delete []param_l;
             throw e;
