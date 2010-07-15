@@ -23,31 +23,8 @@ namespace dbi {
         return n > 0 ? n : atoi(PQcmdTuples(r));
     }
 
-    void pgCheckResult(PGresult *result, string sql) {
-        switch(PQresultStatus(result)) {
-            case PGRES_TUPLES_OK:
-            case PGRES_COPY_OUT:
-            case PGRES_COPY_IN:
-            case PGRES_EMPTY_QUERY:
-            case PGRES_COMMAND_OK:
-                return;
-            case PGRES_BAD_RESPONSE:
-            case PGRES_FATAL_ERROR:
-            case PGRES_NONFATAL_ERROR:
-                snprintf(errormsg, 8192, "In SQL: %s\n\n %s", sql.c_str(), PQresultErrorMessage(result));
-                PQclear(result);
-                throw RuntimeError((const char*)errormsg);
-                break;
-            default:
-                snprintf(errormsg, 8192, "In SQL: %s\n\n Unknown error, check logs.", sql.c_str());
-                PQclear(result);
-                throw RuntimeError(errormsg);
-                break;
-        }
-    }
 
-    // TODO: raise parser errors here before sending it to server ?
-    void pgPreProcessQuery(string &query) {
+    void PQ_PREPROCESS_QUERY(string &query) {
         int i, n = 0;
         char repl[128];
         string var;
@@ -69,7 +46,7 @@ namespace dbi {
         }
     }
 
-    void pgProcessBindParams(const char ***param_v, int **param_l, vector<Param> &bind) {
+    void PQ_PROCESS_BIND(const char ***param_v, int **param_l, vector<Param> &bind) {
         *param_v = new const char*[bind.size()];
         *param_l = new int[bind.size()];
 
@@ -78,28 +55,6 @@ namespace dbi {
             (*param_v)[i] = isnull ? 0 : bind[i].value.data();
             (*param_l)[i] = isnull ? 0 : bind[i].value.length();
         }
-    }
-
-    PGconn* pgRetryConnect(PGconn *conn, bool hard = true) {
-        PQreset(conn);
-        if (PQstatus(conn) == CONNECTION_BAD) {
-            if (hard) {
-                char conninfo[8192];
-                snprintf(conninfo, 8192, "dbname=%s user=%s password=%s host=%s port=%s",
-                    PQdb(conn), PQuser(conn), PQpass(conn), PQhost(conn), PQport(conn));
-                PQfinish(conn);
-                conn = PQconnectdb(conninfo);
-                if (PQstatus(conn) == CONNECTION_BAD) throw ConnectionError(PQerrorMessage(conn));
-                fprintf(stderr, "[WARNING] Socket changed during auto reconnect to database %s on host %s\n",
-                    PQdb(conn), PQhost(conn));
-            }
-            else throw ConnectionError(PQerrorMessage(conn));
-        }
-        else {
-            fprintf(stderr, "[NOTICE] Auto reconnected on same socket to database %s on host %s\n",
-                PQdb(conn), PQhost(conn));
-        }
-        return conn;
     }
 
     // ----------------------------------------------------------------------
@@ -172,7 +127,8 @@ namespace dbi {
         bool rollback(string name);
         void* call(string name, void* args);
         bool close();
-        void reconnect();
+        void reconnect(bool barf = false);
+        int checkResult(PGresult*, string, bool barf = false);
         friend class PgStatement;
     };
 
@@ -191,35 +147,53 @@ namespace dbi {
     }
 
     PGresult* PgStatement::prepare() {
-        int rc;
+        int tries, done;
         PGresult *response, *result;
         string query = _sql;
-        pgPreProcessQuery(query);
+        PQ_PREPROCESS_QUERY(query);
 
         if (_async) {
-            rc = PQsendPrepare(handle->conn, _uuid.c_str(), query.c_str(), 0, 0);
-            if (rc == 0) throw RuntimeError(PQerrorMessage(handle->conn));
-            while (PQisBusy(handle->conn)) PQconsumeInput(handle->conn);
-            result = PQgetResult(handle->conn);
-            while ((response = PQgetResult(handle->conn))) PQclear(response);
+            done = tries = 0;
+            while (!done && tries < 2) {
+                tries++;
+                done = PQsendPrepare(handle->conn, _uuid.c_str(), query.c_str(), 0, 0);
+                if (!done) { handle->reconnect(true); continue; }
 
-            pgCheckResult(result, _sql);
-            PQclear(result);
+                while (PQisBusy(handle->conn)) PQconsumeInput(handle->conn);
+                result = PQgetResult(handle->conn);
+                while ((response = PQgetResult(handle->conn))) PQclear(response);
 
-            rc = PQsendDescribePrepared(handle->conn, _uuid.c_str());
-            if (rc == 0) throw RuntimeError(PQerrorMessage(handle->conn));
-            while (PQisBusy(handle->conn)) PQconsumeInput(handle->conn);
-            result = PQgetResult(handle->conn);
-            while ((response = PQgetResult(handle->conn))) PQclear(response);
+                done = handle->checkResult(result, _sql);
+                PQclear(result);
+                if (!done) continue;
+
+                done = PQsendDescribePrepared(handle->conn, _uuid.c_str());
+                if (!done) continue;
+
+                while (PQisBusy(handle->conn)) PQconsumeInput(handle->conn);
+                result = PQgetResult(handle->conn);
+                while ((response = PQgetResult(handle->conn))) PQclear(response);
+                done = handle->checkResult(result, _sql);
+            }
+
+            if (!done) throw RuntimeError(PQerrorMessage(handle->conn));
         }
         else {
-            result = PQprepare(handle->conn, _uuid.c_str(), query.c_str(), 0, 0);
+            done = tries = 0;
+            while (!done && tries < 2) {
+                tries++;
+                result = PQprepare(handle->conn, _uuid.c_str(), query.c_str(), 0, 0);
+                if (!result) throw RuntimeError("Unable to allocate statement");
+                done = handle->checkResult(result, _sql);
+                PQclear(result);
 
-            if (!result) throw RuntimeError("Unable to allocate statement");
-            pgCheckResult(result, _sql);
-            PQclear(result);
+                if (!done) continue;
 
-            result = PQdescribePrepared(handle->conn, _uuid.c_str());
+                result = PQdescribePrepared(handle->conn, _uuid.c_str());
+                done = handle->checkResult(result, _sql);
+            }
+
+            if (!done) throw RuntimeError(PQerrorMessage(handle->conn));
         }
 
         return result;
@@ -227,8 +201,6 @@ namespace dbi {
 
     PgStatement::~PgStatement() { cleanup(); }
     PgStatement::PgStatement(string query,  PgHandle *h, bool async) {
-        int i;
-
         init();
         _sql   = query;
         _async = async;
@@ -239,10 +211,10 @@ namespace dbi {
 
         _cols  = (unsigned int)PQnfields(result);
 
-        for (i = 0; i < (int)_cols; i++)
+        for (int i = 0; i < (int)_cols; i++)
             _rsfields.push_back(PQfname(result, i));
 
-        for (i = 0; i < (int)_cols; i++)
+        for (int i = 0; i < (int)_cols; i++)
             _rsfield_types.push_back(PQfformat(result, i));
 
         _rsrow.reserve(_cols);
@@ -268,22 +240,26 @@ namespace dbi {
     }
 
     unsigned int PgStatement::execute() {
-        int rc;
+        int done, tries;
         finish();
 
         if (_async) {
-            rc = PQsendQueryPrepared(handle->conn, _uuid.c_str(), 0, 0, 0, 0, 0);
-            if (rc == 0) throw RuntimeError(PQerrorMessage(handle->conn));
+            done = tries = 0;
+            while (!done && tries < 2) {
+                tries++;
+                done = PQsendQueryPrepared(handle->conn, _uuid.c_str(), 0, 0, 0, 0, 0);
+                if (!done) handle->reconnect(true);
+            }
+            if (!done) throw RuntimeError(PQerrorMessage(handle->conn));
         }
         else {
-            _result = PQexecPrepared(handle->conn, _uuid.c_str(), 0, 0, 0, 0, 0);
-            if (PQstatus(handle->conn) == CONNECTION_BAD) {
-                PQclear(_result);
-                handle->reconnect();
-                prepare();
+            done = tries = 0;
+            while (!done && tries < 2) {
+                tries++;
                 _result = PQexecPrepared(handle->conn, _uuid.c_str(), 0, 0, 0, 0, 0);
+                done = handle->checkResult(_result, _sql);
+                if (!done) prepare();
             }
-            pgCheckResult(_result, _sql);
             _rows = (unsigned int)PQNTUPLES(_result);
         }
 
@@ -292,36 +268,39 @@ namespace dbi {
     }
 
     unsigned int PgStatement::execute(vector<Param> &bind) {
-        int *param_l, rc;
+        int *param_l, done, tries;
         const char **param_v;
 
         finish();
-        pgProcessBindParams(&param_v, &param_l, bind);
+        PQ_PROCESS_BIND(&param_v, &param_l, bind);
 
         if (_async) {
-            rc = PQsendQueryPrepared(handle->conn, _uuid.c_str(), bind.size(),
-                                       (const char* const *)param_v, (const int*)param_l, 0, 0);
-            delete []param_v;
-            delete []param_l;
-
-            if (rc == 0) throw RuntimeError(PQerrorMessage(handle->conn));
-        }
-        else {
-            _result = PQexecPrepared(handle->conn, _uuid.c_str(), bind.size(),
-                                       (const char* const *)param_v, (const int*)param_l, 0, 0);
-
-            if (PQstatus(handle->conn) == CONNECTION_BAD) {
-                PQclear(_result);
-                handle->reconnect();
-                prepare();
-                _result = PQexecPrepared(handle->conn, _uuid.c_str(), bind.size(),
+            done = tries = 0;
+            while (!done && tries < 2) {
+                tries++;
+                done = PQsendQueryPrepared(handle->conn, _uuid.c_str(), bind.size(),
                                        (const char* const *)param_v, (const int*)param_l, 0, 0);
             }
-
             delete []param_v;
             delete []param_l;
 
-            pgCheckResult(_result, _sql);
+            if (!done) throw RuntimeError(PQerrorMessage(handle->conn));
+        }
+        else {
+            done = tries = 0;
+            try {
+                while (!done && tries < 2) {
+                    tries++;
+                    _result = PQexecPrepared(handle->conn, _uuid.c_str(), bind.size(),
+                                       (const char* const *)param_v, (const int*)param_l, 0, 0);
+                    done = handle->checkResult(_result, _sql);
+                    if (!done) prepare();
+                }
+            } catch (exception &e) {
+                delete []param_v;
+                delete []param_l;
+                throw e;
+            }
             _rows = (unsigned int)PQNTUPLES(_result);
         }
 
@@ -339,7 +318,7 @@ namespace dbi {
         _result = PQgetResult(handle->conn);
         _rows   = (unsigned int)PQNTUPLES(_result);
         while ((response = PQgetResult(handle->conn))) PQclear(response);
-        pgCheckResult(_result, _sql);
+        handle->checkResult(_result, _sql, true);
     }
 
     unsigned long PgStatement::lastInsertID() {
@@ -447,12 +426,21 @@ namespace dbi {
 
     unsigned int PgHandle::execute(string sql) {
         unsigned int rows;
+        int done, tries;
+        PGresult *result;
+        string query  = sql;
 
-        PGresult *result = PQexec(conn, sql.c_str());
-        pgCheckResult(result, sql);
+        done = tries = 0;
+        PQ_PREPROCESS_QUERY(query);
+        while (!done && tries < 2) {
+            tries++;
+            result = PQexec(conn, query.c_str());
+            done = checkResult(result, sql);
+        }
+
+        if (!done) throw RuntimeError(PQerrorMessage(conn));
 
         rows = (unsigned int)PQNTUPLES(result);
-
         PQclear(result);
         return rows;
     }
@@ -461,17 +449,28 @@ namespace dbi {
         int *param_l;
         const char **param_v;
         unsigned int rows;
+        int done, tries;
+        PGresult *result;
+        string query = sql;
 
-        pgProcessBindParams(&param_v, &param_l, bind);
-        PGresult *result = PQexecParams(conn, sql.c_str(), bind.size(),
+        done = tries = 0;
+        PQ_PREPROCESS_QUERY(query);
+        try {
+            while (!done && tries < 2) {
+                tries++;
+                PQ_PROCESS_BIND(&param_v, &param_l, bind);
+                result = PQexecParams(conn, query.c_str(), bind.size(),
                                         0, (const char* const *)param_v, param_l, 0, 0);
-        delete []param_v;
-        delete []param_l;
-
-        pgCheckResult(result, sql);
+                done = checkResult(result, sql);
+            }
+        }
+        catch (exception &e) {
+            delete []param_v;
+            delete []param_l;
+            throw e;
+        }
 
         rows = (unsigned int)PQNTUPLES(result);
-
         PQclear(result);
         return rows;
     }
@@ -567,10 +566,65 @@ namespace dbi {
         return true;
     }
 
-    void PgHandle::reconnect() {
-        if (conn) conn = pgRetryConnect(conn, tr_nesting == 0 ? true : false);
+    void PgHandle::reconnect(bool barf) {
+
+        if (barf && PQstatus(conn) != CONNECTION_BAD)
+            throw ConnectionError(PQerrorMessage(conn));
+
+        PQreset(conn);
+        if (PQstatus(conn) == CONNECTION_BAD) {
+            if (tr_nesting == 0) {
+                char conninfo[8192];
+                snprintf(conninfo, 8192, "dbname=%s user=%s password=%s host=%s port=%s",
+                    PQdb(conn), PQuser(conn), PQpass(conn), PQhost(conn), PQport(conn));
+                PQfinish(conn);
+                conn = PQconnectdb(conninfo);
+                if (PQstatus(conn) == CONNECTION_BAD) throw ConnectionError(PQerrorMessage(conn));
+                fprintf(stderr, "[WARNING] Socket changed during auto reconnect to database %s on host %s\n",
+                    PQdb(conn), PQhost(conn));
+            }
+            else throw ConnectionError(PQerrorMessage(conn));
+        }
+        else {
+            fprintf(stderr, "[NOTICE] Auto reconnected on same socket to database %s on host %s\n",
+                PQdb(conn), PQhost(conn));
+        }
     }
 
+
+    int PgHandle::checkResult(PGresult *result, string sql, bool barf) {
+        switch(PQresultStatus(result)) {
+            case PGRES_TUPLES_OK:
+            case PGRES_COPY_OUT:
+            case PGRES_COPY_IN:
+            case PGRES_EMPTY_QUERY:
+            case PGRES_COMMAND_OK:
+                return 1;
+            case PGRES_BAD_RESPONSE:
+            case PGRES_FATAL_ERROR:
+            case PGRES_NONFATAL_ERROR:
+                if (PQstatus(conn) == CONNECTION_BAD && !barf) {
+                    reconnect();
+                    PQclear(result);
+                    return 0;
+                }
+                snprintf(errormsg, 8192, "In SQL: %s\n\n %s", sql.c_str(), PQresultErrorMessage(result));
+                PQclear(result);
+                throw RuntimeError((const char*)errormsg);
+                break;
+            default:
+                if (PQstatus(conn) == CONNECTION_BAD && !barf) {
+                    reconnect();
+                    PQclear(result);
+                    return 0;
+                }
+                snprintf(errormsg, 8192, "In SQL: %s\n\n Unknown error, check logs.", sql.c_str());
+                PQclear(result);
+                throw RuntimeError(errormsg);
+                break;
+        }
+        return 1;
+    }
 }
 
 using namespace std;
