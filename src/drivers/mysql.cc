@@ -357,7 +357,7 @@ namespace dbi {
     }
 
     unsigned int MySqlStatement::execute(vector<Param> &bind) {
-        int rc;
+        int failed, tries;
         finish();
 
         MySqlBind _bind(bind.size(), MYSQL_BIND_RO);
@@ -366,15 +366,18 @@ namespace dbi {
         if (mysql_stmt_bind_param(_stmt, _bind.params) != 0 )
             THROW_MYSQL_STMT_ERROR(_stmt);
 
-        rc = mysql_stmt_execute(_stmt);
-        if (rc != 0) {
-            if (mysqlConnectionError(mysql_stmt_errno(_stmt))) {
+        failed = tries = 0;
+        do {
+            tries++;
+            failed = mysql_stmt_execute(_stmt);
+            if (failed && mysqlConnectionError(mysql_stmt_errno(_stmt))) {
+                //TODO: Do we need to re-prepare here ?
                 handle->reconnect();
-                rc = mysql_stmt_execute(_stmt);
+                failed = mysql_stmt_execute(_stmt);
             }
-        }
+        } while (!failed && tries < 2);
 
-        if (rc != 0) THROW_MYSQL_STMT_ERROR(_stmt);
+        if (failed) THROW_MYSQL_STMT_ERROR(_stmt);
 
         _rows = bindResultAndGetAffectedRows();
         return _rows;
@@ -615,6 +618,7 @@ namespace dbi {
         return mysql_insert_id(handle->conn);
     }
 
+    // TODO Handle reconnects in consumeResult() and prepareResult()
     bool MySqlResultSet::consumeResult() {
         if (mysql_read_query_result(handle->conn) != 0)
             throw RuntimeError(mysql_error(handle->conn));
@@ -670,18 +674,19 @@ namespace dbi {
     }
 
     unsigned int MySqlHandle::execute(string sql) {
-        int rc;
+        int failed, tries;
 
-        rc = mysql_real_query(conn, sql.c_str(), sql.length());
-        if (rc != 0) {
-            int error = mysql_errno(conn);
-            if (mysqlConnectionError(mysql_errno(conn))) {
+        failed = tries = 0;
+        do {
+            tries++;
+            failed = mysql_real_query(conn, sql.c_str(), sql.length());
+            if (failed && mysqlConnectionError(mysql_errno(conn))) {
                 reconnect();
-                rc = mysql_real_query(conn, sql.c_str(), sql.length());
+                failed = mysql_real_query(conn, sql.c_str(), sql.length());
             }
-        }
+        } while (!failed && tries < 2);
 
-        if (rc != 0) throw RuntimeError(mysql_error(conn));
+        if (failed) throw RuntimeError(mysql_error(conn));
         return mysql_affected_rows(conn);
     }
 
