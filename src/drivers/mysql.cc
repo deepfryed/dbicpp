@@ -6,6 +6,7 @@
 
 #define DRIVER_NAME     "mysql"
 #define DRIVER_VERSION  "1.2"
+#define __MYSQL_BIND_BUFFER_LEN 1024*128
 
 #define THROW_MYSQL_STMT_ERROR(s) {\
     snprintf(errormsg, 8192, "In SQL: %s\n\n %s", _sql.c_str(), mysql_stmt_error(s));\
@@ -71,8 +72,6 @@ namespace dbi {
         return (error == CR_SERVER_GONE_ERROR || error == CR_SERVER_LOST ||
             error == CR_SERVER_LOST_EXTENDED || error == CR_COMMANDS_OUT_OF_SYNC);
     }
-
-    #define __MYSQL_BIND_BUFFER_LEN 1024*128
 
     class MySqlBind {
         protected:
