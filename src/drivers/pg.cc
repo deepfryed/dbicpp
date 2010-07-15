@@ -78,6 +78,7 @@ namespace dbi {
 
         void init();
         PGresult* prepare();
+        void boom(const char *);
 
         public:
         PgStatement();
@@ -103,9 +104,10 @@ namespace dbi {
     };
 
     class PgHandle : public AbstractHandle {
-        private:
+        protected:
         PGconn *conn;
         int tr_nesting;
+        void boom(const char *);
         public:
         PgHandle();
         PgHandle(string user, string pass, string dbname, string h, string p);
@@ -176,14 +178,14 @@ namespace dbi {
                 done = handle->checkResult(result, _sql);
             }
 
-            if (!done) throw RuntimeError(PQerrorMessage(handle->conn));
+            if (!done) boom(PQerrorMessage(handle->conn));
         }
         else {
             done = tries = 0;
             while (!done && tries < 2) {
                 tries++;
                 result = PQprepare(handle->conn, _uuid.c_str(), query.c_str(), 0, 0);
-                if (!result) throw RuntimeError("Unable to allocate statement");
+                if (!result) boom("Unable to allocate statement");
                 done = handle->checkResult(result, _sql);
                 PQclear(result);
 
@@ -193,7 +195,7 @@ namespace dbi {
                 done = handle->checkResult(result, _sql);
             }
 
-            if (!done) throw RuntimeError(PQerrorMessage(handle->conn));
+            if (!done) boom(PQerrorMessage(handle->conn));
         }
 
         return result;
@@ -250,7 +252,7 @@ namespace dbi {
                 done = PQsendQueryPrepared(handle->conn, _uuid.c_str(), 0, 0, 0, 0, 0);
                 if (!done) handle->reconnect(true);
             }
-            if (!done) throw RuntimeError(PQerrorMessage(handle->conn));
+            if (!done) boom(PQerrorMessage(handle->conn));
         }
         else {
             done = tries = 0;
@@ -284,7 +286,7 @@ namespace dbi {
             delete []param_v;
             delete []param_l;
 
-            if (!done) throw RuntimeError(PQerrorMessage(handle->conn));
+            if (!done) boom(PQerrorMessage(handle->conn));
         }
         else {
             done = tries = 0;
@@ -390,6 +392,13 @@ namespace dbi {
         _rowno = _rowno <= _rows ? _rowno + 1 : _rowno;
     }
 
+    void PgStatement::boom(const char* m) {
+        if (PQstatus(handle->conn) == CONNECTION_BAD)
+            throw ConnectionError(m);
+        else
+            throw RuntimeError(m);
+    }
+
     PgHandle::PgHandle() { tr_nesting = 0; }
     PgHandle::PgHandle(string user, string pass, string dbname, string h, string p) {
         tr_nesting = 0;
@@ -438,7 +447,7 @@ namespace dbi {
             done = checkResult(result, sql);
         }
 
-        if (!done) throw RuntimeError(PQerrorMessage(conn));
+        if (!done) boom(PQerrorMessage(conn));
 
         rows = (unsigned int)PQNTUPLES(result);
         PQclear(result);
@@ -499,13 +508,13 @@ namespace dbi {
 
         PGcancel *cancel = PQgetCancel(conn);
         if (!cancel)
-            throw RuntimeError("Invalid handle or nothing to cancel");
+            boom("Invalid handle or nothing to cancel");
 
         rc = PQcancel(cancel, error, 512);
         PQfreeCancel(cancel);
 
         if (rc != 1)
-            throw RuntimeError(error);
+            boom(error);
         else
             return true;
     }
@@ -624,6 +633,13 @@ namespace dbi {
                 break;
         }
         return 1;
+    }
+
+    void PgHandle::boom(const char* m) {
+        if (PQstatus(conn) == CONNECTION_BAD)
+            throw ConnectionError(m);
+        else
+            throw RuntimeError(m);
     }
 }
 

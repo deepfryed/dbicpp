@@ -11,7 +11,7 @@
     snprintf(errormsg, 8192, "In SQL: %s\n\n %s", _sql.c_str(), mysql_stmt_error(s));\
     mysql_stmt_free_result(s); \
     mysql_stmt_close(s); \
-    throw RuntimeError(errormsg);\
+    boom(errormsg);\
 }
 
 namespace dbi {
@@ -159,6 +159,7 @@ namespace dbi {
         MySqlHandle *handle;
         void init();
         unsigned int bindResultAndGetAffectedRows();
+        void boom(const char*);
 
         public:
         ~MySqlStatement();
@@ -221,6 +222,7 @@ namespace dbi {
         protected:
         MYSQL *conn;
         int tr_nesting;
+        void boom(const char*);
 
         public:
         MySqlHandle();
@@ -375,7 +377,7 @@ namespace dbi {
                 handle->reconnect();
                 failed = mysql_stmt_execute(_stmt);
             }
-        } while (!failed && tries < 2);
+        } while (failed && tries < 2);
 
         if (failed) THROW_MYSQL_STMT_ERROR(_stmt);
 
@@ -512,6 +514,13 @@ namespace dbi {
 
     void MySqlStatement::prepareResult() {
         throw RuntimeError("prepareResult(): Incorrect API call. Use the Async API");
+    }
+
+    void MySqlStatement::boom(const char *m) {
+        if (mysqlConnectionError(mysql_errno(handle->conn)))
+            throw ConnectionError(m);
+        else
+            throw RuntimeError(m);
     }
 
 
@@ -675,18 +684,20 @@ namespace dbi {
 
     unsigned int MySqlHandle::execute(string sql) {
         int failed, tries;
+        string query = sql;
+        mysqlPreProcessQuery(query);
 
         failed = tries = 0;
         do {
             tries++;
-            failed = mysql_real_query(conn, sql.c_str(), sql.length());
+            failed = mysql_real_query(conn, query.c_str(), query.length());
             if (failed && mysqlConnectionError(mysql_errno(conn))) {
                 reconnect();
-                failed = mysql_real_query(conn, sql.c_str(), sql.length());
+                failed = mysql_real_query(conn, query.c_str(), query.length());
             }
-        } while (!failed && tries < 2);
+        } while (failed && tries < 2);
 
-        if (failed) throw RuntimeError(mysql_error(conn));
+        if (failed) boom(mysql_error(conn));
         return mysql_affected_rows(conn);
     }
 
@@ -783,6 +794,13 @@ namespace dbi {
                 fprintf(stderr, "[WARNING] Socket changed during auto reconnect to database %s on host %s\n",
                     _db.c_str(), _host.c_str());
         }
+    }
+
+    void MySqlHandle::boom(const char *m) {
+        if (mysqlConnectionError(mysql_errno(conn)))
+            throw ConnectionError(m);
+        else
+            throw RuntimeError(m);
     }
 }
 
