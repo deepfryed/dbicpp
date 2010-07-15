@@ -10,6 +10,8 @@
 #include <pcrecpp.h>
 #include <sys/time.h>
 #include <uuid/uuid.h>
+#include <vector>
+#include <map>
 
 namespace dbi {
     struct null {};

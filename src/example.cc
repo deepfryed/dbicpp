@@ -15,7 +15,7 @@ using namespace dbi;
 
 void printResultRows(Statement &st) {
     ResultRow r;
-    while ((r = st.fetchRow()).size() > 0) {
+    while (r = st.fetchRow()) {
         cout << r.join("\t") << endl;
     }
 }
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
     st % 1L, 10L;
     st.execute();
     ResultRowHash rh;
-    while ((rh = st.fetchRowHash()).size() > 0) {
+    while (rh = st.fetchRowHash()) {
         cout << rh["name"] << endl;
     }
     st.finish();

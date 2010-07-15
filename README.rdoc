@@ -28,8 +28,10 @@ I'm working on drivers for the following, which will be available soon.
   using namespace dbi;
 
   int main() {
+
       // Handle h ("driver", "user", "password", "database", "host", "port");
       Handle h ("postgresql", getlogin(), "", "dbicpp");
+
       Statement st (h, "SELECT id, name, email FROM users WHERE id >= ? AND id < ?");
 
       // bind and execute the statement.
@@ -46,8 +48,8 @@ See src/example.cc for more specific examples.
 
 === Ruby
 
-You need to install the swift gem. It includes ruby bindings to dbicpp and is also
-a funky minimal ORM.
+You need to install the swift gem. It includes ruby bindings to dbicpp and also
+includes a funky thin ORM.
 
 
   require 'swift'

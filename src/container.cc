@@ -1,4 +1,5 @@
 #include "dbic++.h"
+#include <cstdio>
 
 namespace dbi {
 
@@ -23,24 +24,36 @@ namespace dbi {
         this->push_back(v);
     }
 
-    vector<string> ResultRowHash::columns(void) {
-        vector<string> rs;
-
-        for(map<string,Param>::iterator iter = begin(); iter != end(); ++iter)
-            rs.push_back(iter->first);
-
-        return rs;
-    }
-
     ostream& operator<< (ostream &out, ResultRow &r) {
         out << r.join("\t");
         return out;
     }
 
+    void ResultRowHash::clear() {
+        data.clear();
+    }
+
+    Param& ResultRowHash::operator[](const char *k) {
+        return data[k];
+    }
+
+    Param& ResultRowHash::operator[](string &k) {
+        return data[k];
+    }
+
+    vector<string> ResultRowHash::columns(void) {
+        vector<string> rs;
+
+        for(map<string,Param>::iterator iter = data.begin(); iter != data.end(); ++iter)
+            rs.push_back(iter->first);
+
+        return rs;
+    }
+
     ostream& operator<< (ostream &out, ResultRowHash &r) {
-        for(map<string,Param>::iterator iter = r.begin(); iter != r.end();) {
+        for(map<string,Param>::iterator iter = r.data.begin(); iter != r.data.end();) {
             out << iter->first << "\t" << iter->second;
-            if (++iter != r.end()) out << "\t";
+            if (++iter != r.data.end()) out << "\t";
         }
 
         return out;
