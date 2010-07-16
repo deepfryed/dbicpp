@@ -5,11 +5,11 @@ class Benchmarks
 
   class DBICPP
     attr_reader :driver
-    Swift::DBI.init File.dirname(__FILE__) + '/../../lib/dbic++'
+    Swift.init File.dirname(__FILE__) + '/../../lib/dbic++'
 
     def initialize driver, sql
       @driver = driver
-      @h = Swift::DBI::Handle.new user: Etc.getlogin, db: 'dbicpp', driver: driver
+      @h = Swift::Adapter.new user: Etc.getlogin, db: 'dbicpp', driver: driver
       @sth = @h.prepare sql
     end
 
@@ -22,7 +22,7 @@ class Benchmarks
     end
 
     def self.name
-      "ruby: DBICPP"
+      "ruby: swift"
     end
   end
 
