@@ -5,7 +5,7 @@ INCLUDE_DIRECTORIES(inc /usr/include/postgresql /usr/include/mysql)
 LINK_DIRECTORIES(lib)
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 
-ADD_LIBRARY(dbic++ STATIC src/dbic++.cc src/container.cc src/param.cc src/error.cc src/reactor.cc src/cpool.cc)
+ADD_LIBRARY(dbic++ STATIC src/dbic++.cc src/handle.cc src/statement.cc src/container.cc src/param.cc src/error.cc src/reactor.cc src/cpool.cc)
 
 ADD_LIBRARY(dbdpg SHARED src/drivers/pg.cc)
 TARGET_LINK_LIBRARIES(dbdpg pq)

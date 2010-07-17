@@ -244,7 +244,7 @@ namespace dbi {
         bool begin(string name);
         bool commit(string name);
         bool rollback(string name);
-        void* call(string name, void* args);
+        void* call(string name, void* args, unsigned long l);
         bool close();
         void reconnect();
 
@@ -783,7 +783,7 @@ namespace dbi {
         return true;
     };
 
-    void* MySqlHandle::call(string name, void* args) {
+    void* MySqlHandle::call(string name, void* args, unsigned long l) {
         return NULL;
     }
 

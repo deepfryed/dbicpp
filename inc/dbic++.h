@@ -2,8 +2,10 @@
 #define _DBICXX_BASE_H
 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <cstdarg>
+#include <cstdio>
 #include <sys/types.h>
 #include <dirent.h>
 #include <dlfcn.h>
@@ -48,7 +50,7 @@ namespace dbi {
         virtual bool begin(string name) = 0;
         virtual bool commit(string name) = 0;
         virtual bool rollback(string name) = 0;
-        virtual void* call(string name, void*) = 0;
+        virtual void* call(string name, void*, unsigned long int) = 0;
         virtual bool close() = 0;
         virtual void cleanup() = 0;
 
@@ -125,7 +127,7 @@ namespace dbi {
         bool begin(string name);
         bool commit(string name);
         bool rollback(string name);
-        void* call(string name, void*);
+        void* call(string name, void*, unsigned long int);
         bool close();
         vector<string>& transactions();
         friend class Statement;

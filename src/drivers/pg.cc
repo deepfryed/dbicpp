@@ -128,7 +128,7 @@ namespace dbi {
         bool begin(string name);
         bool commit(string name);
         bool rollback(string name);
-        void* call(string name, void* args);
+        void* call(string name, void* args, unsigned long l);
         bool close();
         void reconnect(bool barf = false);
         int checkResult(PGresult*, string, bool barf = false);
@@ -570,7 +570,7 @@ namespace dbi {
         return true;
     };
 
-    void* PgHandle::call(string name, void* args) {
+    void* PgHandle::call(string name, void* args, unsigned long l) {
         return NULL;
     }
 
