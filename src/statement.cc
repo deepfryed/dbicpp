@@ -156,4 +156,8 @@ namespace dbi {
     void Statement::advanceRow() {
         st->advanceRow();
     }
+
+    vector<int>& Statement::types() {
+        return st->types();
+    }
 }

@@ -152,6 +152,7 @@ namespace dbi {
         unsigned int _rowno, _rows, _cols;
         ResultRow _rsrow;
         ResultRowHash _rsrowhash;
+        vector<int> _rstypes;
 
         protected:
 
@@ -181,6 +182,7 @@ namespace dbi {
         bool consumeResult();
         void prepareResult();
         void rewind();
+        vector<int>& types();
     };
 
 
@@ -193,6 +195,7 @@ namespace dbi {
         unsigned int _cols;
         unsigned int _rowno;
         vector<string> _rsfields;
+        vector<int> _rstypes;
         ResultRow _rsrow;
         ResultRowHash _rsrowhash;
         public:
@@ -212,6 +215,7 @@ namespace dbi {
         bool consumeResult();
         void prepareResult();
         void rewind();
+        vector<int>& types();
     };
 
 
@@ -320,8 +324,30 @@ namespace dbi {
         _buffer_lengths.reserve(_cols);
         _rsrow.reserve(_cols);
         if (_stmt->fields) {
-            for (int i = 0; i < (int)_cols; i++)
+            for (int i = 0; i < (int)_cols; i++) {
                 _rsfields.push_back(_stmt->fields[i].name);
+                switch(_stmt->fields[i].type) {
+                    // shamelessly stolen from http://github.com/brianmario/mysql2
+                    case MYSQL_TYPE_TINY:       // TINYINT field
+                    case MYSQL_TYPE_SHORT:      // SMALLINT field
+                    case MYSQL_TYPE_LONG:       // INTEGER field
+                    case MYSQL_TYPE_INT24:      // MEDIUMINT field
+                    case MYSQL_TYPE_LONGLONG:   // BIGINT field
+                    case MYSQL_TYPE_YEAR:       // YEAR field
+                        _rstypes.push_back(DBI_TYPE_INT); break;
+                    case MYSQL_TYPE_DECIMAL:    // DECIMAL or NUMERIC field
+                    case MYSQL_TYPE_NEWDECIMAL: // Precision math DECIMAL or NUMERIC field (MySQL 5.0.3 and up)
+                        _rstypes.push_back(DBI_TYPE_NUMERIC); break;
+                    case MYSQL_TYPE_FLOAT:      // FLOAT field
+                    case MYSQL_TYPE_DOUBLE:     // DOUBLE or REAL field
+                        _rstypes.push_back(DBI_TYPE_FLOAT); break;
+                    case MYSQL_TYPE_TIMESTAMP:  // TIMESTAMP field
+                    case MYSQL_TYPE_DATETIME:   // DATETIME field
+                        _rstypes.push_back(DBI_TYPE_TIME); break;
+                    default:
+                        _rstypes.push_back(DBI_TYPE_TEXT); break;
+                }
+            }
         }
     }
 
@@ -529,6 +555,10 @@ namespace dbi {
         mysql_stmt_data_seek(_stmt, 0);
     }
 
+    vector<int>& MySqlStatement::types() {
+        return _rstypes;
+    }
+
     // ----------------------------------------------------------------------
     // MySqlResultSet
     // ----------------------------------------------------------------------
@@ -649,13 +679,39 @@ namespace dbi {
         _cols  = mysql_num_fields(result);
 
         fields = mysql_fetch_fields(result);
-        for (n = 0; n < _cols; n++)
+        for (n = 0; n < _cols; n++) {
             _rsfields.push_back(fields[n].name);
+            switch(fields[n].type) {
+                // shamelessly stolen from http://github.com/brianmario/mysql2
+                case MYSQL_TYPE_TINY:       // TINYINT field
+                case MYSQL_TYPE_SHORT:      // SMALLINT field
+                case MYSQL_TYPE_LONG:       // INTEGER field
+                case MYSQL_TYPE_INT24:      // MEDIUMINT field
+                case MYSQL_TYPE_LONGLONG:   // BIGINT field
+                case MYSQL_TYPE_YEAR:       // YEAR field
+                    _rstypes.push_back(DBI_TYPE_INT); break;
+                case MYSQL_TYPE_DECIMAL:    // DECIMAL or NUMERIC field
+                case MYSQL_TYPE_NEWDECIMAL: // Precision math DECIMAL or NUMERIC field (MySQL 5.0.3 and up)
+                    _rstypes.push_back(DBI_TYPE_NUMERIC); break;
+                case MYSQL_TYPE_FLOAT:      // FLOAT field
+                case MYSQL_TYPE_DOUBLE:     // DOUBLE or REAL field
+                    _rstypes.push_back(DBI_TYPE_FLOAT); break;
+                case MYSQL_TYPE_TIMESTAMP:  // TIMESTAMP field
+                case MYSQL_TYPE_DATETIME:   // DATETIME field
+                    _rstypes.push_back(DBI_TYPE_TIME); break;
+                default:
+                    _rstypes.push_back(DBI_TYPE_TEXT); break;
+            }
+        }
     }
 
     void MySqlResultSet::rewind() {
         _rowno = 0;
         mysql_data_seek(result, 0);
+    }
+
+    vector<int>& MySqlResultSet::types() {
+        return _rstypes;
     }
 
     // ----------------------------------------------------------------------

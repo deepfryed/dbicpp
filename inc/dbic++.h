@@ -28,6 +28,12 @@ namespace dbi {
 #define DEFAULT_DRIVER_PATH "/usr/lib/dbic++"
 #define OPTIONAL_ARG(a, v) a ? a : v
 
+#define DBI_TYPE_INT     1
+#define DBI_TYPE_TIME    2
+#define DBI_TYPE_TEXT    3
+#define DBI_TYPE_FLOAT   4
+#define DBI_TYPE_NUMERIC 5
+
 namespace dbi {
 
     using namespace std;
@@ -81,6 +87,7 @@ namespace dbi {
         virtual void cleanup() = 0;
         virtual unsigned long lastInsertID() = 0;
         virtual void rewind() = 0;
+        virtual vector<int>& types() = 0;
 
         // ASYNC API
         // Returns false if done, true is still more probably yet to consume
@@ -174,6 +181,7 @@ namespace dbi {
         void cleanup();
         unsigned long lastInsertID();
         void rewind();
+        vector<int>& types();
     };
 
     bool dbiInitialize(string path);

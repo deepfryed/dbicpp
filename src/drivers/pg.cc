@@ -70,7 +70,7 @@ namespace dbi {
         string _uuid;
         PGresult *_result;
         vector<string> _rsfields;
-        vector<int> _rsfield_types;
+        vector<int> _rstypes;
         unsigned int _rowno, _rows, _cols;
         ResultRow _rsrow;
         ResultRowHash _rsrowhash;
@@ -102,6 +102,7 @@ namespace dbi {
         unsigned int currentRow();
         void advanceRow();
         void rewind();
+        vector<int>& types();
     };
 
     class PgHandle : public AbstractHandle {
@@ -217,8 +218,20 @@ namespace dbi {
         for (int i = 0; i < (int)_cols; i++)
             _rsfields.push_back(PQfname(result, i));
 
-        for (int i = 0; i < (int)_cols; i++)
-            _rsfield_types.push_back(PQfformat(result, i));
+        // postgres oid types are all in pg_type. no clue why they're not in the headers.
+        for (int i = 0; i < (int)_cols; i++) {
+            switch(PQftype(result, i)) {
+                case   20:
+                case   21:
+                case   23: _rstypes.push_back(DBI_TYPE_INT); break;
+                case  700:
+                case  701: _rstypes.push_back(DBI_TYPE_FLOAT); break;
+                case 1114:
+                case 1184: _rstypes.push_back(DBI_TYPE_TIME); break;
+                case 1700: _rstypes.push_back(DBI_TYPE_NUMERIC); break;
+                  default: _rstypes.push_back(DBI_TYPE_TEXT); break;
+            }
+        }
 
         _rsrow.reserve(_cols);
         PQclear(result);
@@ -402,6 +415,10 @@ namespace dbi {
 
     void PgStatement::rewind() {
         _rowno = 0;
+    }
+
+    vector<int>& PgStatement::types() {
+        return _rstypes;
     }
 
     PgHandle::PgHandle() { tr_nesting = 0; }
