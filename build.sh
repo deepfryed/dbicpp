@@ -40,7 +40,8 @@ usage() {
     $0 [options]
     
     -h print this help message.
-    -d builds debian packages.
+    -d builds debian binary packages for local architecture.
+    -s builds debian source packages for this version.
     -l builds and install libraries locally into lib (default).
     -c cleanup all temporary files.
     -i builds and installs dbic++ under /usr (root)
@@ -63,9 +64,16 @@ _install() {
   make install
 }
 
-debian_build() {
+debian_binary_build() {
   dpkg-buildpackage -rfakeroot -b
   make clean
+}
+
+debian_source_build() {
+  PREFIX=dbic++-$(cat debian/changelog | head -n1 | grep -o "[0-9.]\+")
+  git archive --remote=$PWD --format=tar --prefix=$PREFIX/ HEAD | tar -C $PWD/.. -xvf -
+  cd $PWD/../$PREFIX
+  debuild -S -sa
 }
 
 local_build() {
@@ -78,15 +86,16 @@ local_build() {
   rm -f install_manifest.txt
 }
 
-while getopts "cdhilur" OPTION
+while getopts "cdhilurs" OPTION
 do
   case $OPTION in
     c) cleanup; exit 0;;
-    d) debian_build; exit 0;;
+    d) debian_binary_build; exit 0;;
     l) local_build; exit 0;;
     i) _install; exit 0;;
     u) _uninstall; exit 0;;
     r) realclean; exit 0;;
+    s) debian_source_build; exit 0;;
     h) usage; exit 0;;
     ?) usage; exit 0;;
   esac

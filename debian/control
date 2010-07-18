@@ -2,8 +2,8 @@ Source: dbic++
 Section: devel
 Priority: optional
 Maintainer: Bharanee Rathna <deepfryed@gmail.com>
-Build-Depends: debhelper (>> 4.0.0), libpcre3-dev, uuid-dev, libmysqlclient-dev, libpq-dev, libevent-dev
-Standards-Version: 0.1.0
+Build-Depends: debhelper (>> 4.0.0), libpcre3-dev, uuid-dev, libmysqlclient-dev, libpq-dev, libevent-dev, cdbs
+Standards-Version: 3.8.4
 
 Package: dbic++-dev
 Section: libdevel
