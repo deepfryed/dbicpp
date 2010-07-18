@@ -8,7 +8,7 @@ Standards-Version: 3.8.4
 Package: dbic++-dev
 Section: libdevel
 Architecture: any
-Depends: libpcre3-dev, uuid-dev, libevent-dev
+Depends: ${misc:Depends}, libpcre3-dev, uuid-dev, libevent-dev
 Description: C++ Database Interface (development)
  dbic++ offers a simple DBI style database API. It currently supports MySQL >= 5.1
  and PostgreSQL >= 8.0. Support for SQLite3 is planned.
@@ -18,7 +18,7 @@ Description: C++ Database Interface (development)
 Package: dbic++-pg
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, libpq-dev
+Depends: ${misc:Depends}, ${shlibs:Depends}, libpq-dev
 Description: C++ Database Interface (library)
  dbic++ offers a simple DBI style database API. It currently supports MySQL >= 5.1
  and PostgreSQL >= 8.0. Support for SQLite3 is planned.
@@ -28,7 +28,7 @@ Description: C++ Database Interface (library)
 Package: dbic++-mysql
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, libmysqlclient-dev
+Depends: ${misc:Depends}, ${shlibs:Depends}, libmysqlclient-dev
 Description: C++ Database Interface (library)
  dbic++ offers a simple DBI style database API. It currently supports MySQL >= 5.1
  and PostgreSQL >= 8.0. Support for SQLite3 is planned.
