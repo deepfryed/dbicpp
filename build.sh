@@ -25,6 +25,13 @@ cleanup() {
   rm -rf debian/tmp/
 }
 
+realclean() {
+  cleanup
+  rm -rf lib/*
+  rm -rf bench/bin/*
+  rm -rf bench/src/*.o
+}
+
 usage() {
   echo "
 
@@ -36,6 +43,7 @@ usage() {
     -c cleanup all temporary files.
     -i builds and installs dbic++ under /usr (root)
     -u uninstall dbic++ stuff from /usr (root)
+    -r real clean - cleanups up build artifacts and local install files
 
   "
 }
@@ -68,7 +76,7 @@ local_build() {
   rm -f install_manifest.txt
 }
 
-while getopts "cdhilu" OPTION
+while getopts "cdhilur" OPTION
 do
   case $OPTION in
     c) cleanup; exit 0;;
@@ -76,6 +84,7 @@ do
     l) local_build; exit 0;;
     i) _install; exit 0;;
     u) _uninstall; exit 0;;
+    r) realclean; exit 0;;
     h) usage; exit 0;;
     ?) usage; exit 0;;
   esac
