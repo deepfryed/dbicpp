@@ -57,9 +57,8 @@ See src/example.cc for more specific examples.
 
 === Ruby
 
-You need to install the swift gem. It includes ruby bindings to dbicpp and also
-includes a funky thin ORM.
-
+You need to install swift (http://github.com/shanna/swift), it includes ruby bindings for
+dbic++.
 
   require 'swift'
   require 'etc'
@@ -97,14 +96,34 @@ includes a funky thin ORM.
 
 == INSTALL
 
-=== Local Install
+=== Dependencies
+
+* cmake (cmake)
+* pcre3 development libraries (libpcre3-dev)
+* uuid development libraries (uuid-dev)
+* mysql client libraries (libmysqlclient-dev)
+* postgresql client libraries (libpq-dev)
+* libevent development libraries (libevent-dev)
+
+If you need to build debian packages, you may need the following in addition.
+
+* cdbs (cdbs)
+* debhelper (debhelper)
+* devscripts (devscripts)
+
+=== Local install
 
   ./build
 
+=== System wide install
+
+  sudo ./build -i
+
 === Debian packages
 
+To build debian packages for your local architecture,
+
   ./build -d
-  sudo dpkg -i ../dbicpp*.deb
 
 You can also add the ppa repository at https://launchpad.net/~deepfryed/+archive/ppa and install
 the latest packages through apt.
@@ -117,9 +136,6 @@ local MySQL and PostgreSQL server.
   cd bench/
   make clean
   ./benchmarks.rb
-
-  * You may need to wait for @shanehanna to release the swift ruby bindings
-    to run the benchmarks.
 
 The following results were obtained on a Core2DUO 2.53GHz, 4GB, 5200rpm drive
 with stock database configs.
@@ -146,13 +162,6 @@ with stock database configs.
   c++: libdbic++                  0.000000   0.000000   0.560000 (  1.336096)
   c: libpq                        0.010000   0.000000   0.510000 (  1.085639)
 
-
-  † swift does typecasting to 5 basic primitive types at the adapter level
-    * Integer/Bignum
-    * Float/BigDecimal
-    * Time
-    * NilClass
-    * String (everything else)
 
 == TODO
 
