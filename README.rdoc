@@ -106,6 +106,9 @@ includes a funky thin ORM.
   ./build -d
   sudo dpkg -i ../dbicpp*.deb
 
+You can also add the ppa repository at https://launchpad.net/~deepfryed/+archive/ppa and install
+the latest packages through apt.
+
 == Benchmarks
 
 You can run these yourself. Just create a database called 'dbicpp' on your
