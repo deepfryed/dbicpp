@@ -108,12 +108,15 @@ includes a funky thin ORM.
 
 == Benchmarks
 
-You can run these yourself. Just create a database called 'dbicpp' and
-a user 'udbicpp' on your local MySQL and PostgreSQL server.
+You can run these yourself. Just create a database called 'dbicpp' on your
+local MySQL and PostgreSQL server.
 
   cd bench/
   make clean
   ./benchmarks.rb
+
+  * You may need to wait for @shanehanna to release the swift ruby bindings
+    to run the benchmarks.
 
 The following results were obtained on a Core2DUO 2.53GHz, 4GB, 5200rpm drive
 with stock database configs.
@@ -138,18 +141,18 @@ with stock database configs.
   c: libpq                        0.010000   0.000000   0.510000 (  1.085639)
 
 
-  † swift does not do typecasting at the adapter level. Typecasting is done
-    if you use the ORM.
+  † swift does typecasting to 5 basic primitive types at the adapter level
+    * Integer/Bignum
+    * Float/BigDecimal
+    * Time
+    * NilClass
+    * String (everything else)
 
 == TODO
 
 === Database Features
 
 * cursor support, function calls and a lot more.
-
-=== Distribution
-
-* upload stuff to ppa .
 
 == LICENSE
 
