@@ -221,6 +221,7 @@ namespace dbi {
         // postgres oid types are all in pg_type. no clue why they're not in the headers.
         for (int i = 0; i < (int)_cols; i++) {
             switch(PQftype(result, i)) {
+                case   16: _rstypes.push_back(DBI_TYPE_BOOLEAN); break;
                 case   20:
                 case   21:
                 case   23: _rstypes.push_back(DBI_TYPE_INT); break;

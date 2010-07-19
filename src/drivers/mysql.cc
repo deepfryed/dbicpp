@@ -324,28 +324,35 @@ namespace dbi {
         _buffer_lengths.reserve(_cols);
         _rsrow.reserve(_cols);
         if (_stmt->fields) {
-            for (int i = 0; i < (int)_cols; i++) {
-                _rsfields.push_back(_stmt->fields[i].name);
-                switch(_stmt->fields[i].type) {
+            for (int n = 0; n < (int)_cols; n++) {
+                _rsfields.push_back(_stmt->fields[n].name);
+                switch(_stmt->fields[n].type) {
                     // shamelessly stolen from http://github.com/brianmario/mysql2
                     case MYSQL_TYPE_TINY:       // TINYINT field
+                        _rstypes.push_back(_stmt->fields[n].length == 1 ? DBI_TYPE_BOOLEAN : DBI_TYPE_INT);
+                        break;
                     case MYSQL_TYPE_SHORT:      // SMALLINT field
                     case MYSQL_TYPE_LONG:       // INTEGER field
                     case MYSQL_TYPE_INT24:      // MEDIUMINT field
                     case MYSQL_TYPE_LONGLONG:   // BIGINT field
                     case MYSQL_TYPE_YEAR:       // YEAR field
-                        _rstypes.push_back(DBI_TYPE_INT); break;
+                        _rstypes.push_back(DBI_TYPE_INT);
+                        break;
                     case MYSQL_TYPE_DECIMAL:    // DECIMAL or NUMERIC field
                     case MYSQL_TYPE_NEWDECIMAL: // Precision math DECIMAL or NUMERIC field (MySQL 5.0.3 and up)
-                        _rstypes.push_back(DBI_TYPE_NUMERIC); break;
+                        _rstypes.push_back(DBI_TYPE_NUMERIC);
+                        break;
                     case MYSQL_TYPE_FLOAT:      // FLOAT field
                     case MYSQL_TYPE_DOUBLE:     // DOUBLE or REAL field
-                        _rstypes.push_back(DBI_TYPE_FLOAT); break;
+                        _rstypes.push_back(DBI_TYPE_FLOAT);
+                        break;
                     case MYSQL_TYPE_TIMESTAMP:  // TIMESTAMP field
                     case MYSQL_TYPE_DATETIME:   // DATETIME field
-                        _rstypes.push_back(DBI_TYPE_TIME); break;
+                        _rstypes.push_back(DBI_TYPE_TIME);
+                        break;
                     default:
-                        _rstypes.push_back(DBI_TYPE_TEXT); break;
+                        _rstypes.push_back(DBI_TYPE_TEXT);
+                        break;
                 }
             }
         }
@@ -684,23 +691,30 @@ namespace dbi {
             switch(fields[n].type) {
                 // shamelessly stolen from http://github.com/brianmario/mysql2
                 case MYSQL_TYPE_TINY:       // TINYINT field
+                    _rstypes.push_back(fields[n].length == 1 ? DBI_TYPE_BOOLEAN : DBI_TYPE_INT);
+                    break;
                 case MYSQL_TYPE_SHORT:      // SMALLINT field
                 case MYSQL_TYPE_LONG:       // INTEGER field
                 case MYSQL_TYPE_INT24:      // MEDIUMINT field
                 case MYSQL_TYPE_LONGLONG:   // BIGINT field
                 case MYSQL_TYPE_YEAR:       // YEAR field
-                    _rstypes.push_back(DBI_TYPE_INT); break;
+                    _rstypes.push_back(DBI_TYPE_INT);
+                    break;
                 case MYSQL_TYPE_DECIMAL:    // DECIMAL or NUMERIC field
                 case MYSQL_TYPE_NEWDECIMAL: // Precision math DECIMAL or NUMERIC field (MySQL 5.0.3 and up)
-                    _rstypes.push_back(DBI_TYPE_NUMERIC); break;
+                    _rstypes.push_back(DBI_TYPE_NUMERIC);
+                    break;
                 case MYSQL_TYPE_FLOAT:      // FLOAT field
                 case MYSQL_TYPE_DOUBLE:     // DOUBLE or REAL field
-                    _rstypes.push_back(DBI_TYPE_FLOAT); break;
+                    _rstypes.push_back(DBI_TYPE_FLOAT);
+                    break;
                 case MYSQL_TYPE_TIMESTAMP:  // TIMESTAMP field
                 case MYSQL_TYPE_DATETIME:   // DATETIME field
-                    _rstypes.push_back(DBI_TYPE_TIME); break;
+                    _rstypes.push_back(DBI_TYPE_TIME);
+                    break;
                 default:
-                    _rstypes.push_back(DBI_TYPE_TEXT); break;
+                    _rstypes.push_back(DBI_TYPE_TEXT);
+                    break;
             }
         }
     }

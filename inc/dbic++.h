@@ -33,6 +33,7 @@ namespace dbi {
 #define DBI_TYPE_TEXT    3
 #define DBI_TYPE_FLOAT   4
 #define DBI_TYPE_NUMERIC 5
+#define DBI_TYPE_BOOLEAN 6
 
 namespace dbi {
 
