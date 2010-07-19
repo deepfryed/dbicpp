@@ -121,6 +121,9 @@ local MySQL and PostgreSQL server.
 The following results were obtained on a Core2DUO 2.53GHz, 4GB, 5200rpm drive
 with stock database configs.
 
+  * The dataset size is 50 rows of ~64 bytes each.
+  * 5000 "select * from ..." run back to back, fetching all rows and printing them.
+
   mysql
   =====
                                       user     system      total        real
