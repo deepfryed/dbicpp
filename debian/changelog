@@ -1,3 +1,9 @@
+dbic++ (0.1.7) lucid; urgency=low
+
+  * added cmake as build dependency.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Mon, 19 Jul 2010 11:08:00 +1000
+
 dbic++ (0.1.6) lucid; urgency=low
 
   * debian package meta fixed and version bump.
