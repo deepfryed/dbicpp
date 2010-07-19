@@ -1,3 +1,9 @@
+dbic++ (0.1.6) unstable; urgency=low
+
+  * debian package meta fixed and version bump.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Mon, 19 Jul 2010 10:15:00 +1000
+
 dbic++ (0.1.5) unstable; urgency=low
 
   * Statement#types and version bump.
