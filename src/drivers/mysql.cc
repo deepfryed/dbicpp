@@ -378,15 +378,24 @@ namespace dbi {
     }
 
     unsigned int MySqlStatement::rows() {
-        checkReady("rows()");
         return _rows;
     }
 
     unsigned int MySqlStatement::execute() {
+        int failed, tries;
         finish();
 
-        if (mysql_stmt_execute(_stmt) != 0)
-            THROW_MYSQL_STMT_ERROR(_stmt);
+        failed = tries = 0;
+        do {
+            tries++;
+            failed = mysql_stmt_execute(_stmt);
+            if (failed && MYSQL_CONNECTION_ERROR(mysql_stmt_errno(_stmt))) {
+                handle->reconnect();
+                failed = mysql_stmt_execute(_stmt);
+            }
+        } while (failed && tries < 2);
+
+        if (failed) THROW_MYSQL_STMT_ERROR(_stmt);
 
         _rows = bindResultAndGetAffectedRows();
         return _rows;
@@ -584,7 +593,6 @@ namespace dbi {
     }
 
     unsigned int MySqlResultSet::rows() {
-        checkReady("rows()");
         return _rows;
     }
 

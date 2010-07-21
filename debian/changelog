@@ -1,3 +1,9 @@
+dbic++ (0.1.8.1) lucid; urgency=low
+
+  * mysql ResultSet#rows and Statement#rows do not have to check if results are bound.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Wed, 21 Jul 2010 10:50:00 +1000
+
 dbic++ (0.1.8) lucid; urgency=low
 
   * added boolean field typecast.
