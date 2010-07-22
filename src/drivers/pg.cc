@@ -23,6 +23,9 @@ namespace dbi {
         return n > 0 ? n : atoi(PQcmdTuples(r));
     }
 
+    void PQ_NOTICE(void *arg, const char *message) {
+        if (_trace) logMessage(_trace_fd, message);
+    }
 
     void PQ_PREPROCESS_QUERY(string &query) {
         int i, n = 0;
@@ -442,6 +445,8 @@ namespace dbi {
             throw ConnectionError("Unable to allocate db handle");
         else if (PQstatus(conn) == CONNECTION_BAD)
             throw ConnectionError(PQerrorMessage(conn));
+
+        PQsetNoticeProcessor(conn, PQ_NOTICE, 0);
     }
 
     PgHandle::~PgHandle() {
@@ -683,4 +688,5 @@ extern "C" {
         driver->version = DRIVER_VERSION;
         return driver;
     }
+
 }
