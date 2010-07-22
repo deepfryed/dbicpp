@@ -10,8 +10,6 @@
 
 #define THROW_MYSQL_STMT_ERROR(s) {\
     snprintf(errormsg, 8192, "In SQL: %s\n\n %s", _sql.c_str(), mysql_stmt_error(s));\
-    mysql_stmt_free_result(s); \
-    mysql_stmt_close(s); \
     boom(errormsg);\
 }
 
@@ -228,6 +226,8 @@ namespace dbi {
         MYSQL *conn;
         int tr_nesting;
         void boom(const char*);
+        void connectionError(const char *msg = 0);
+        void runtimeError(const char *msg = 0);
 
         public:
         MySqlHandle();
@@ -302,7 +302,6 @@ namespace dbi {
     }
 
     MySqlStatement::~MySqlStatement() {
-        finish();
         cleanup();
     }
 
@@ -359,6 +358,7 @@ namespace dbi {
     }
 
     void MySqlStatement::cleanup() {
+        finish();
         if (_stmt)
             mysql_stmt_close(_stmt);
         if(_result)
@@ -551,15 +551,18 @@ namespace dbi {
     }
 
     bool MySqlStatement::consumeResult() {
+        finish();
         throw RuntimeError("consumeResult(): Incorrect API call. Use the Async API");
         return false;
     }
 
     void MySqlStatement::prepareResult() {
+        finish();
         throw RuntimeError("prepareResult(): Incorrect API call. Use the Async API");
     }
 
     void MySqlStatement::boom(const char *m) {
+        finish();
         if (MYSQL_CONNECTION_ERROR(mysql_errno(handle->conn)))
             throw ConnectionError(m);
         else
@@ -679,8 +682,10 @@ namespace dbi {
 
     // TODO Handle reconnects in consumeResult() and prepareResult()
     bool MySqlResultSet::consumeResult() {
-        if (mysql_read_query_result(handle->conn) != 0)
+        if (mysql_read_query_result(handle->conn) != 0) {
+            finish();
             throw RuntimeError(mysql_error(handle->conn));
+        }
         return false;
     }
 
@@ -753,7 +758,7 @@ namespace dbi {
         _host = host;
 
         if(!mysql_real_connect(conn, host.c_str(), user.c_str(), pass.c_str(), dbname.c_str(), _port, 0, 0))
-            throw ConnectionError(mysql_error(conn));
+            connectionError();
         mysql_options(conn, MYSQL_OPT_RECONNECT, &MYSQL_BOOL_TRUE);
     }
 
@@ -874,9 +879,9 @@ namespace dbi {
     void MySqlHandle::reconnect() {
         if (conn) {
             if (tr_nesting > 0)
-                throw ConnectionError("Lost connection inside a transaction, unable to reconnect");
+                connectionError("Lost connection inside a transaction, unable to reconnect");
             if(mysql_ping(conn) != 0)
-                throw RuntimeError(mysql_error(conn));
+                runtimeError();
             else
                 fprintf(stderr, "[WARNING] Socket changed during auto reconnect to database %s on host %s\n",
                     _db.c_str(), _host.c_str());
@@ -888,6 +893,18 @@ namespace dbi {
             throw ConnectionError(m);
         else
             throw RuntimeError(m);
+    }
+
+    void MySqlHandle::connectionError(const char *msg) {
+        string error(msg);
+        if (!msg) error = mysql_error(conn);
+        throw ConnectionError(error);
+    }
+
+    void MySqlHandle::runtimeError(const char *msg) {
+        string error(msg);
+        if (!msg) error = mysql_error(conn);
+        throw RuntimeError(error);
     }
 }
 

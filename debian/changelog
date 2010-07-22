@@ -1,3 +1,9 @@
+dbic++ (0.1.8.2) lucid; urgency=low
+
+  * fixed mysql & pg dbl free errors.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Thu, 22 Jul 2010 12:11:00 +1000
+
 dbic++ (0.1.8.1) lucid; urgency=low
 
   * mysql ResultSet#rows and Statement#rows do not have to check if results are bound.

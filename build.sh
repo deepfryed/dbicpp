@@ -58,7 +58,7 @@ _uninstall() {
 }
 
 _install() {
-  uninstall
+  _uninstall
   cmake -DCMAKE_PG_VERSION=$PG_VERSION -DCMAKE_MYSQL_VERSION=$MYSQL_VERSION -DCMAKE_INSTALL_PREFIX:PATH=/usr
   make
   make install

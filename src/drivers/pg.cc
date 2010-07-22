@@ -641,7 +641,6 @@ namespace dbi {
                     return 0;
                 }
                 snprintf(errormsg, 8192, "In SQL: %s\n\n %s", sql.c_str(), PQresultErrorMessage(result));
-                PQclear(result);
                 throw RuntimeError((const char*)errormsg);
                 break;
             default:
@@ -651,7 +650,6 @@ namespace dbi {
                     return 0;
                 }
                 snprintf(errormsg, 8192, "In SQL: %s\n\n Unknown error, check logs.", sql.c_str());
-                PQclear(result);
                 throw RuntimeError(errormsg);
                 break;
         }
