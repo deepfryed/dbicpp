@@ -58,8 +58,8 @@ namespace dbi {
                         throw InvalidDriverError(dlerror());
 
                     if (drivers[driver->name]) {
-                        cout << "[WARNING] Already initialized " << driver->name << " driver."
-                             << " Ignoring: " << filename << endl;
+                        logMessage(_trace_fd, "WARNING: Already loaded " + driver->name +
+                                   " driver. Ignoring: " + filename);
                         dlclose(handle);
                         delete driver;
                     }
@@ -67,12 +67,11 @@ namespace dbi {
                         drivers[driver->name] = driver;
                     }
                 }
-                else {
-                    cout << "[WARNING] Ignoring " << filename << ":" << dlerror() << endl;
-                }
+                else
+                    logMessage(_trace_fd, "WARNING: Ignoring" + filename + ":" + dlerror());
             }
             else {
-                cout << "[WARNING] Ignoring " << filename << ":" << dlerror() << endl;
+                logMessage(_trace_fd, "WARNING: Ignoring" + filename + ":" + dlerror());
             }
         }
 

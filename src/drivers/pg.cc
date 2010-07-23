@@ -617,14 +617,16 @@ namespace dbi {
                 PQfinish(conn);
                 conn = PQconnectdb(conninfo);
                 if (PQstatus(conn) == CONNECTION_BAD) throw ConnectionError(PQerrorMessage(conn));
-                fprintf(stderr, "[WARNING] Socket changed during auto reconnect to database %s on host %s\n",
+                sprintf(errormsg, "WARNING: Socket changed during auto reconnect to database %s on host %s\n",
                     PQdb(conn), PQhost(conn));
+                logMessage(_trace_fd, errormsg);
             }
             else throw ConnectionError(PQerrorMessage(conn));
         }
         else {
-            fprintf(stderr, "[NOTICE] Auto reconnected on same socket to database %s on host %s\n",
+            sprintf(errormsg, "NOTICE: Auto reconnected on same socket to database %s on host %s\n",
                 PQdb(conn), PQhost(conn));
+            logMessage(_trace_fd, errormsg);
         }
     }
 

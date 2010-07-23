@@ -882,9 +882,11 @@ namespace dbi {
                 connectionError("Lost connection inside a transaction, unable to reconnect");
             if(mysql_ping(conn) != 0)
                 runtimeError();
-            else
-                fprintf(stderr, "[WARNING] Socket changed during auto reconnect to database %s on host %s\n",
+            else {
+                sprintf(errormsg, "WARNING: Socket changed during auto reconnect to database %s on host %s\n",
                     _db.c_str(), _host.c_str());
+                logMessage(_trace_fd, errormsg);
+            }
         }
     }
 
