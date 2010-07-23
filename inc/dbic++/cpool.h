@@ -13,7 +13,7 @@ namespace dbi {
         ConnectionPool(int size, string driver_name, string user, string pass, string dbname);
         ~ConnectionPool();
 
-        Request* execute(string sql, vector<Param> &bind, void (*callback)(AbstractResultSet *r), void *context = 0);
+        Request* execute(string sql, ResultRow &bind, void (*callback)(AbstractResultSet *r), void *context = 0);
         Request* execute(string sql, void (*callback)(AbstractResultSet *r), void *context = 0);
         bool process(Request *);
 

@@ -123,48 +123,11 @@ namespace dbi {
         _trace_fd = fd;
     }
 
-    unsigned int Handle::execute(string sql) {
-        if (_trace) logMessage(_trace_fd, sql);
-        return h->execute(sql);
-    }
-
     string formatParams(string sql, ResultRow &p) {
         string message(sql);
 
         if (p.size() > 0) message += " ~ " + p.join(", ");
         return message;
-    }
-
-    unsigned int Statement::execute() {
-        unsigned int rc;
-        if (_trace)
-            logMessage(_trace_fd, formatParams(st->command(), params));
-        rc = st->execute(params);
-        params.clear();
-        return rc;
-    }
-
-    unsigned int Statement::execute(ResultRow &bind) {
-        if (_trace)
-            logMessage(_trace_fd, formatParams(st->command(), bind));
-        return st->execute(bind);
-    }
-
-    unsigned int Statement::operator,(dbi::execute const &e) {
-        unsigned int rc;
-        if (_trace)
-            logMessage(_trace_fd, formatParams(st->command(), params));
-        rc = st->execute(params);
-        params.clear();
-        return rc;
-    }
-
-    unsigned long Statement::lastInsertID() {
-        return st->lastInsertID();
-    }
-
-    void Statement::rewind() {
-        st->rewind();
     }
 
     void logMessage(int fd, string msg) {

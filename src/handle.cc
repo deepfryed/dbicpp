@@ -28,6 +28,11 @@ namespace dbi {
         delete h;
     }
 
+    unsigned int Handle::execute(string sql) {
+        if (_trace) logMessage(_trace_fd, sql);
+        return h->execute(sql);
+    }
+
     Statement Handle::prepare(string sql) {
         return Statement(h->prepare(sql));
     }

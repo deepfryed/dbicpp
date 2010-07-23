@@ -1,3 +1,9 @@
+dbic++ (0.1.9) lucid; urgency=low
+
+  * cleanup and fixed connection pool logger.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Fri, 23 Jul 2010 12:30:00 +1000
+
 dbic++ (0.1.8.2) lucid; urgency=low
 
   * fixed mysql & pg dbl free errors.
