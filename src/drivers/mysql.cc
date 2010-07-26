@@ -954,7 +954,7 @@ namespace dbi {
         in.buffer = io;
         pthread_create(&writer, 0, MYSQL_PIPE_WRITER, &in);
 
-        snprintf(sql, 4095, "load data local infile '%s' into table %s (%s)",
+        snprintf(sql, 4095, "load data local infile '%s' replace into table %s (%s)",
             in.filename, table.c_str(), fields.join(", ").c_str());
         if (mysql_real_query(conn, sql, strlen(sql))) runtimeError();
 
