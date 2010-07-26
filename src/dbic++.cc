@@ -149,4 +149,29 @@ namespace dbi {
         n += write(fd, "\n", 1);
     }
 
+    IO::IO(const char *v, unsigned long l) {
+        eof = false;
+        data = string(v, l);
+    }
+
+    void IO::write(const char *v) {
+        data += string(v);
+    }
+
+    void IO::write(const char *v, unsigned long l) {
+        data += string(v, l);
+    }
+
+    string& IO::read() {
+        if (eof)
+            return empty;
+        else {
+            eof = true;
+            return data;
+        }
+    }
+
+    void IO::truncate() {
+        data = "";
+    }
 }

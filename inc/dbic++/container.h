@@ -1,6 +1,7 @@
 #ifndef _DBICXX_CONTAINER_H
 #define _DBICXX_CONTAINER_H
 
+#include <stdarg.h>
 #include <sstream>
 
 namespace dbi {
@@ -10,6 +11,7 @@ namespace dbi {
     class ResultRow : public vector<Param> {
         public:
         ResultRow() {}
+        ResultRow(int n, ...);
         string join(string delim);
         void operator<<(string v);
         void operator<<(Param &v);

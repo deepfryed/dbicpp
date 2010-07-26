@@ -136,6 +136,8 @@ namespace dbi {
         bool close();
         void reconnect(bool barf = false);
         int checkResult(PGresult*, string, bool barf = false);
+        unsigned long copyIn(string table, ResultRow &fields, IO*);
+
         friend class PgStatement;
     };
 
@@ -668,6 +670,25 @@ namespace dbi {
             throw ConnectionError(m);
         else
             throw RuntimeError(m);
+    }
+
+    unsigned long PgHandle::copyIn(string table, ResultRow &fields, IO* io) {
+        char sql[4096];
+        unsigned long nrows;
+        snprintf(sql, 4095, "copy %s (%s) from stdin", table.c_str(), fields.join(", ").c_str());
+        execute(sql);
+        string rows = io->read();
+        while (rows.length() > 0) {
+            if (PQputCopyData(conn, rows.data(), rows.length()) != 1)
+                throw RuntimeError(PQerrorMessage(conn));
+            rows = io->read();
+        }
+        if (PQputCopyEnd(conn, 0) != 1)
+                throw RuntimeError(PQerrorMessage(conn));
+        PGresult *res = PQgetResult(conn);
+        nrows = PQNTUPLES(res);
+        PQclear(res);
+        return nrows;
     }
 }
 

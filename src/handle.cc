@@ -77,4 +77,8 @@ namespace dbi {
     void* Handle::call(string name, void* arg, unsigned long l) {
         return h->call(name, arg, l);
     }
+
+    unsigned long Handle::copyIn(string table, ResultRow &fields, IO* io) {
+        return h->copyIn(table, fields, io);
+    }
 }

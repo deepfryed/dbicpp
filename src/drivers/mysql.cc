@@ -3,6 +3,9 @@
 #include <mysql/mysql.h>
 #include <mysql/mysql_com.h>
 #include <mysql/errmsg.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #define DRIVER_NAME     "mysql"
 #define DRIVER_VERSION  "1.3"
@@ -20,6 +23,29 @@ namespace dbi {
     char MYSQL_BOOL_TRUE  = 1;
     char MYSQL_BOOL_FALSE = 0;
     bool MYSQL_BIND_RO    = true;
+
+    struct MySqlCopyIn {
+        MYSQL *conn;
+        char filename[512];
+        IO *buffer;
+    };
+
+    // spin on type writer :P
+    void* MYSQL_PIPE_WRITER (void *ptr) {
+        MySqlCopyIn *in = (MySqlCopyIn *)ptr;
+
+        int fd = open(in->filename, O_WRONLY);
+        if (fd == - 1)
+            throw RuntimeError("Unable to open FIFO pipe for writing data");
+
+        string rows = in->buffer->read();
+        while (rows.length() > 0) {
+            write(fd, rows.data(), rows.length());
+            rows = in->buffer->read();
+        }
+        close(fd);
+        return 0;
+    }
 
     // MYSQL does not support type specific binding
     void MYSQL_PREPROCESS_QUERY(string &query) {
@@ -251,6 +277,7 @@ namespace dbi {
         void* call(string name, void* args, unsigned long l);
         bool close();
         void reconnect();
+        unsigned long copyIn(string table, ResultRow &fields, IO*);
 
         friend class MySqlStatement;
         friend class MySqlResultSet;
@@ -907,6 +934,33 @@ namespace dbi {
         string error(msg);
         if (!msg) error = mysql_error(conn);
         throw RuntimeError(error);
+    }
+
+    unsigned long MySqlHandle::copyIn(string table, ResultRow &fields, IO* io) {
+        char sql[4096];
+        pthread_t writer;
+        MySqlCopyIn in;
+
+        strcpy(in.filename, "/tmp/dbi.XXXXXX");
+        ::close(mkstemp(in.filename));
+        unlink(in.filename);
+
+        if (mkfifo(in.filename, 0600)) {
+            sprintf(errormsg, "Unable to open FIFO file for writing data: %s", in.filename);
+            throw RuntimeError(errormsg);
+        }
+
+        in.conn   = conn;
+        in.buffer = io;
+        pthread_create(&writer, 0, MYSQL_PIPE_WRITER, &in);
+
+        snprintf(sql, 4095, "load data local infile '%s' into table %s (%s)",
+            in.filename, table.c_str(), fields.join(", ").c_str());
+        if (mysql_real_query(conn, sql, strlen(sql))) runtimeError();
+
+        pthread_join(writer, 0);
+        unlink(in.filename);
+        return (unsigned long) mysql_affected_rows(conn);
     }
 }
 

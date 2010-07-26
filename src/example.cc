@@ -6,7 +6,7 @@
 
    To compile:
 
-   g++ -Iinc -Llibs -rdynamic -o example example.cc -ldbic++ -ldl -lpcrecpp -levent
+   g++ -Iinc -Llibs -rdynamic -o example example.cc -ldbic++ -ldl -lpcrecpp -levent -lpthread
 
 ----------------------------------------------------------------------------------*/
 
@@ -33,37 +33,36 @@ int main(int argc, char *argv[]) {
     Handle h (driver, getlogin(), "", "dbicpp");
 
     // Set trace on and log queries to stderr
-    // trace(true, 2);
+    trace(true, 2);
 
     // create table.
     cout << endl;
-    cout << "Creating table" << endl;
-    cout << "--------------" << endl << endl;
+    cout << "-- creating table --" << endl;
 
     // create test table
-    h.execute("DROP TABLE IF EXISTS users");
-    h.execute("CREATE TABLE users(id serial, name text, email text)");
+    h.execute("drop table if exists users");
+    h.execute("create table users(id serial, name text, email text)");
 
     // create table.
     cout << endl;
-    cout << "Inserting test data" << endl;
-    cout << "-------------------" << endl << endl;
+    cout << "-- inserting test data --" << endl;
 
     // insert some test data
-    Statement tdata (h, "INSERT INTO users(name, email) VALUES(?, ?)");
+    Statement tdata (h, "insert into users(name, email) values(?, ?)");
     tdata % "Apple Arthurton", "apple@example.com", execute();
     tdata % "Benny Arthurton", "benny@example.com", execute();
 
     // prepare, bind and execute in one go.
-    ( h << "INSERT INTO users(name, email) VALUES (?, ?)" ) % "James Arthurton", "james@example.com", execute();
+    ( h << "insert into users(name, email) values (?, ?)" ) % "James Arthurton", "james@example.com", execute();
 
-    cout << "Simple select" << endl;
-    cout << "-------------" << endl << endl;
+    cout << endl;
+    cout << "-- simple select --" << endl;
 
-    Statement st (h, "SELECT id, name, email FROM users WHERE id >= ? AND id < ?");
+    Statement st (h, "select id, name, email from users where id >= ? and id < ?");
 
     if (driver == "postgresql") {
-        cout << "pausing... and trying to kill connection for an auto-reconnect" << endl;
+        cout << endl;
+        cout << "-- trying to kill connection for an auto-reconnect --" << endl;
         system("sudo kill `pgrep -U postgres -f postgres.*dbicpp`");
         sleep(1);
     }
@@ -74,8 +73,7 @@ int main(int argc, char *argv[]) {
     st.finish();
 
     cout << endl;
-    cout << "fetchRowHash" << endl;
-    cout << "------------" << endl << endl;
+    cout << "-- fetchRowHash --" << endl;
 
     // bind and execute the statement later.
     st % 1L, 10L;
@@ -87,8 +85,7 @@ int main(int argc, char *argv[]) {
     }
 
     cout << endl;
-    cout << "Rewind" << endl;
-    cout << "------" << endl << endl;
+    cout << "-- rewind --" << endl;
 
     st.rewind();
     while (rh = st.fetchRowHash()) {
@@ -99,40 +96,55 @@ int main(int argc, char *argv[]) {
 
     // nested transaction
     cout << endl;
-    cout << "Nested transaction" << endl;
-    cout << "------------------" << endl << endl;
+    cout << "-- nested transaction --" << endl;
 
     h.begin("transaction_1");
-    cout << "deleted rows with id = 1: " << h.execute("DELETE FROM users WHERE id = 1") << endl;
+    cout << "-- deleted rows with id = 1 --" << endl;
+    h.execute("delete from users where id = 1");
+
     h.begin("transaction_2");
-    cout << "deleted rows with id = 2: " << h.execute("DELETE FROM users WHERE id = 2") << endl;
-    cout << "rollback last statement" << endl;
+    cout << "-- deleted rows with id = 2 --" << endl;
+    h.execute("delete from users where id = 2");
+
+    cout << "-- rollback last statement --" << endl;
     h.rollback("transaction_2");
     h.commit("transaction_1");
 
     // transaction
     cout << endl;
-    cout << "Inserts & Selects inside transaction" << endl;
-    cout << "------------------------------------" << endl << endl;
+    cout << "-- inserts & selects inside transaction --" << endl;
 
-    string sql("INSERT INTO users (name, email) VALUES (?, ?)");
+    string sql("insert into users (name, email) values (?, ?)");
     Statement ins (h, sql + (driver == "postgresql" ? " RETURNING id" : ""));
+
     ins % "John Doe", "doe@example.com", execute();
-    cout << "Inserted 1 row, last insert id = " << ins.lastInsertID() << endl;
+    cout << "-- inserted 1 row, last insert id = " << ins.lastInsertID() << " --" << endl;
+
     ins % "Jane Doe", null(), execute();
-    cout << "Inserted 1 row with null email value" << endl << endl;
+    cout << "-- inserted 1 row with null email value --" << endl;
 
     // type specific binding.
-    st << "SELECT id, name, email FROM users WHERE id > %d", 0L, execute();
+    st << "select id, name, email from users where id > %d", 0L, execute();
+    printResultRows(st);
+    st.finish();
+
+    cout << endl;
+    cout << "-- bulk copy in --" << endl;
+    ResultRow fields(2, "name", "email");
+    IO buffer;
+    buffer.write("sally\tsally@local\n");
+    buffer.write("jonas\tjonas@local\n");
+    cout << "rows: " << h.copyIn("users", fields, &buffer) << endl;
+
+    st << "select id, name, email from users where id > %d", 0L, execute();
     printResultRows(st);
     st.finish();
 
     // async querying.
     cout << endl;
-    cout << "Asynchronous query" << endl;
-    cout << "------------------" << endl << endl;
+    cout << "-- asynchronous query --" << endl;
 
-    string sleep_sql = (driver == "mysql" ? "SELECT sleep" : "SELECT pg_sleep");
+    string sleep_sql = (driver == "mysql" ? "select sleep" : "select pg_sleep");
 
     ConnectionPool pool(5, driver, getlogin(), "", "dbicpp");
     Reactor::initialize();

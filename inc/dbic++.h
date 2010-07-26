@@ -46,6 +46,20 @@ namespace dbi {
     class AbstractStatement;
     class AbstractResultSet;
 
+    class IO {
+        private:
+        bool eof;
+        string empty;
+        string data;
+        public:
+        IO() { eof = false; }
+        IO(const char *, unsigned long);
+        string &read(void);
+        void write(const char *);
+        void write(const char *, unsigned long);
+        void truncate(void);
+    };
+
     class AbstractHandle {
         public:
         virtual unsigned int execute(string sql) = 0;
@@ -60,6 +74,7 @@ namespace dbi {
         virtual void* call(string name, void*, unsigned long int) = 0;
         virtual bool close() = 0;
         virtual void cleanup() = 0;
+        virtual unsigned long copyIn(string table, ResultRow &fields, IO*) = 0;
 
         friend class ConnectionPool;
         friend class Request;
@@ -138,6 +153,7 @@ namespace dbi {
         void* call(string name, void*, unsigned long int);
         bool close();
         vector<string>& transactions();
+        unsigned long copyIn(string table, ResultRow &fields, IO*);
         friend class Statement;
     };
 

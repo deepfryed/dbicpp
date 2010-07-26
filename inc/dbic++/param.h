@@ -8,8 +8,10 @@ namespace dbi {
     using namespace std;
 
     struct Param {
+        public:
         bool isnull;
         string value;
+        operator bool() { return value.length() > 0; }
     };
 
     Param PARAM(char* s);
@@ -19,6 +21,7 @@ namespace dbi {
     Param PARAM_BINARY(unsigned char* data, unsigned long l);
 
     ostream& operator<<(ostream &out, Param &p);
+
 }
 
 #endif
