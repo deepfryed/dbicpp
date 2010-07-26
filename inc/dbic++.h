@@ -52,8 +52,22 @@ namespace dbi {
         string empty;
         string data;
         public:
-        IO() { eof = false; }
-        IO(const char *, unsigned long);
+        IO() {}
+        IO(const char *, unsigned long) {}
+        virtual string &read(void) = 0;
+        virtual void write(const char *) = 0;
+        virtual void write(const char *, unsigned long) = 0;
+        virtual void truncate(void) = 0;
+    };
+
+    class IOStream : public IO {
+        private:
+        bool eof;
+        string empty;
+        string data;
+        public:
+        IOStream() { eof = false; }
+        IOStream(const char *, unsigned long);
         string &read(void);
         void write(const char *);
         void write(const char *, unsigned long);

@@ -676,6 +676,8 @@ namespace dbi {
         char sql[4096];
         unsigned long nrows;
         snprintf(sql, 4095, "copy %s (%s) from stdin", table.c_str(), fields.join(", ").c_str());
+        if (_trace)
+            logMessage(_trace_fd, sql);
         execute(sql);
         string rows = io->read();
         while (rows.length() > 0) {

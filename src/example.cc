@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
     cout << endl;
     cout << "-- bulk copy in --" << endl;
     ResultRow fields(2, "name", "email");
-    IO buffer;
+    IOStream buffer;
     buffer.write("sally\tsally@local\n");
     buffer.write("jonas\tjonas@local\n");
     cout << "rows: " << h.copyIn("users", fields, &buffer) << endl;

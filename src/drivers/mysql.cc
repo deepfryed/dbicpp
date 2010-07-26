@@ -956,6 +956,9 @@ namespace dbi {
 
         snprintf(sql, 4095, "load data local infile '%s' replace into table %s (%s)",
             in.filename, table.c_str(), fields.join(", ").c_str());
+        if (_trace)
+            logMessage(_trace_fd, sql);
+
         if (mysql_real_query(conn, sql, strlen(sql))) runtimeError();
 
         pthread_join(writer, 0);

@@ -149,20 +149,20 @@ namespace dbi {
         n += write(fd, "\n", 1);
     }
 
-    IO::IO(const char *v, unsigned long l) {
+    IOStream::IOStream(const char *v, unsigned long l) {
         eof = false;
         data = string(v, l);
     }
 
-    void IO::write(const char *v) {
+    void IOStream::write(const char *v) {
         data += string(v);
     }
 
-    void IO::write(const char *v, unsigned long l) {
+    void IOStream::write(const char *v, unsigned long l) {
         data += string(v, l);
     }
 
-    string& IO::read() {
+    string& IOStream::read() {
         if (eof)
             return empty;
         else {
@@ -171,7 +171,7 @@ namespace dbi {
         }
     }
 
-    void IO::truncate() {
+    void IOStream::truncate() {
         data = "";
     }
 }
