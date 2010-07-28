@@ -1,3 +1,9 @@
+dbic++ (0.2.0) lucid; urgency=low
+
+  * fixed a chunky memory leak in pg driver when using bind params.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Wed, 28 Jul 2010 13:51:00 +1000
+
 dbic++ (0.1.9) lucid; urgency=low
 
   * cleanup and fixed connection pool logger.

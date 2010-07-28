@@ -82,9 +82,12 @@ namespace dbi {
     void dbiShutdown() {
         for (map<string, Driver*>::iterator iter = drivers.begin(); iter != drivers.end(); ++iter) {
             Driver *driver = iter->second;
-            if (driver)
+            if (driver) {
+                dlclose(driver->handle);
                 delete driver;
+            }
         }
+        drivers.clear();
     }
 
     vector<string> available_drivers () {

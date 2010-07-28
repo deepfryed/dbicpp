@@ -323,6 +323,8 @@ namespace dbi {
                 delete []param_l;
                 throw e;
             }
+            delete []param_v;
+            delete []param_l;
             _rows = (unsigned int)PQNTUPLES(_result);
         }
 
@@ -509,6 +511,8 @@ namespace dbi {
             throw e;
         }
 
+        delete []param_v;
+        delete []param_l;
         rows = (unsigned int)PQNTUPLES(result);
         PQclear(result);
         return rows;
