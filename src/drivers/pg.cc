@@ -103,7 +103,6 @@ namespace dbi {
         bool finish();
         unsigned char* fetchValue(unsigned int r, unsigned int c, unsigned long *l = 0);
         unsigned int currentRow();
-        void advanceRow();
         void rewind();
         vector<int>& types();
     };
@@ -402,16 +401,13 @@ namespace dbi {
 
     unsigned char* PgStatement::fetchValue(unsigned int r, unsigned int c, unsigned long *l) {
         checkReady("fetchValue()");
+        _rowno = r;
         if (l) *l = PQgetlength(_result, r, c);
         return PQgetisnull(_result, r, c) ? 0 : (unsigned char*)PQgetvalue(_result, r, c);
     }
 
     unsigned int PgStatement::currentRow() {
         return _rowno;
-    }
-
-    void PgStatement::advanceRow() {
-        _rowno = _rowno <= _rows ? _rowno + 1 : _rowno;
     }
 
     void PgStatement::boom(const char* m) {

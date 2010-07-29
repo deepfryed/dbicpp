@@ -202,7 +202,6 @@ namespace dbi {
         bool finish();
         unsigned char* fetchValue(unsigned int r, unsigned int c, unsigned long *l = 0);
         unsigned int currentRow();
-        void advanceRow();
         bool consumeResult();
         void prepareResult();
         void rewind();
@@ -233,7 +232,6 @@ namespace dbi {
         bool finish();
         unsigned char* fetchValue(unsigned int r, unsigned int c, unsigned long *l = 0);
         unsigned int currentRow();
-        void advanceRow();
         void cleanup();
         unsigned long lastInsertID();
         bool consumeResult();
@@ -549,10 +547,14 @@ namespace dbi {
         unsigned long length;
         checkReady("fetchValue()");
 
-        mysql_stmt_data_seek(_stmt, r);
-        rc = mysql_stmt_fetch(_stmt);
-        if (rc != 0 && rc != MYSQL_DATA_TRUNCATED)
-            THROW_MYSQL_STMT_ERROR(_stmt);
+        if (r >= _rows) return 0;
+        if (_rowno != r) {
+            _rowno = r;
+            mysql_stmt_data_seek(_stmt, r);
+            rc = mysql_stmt_fetch(_stmt);
+            if (rc != 0 && rc != MYSQL_DATA_TRUNCATED)
+                THROW_MYSQL_STMT_ERROR(_stmt);
+        }
 
         length = *(_result->params[c].length);
         if (*_result->params[c].is_null) {
@@ -571,10 +573,6 @@ namespace dbi {
 
     unsigned int MySqlStatement::currentRow() {
         return _rowno;
-    }
-
-    void MySqlStatement::advanceRow() {
-        _rowno = _rowno <= _rows ? _rowno + 1 : _rowno;
     }
 
     bool MySqlStatement::consumeResult() {
@@ -678,24 +676,20 @@ namespace dbi {
 
     unsigned char* MySqlResultSet::fetchValue(unsigned int r, unsigned int c, unsigned long *l) {
         checkReady("fetchValue()");
-        if (r < _rows) {
+        if (r >= _rows) return 0;
+        if (_rowno != r) {
+            _rowno = r;
             mysql_data_seek(result, r);
-            MYSQL_ROW row = mysql_fetch_row(result);
-            unsigned long* lengths = mysql_fetch_lengths(result);
-            if (l) *l = lengths[c];
-            return (unsigned char*)row[c];
         }
-        else {
-            return 0;
-        }
+
+        MYSQL_ROW row = mysql_fetch_row(result);
+        unsigned long* lengths = mysql_fetch_lengths(result);
+        if (l) *l = lengths[c];
+        return (unsigned char*)row[c];
     }
 
     unsigned int MySqlResultSet::currentRow() {
         return _rowno;
-    }
-
-    void MySqlResultSet::advanceRow() {
-        _rowno++;
     }
 
     void MySqlResultSet::cleanup() {

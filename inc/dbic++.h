@@ -113,7 +113,6 @@ namespace dbi {
         virtual bool finish() = 0;
         virtual unsigned char* fetchValue(unsigned int, unsigned int, unsigned long*) = 0;
         virtual unsigned int currentRow() = 0;
-        virtual void advanceRow() = 0;
         virtual void cleanup() = 0;
         virtual unsigned long lastInsertID() = 0;
         virtual void rewind() = 0;
@@ -207,7 +206,6 @@ namespace dbi {
         unsigned char* fetchValue(unsigned int r, unsigned int c, unsigned long*);
         unsigned char* operator()(unsigned int r, unsigned int c);
         unsigned int currentRow();
-        void advanceRow();
         bool finish();
         void cleanup();
         unsigned long lastInsertID();

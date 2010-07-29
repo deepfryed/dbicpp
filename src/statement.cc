@@ -153,10 +153,6 @@ namespace dbi {
         return st->currentRow();
     }
 
-    void Statement::advanceRow() {
-        st->advanceRow();
-    }
-
     vector<int>& Statement::types() {
         return st->types();
     }
