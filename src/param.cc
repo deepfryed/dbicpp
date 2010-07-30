@@ -16,7 +16,7 @@ namespace dbi {
         return p;
     }
 
-    Param PARAM_BINARY(unsigned char *data, unsigned long l) {
+    Param PARAM_BINARY(unsigned char *data, ulong l) {
         Param p = { false, string((const char*)data, l) };
         return p;
     }

@@ -28,7 +28,7 @@ namespace dbi {
         delete h;
     }
 
-    unsigned int Handle::execute(string sql) {
+    uint Handle::execute(string sql) {
         if (_trace) logMessage(_trace_fd, sql);
         return h->execute(sql);
     }
@@ -74,11 +74,11 @@ namespace dbi {
         return trx;
     }
 
-    void* Handle::call(string name, void* arg, unsigned long l) {
+    void* Handle::call(string name, void* arg, ulong l) {
         return h->call(name, arg, l);
     }
 
-    unsigned long Handle::copyIn(string table, ResultRow &fields, IO* io) {
+    ulong Handle::copyIn(string table, ResultRow &fields, IO* io) {
         return h->copyIn(table, fields, io);
     }
 }

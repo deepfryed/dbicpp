@@ -53,7 +53,7 @@ namespace dbi {
         *param_v = new const char*[bind.size()];
         *param_l = new int[bind.size()];
 
-        for (unsigned int i = 0; i < bind.size(); i++) {
+        for (uint i = 0; i < bind.size(); i++) {
             bool isnull = bind[i].isnull;
             (*param_v)[i] = isnull ? 0 : bind[i].value.data();
             (*param_l)[i] = isnull ? 0 : bind[i].value.length();
@@ -74,7 +74,7 @@ namespace dbi {
         PGresult *_result;
         vector<string> _rsfields;
         vector<int> _rstypes;
-        unsigned int _rowno, _rows, _cols;
+        uint _rowno, _rows, _cols;
         ResultRow _rsrow;
         ResultRowHash _rsrowhash;
         bool _async;
@@ -90,19 +90,19 @@ namespace dbi {
         void cleanup();
         string command();
         void checkReady(string);
-        unsigned int rows();
-        unsigned int columns();
-        unsigned int execute();
-        unsigned int execute(vector<Param>&);
+        uint rows();
+        uint columns();
+        uint execute();
+        uint execute(vector<Param>&);
         bool consumeResult();
         void prepareResult();
-        unsigned long lastInsertID();
+        ulong lastInsertID();
         ResultRow& fetchRow();
         ResultRowHash& fetchRowHash();
         vector<string> fields();
         bool finish();
-        unsigned char* fetchValue(unsigned int r, unsigned int c, unsigned long *l = 0);
-        unsigned int currentRow();
+        unsigned char* fetchValue(uint r, uint c, ulong *l = 0);
+        uint currentRow();
         void rewind();
         vector<int>& types();
     };
@@ -117,8 +117,8 @@ namespace dbi {
         PgHandle(string user, string pass, string dbname, string h, string p);
         ~PgHandle();
         void cleanup();
-        unsigned int execute(string sql);
-        unsigned int execute(string sql, vector<Param> &bind);
+        uint execute(string sql);
+        uint execute(string sql, vector<Param> &bind);
         int socket();
         PgStatement* aexecute(string sql, vector<Param> &bind);
         void initAsync();
@@ -131,11 +131,11 @@ namespace dbi {
         bool begin(string name);
         bool commit(string name);
         bool rollback(string name);
-        void* call(string name, void* args, unsigned long l);
+        void* call(string name, void* args, ulong l);
         bool close();
         void reconnect(bool barf = false);
         int checkResult(PGresult*, string, bool barf = false);
-        unsigned long copyIn(string table, ResultRow &fields, IO*);
+        ulong copyIn(string table, ResultRow &fields, IO*);
 
         friend class PgStatement;
     };
@@ -217,7 +217,7 @@ namespace dbi {
         // prepare is always sync - only execute is really async.
         PGresult *result = prepare();
 
-        _cols  = (unsigned int)PQnfields(result);
+        _cols  = (uint)PQnfields(result);
 
         for (int i = 0; i < (int)_cols; i++)
             _rsfields.push_back(PQfname(result, i));
@@ -255,12 +255,12 @@ namespace dbi {
             throw RuntimeError((m + " cannot be called yet. call execute() first").c_str());
     }
 
-    unsigned int PgStatement::rows() {
+    uint PgStatement::rows() {
         checkReady("rows()");
         return _rows;
     }
 
-    unsigned int PgStatement::execute() {
+    uint PgStatement::execute() {
         int done, tries;
         finish();
 
@@ -281,14 +281,14 @@ namespace dbi {
                 done = handle->checkResult(_result, _sql);
                 if (!done) prepare();
             }
-            _rows = (unsigned int)PQNTUPLES(_result);
+            _rows = (uint)PQNTUPLES(_result);
         }
 
         // will return 0 for async queries.
         return _rows;
     }
 
-    unsigned int PgStatement::execute(vector<Param> &bind) {
+    uint PgStatement::execute(vector<Param> &bind) {
         int *param_l, done, tries;
         const char **param_v;
 
@@ -324,7 +324,7 @@ namespace dbi {
             }
             delete []param_v;
             delete []param_l;
-            _rows = (unsigned int)PQNTUPLES(_result);
+            _rows = (uint)PQNTUPLES(_result);
         }
 
         // will return 0 for async queries.
@@ -339,12 +339,12 @@ namespace dbi {
     void PgStatement::prepareResult() {
         PGresult *response;
         _result = PQgetResult(handle->conn);
-        _rows   = (unsigned int)PQNTUPLES(_result);
+        _rows   = (uint)PQNTUPLES(_result);
         while ((response = PQgetResult(handle->conn))) PQclear(response);
         handle->checkResult(_result, _sql, true);
     }
 
-    unsigned long PgStatement::lastInsertID() {
+    ulong PgStatement::lastInsertID() {
         checkReady("lastInsertID()");
         ResultRow r = fetchRow();
         return r.size() > 0 ? atol(r[0].value.c_str()) : 0;
@@ -357,7 +357,7 @@ namespace dbi {
 
         if (_rowno < _rows) {
             _rowno++;
-            for (unsigned int i = 0; i < _cols; i++)
+            for (uint i = 0; i < _cols; i++)
                 _rsrow.push_back(PQgetisnull(_result, _rowno-1, i) ?
                     PARAM(null()) : PG2PARAM(_result, _rowno-1, i));
         }
@@ -372,7 +372,7 @@ namespace dbi {
 
         if (_rowno < _rows) {
             _rowno++;
-            for (unsigned int i = 0; i < _cols; i++)
+            for (uint i = 0; i < _cols; i++)
                 _rsrowhash[_rsfields[i]] = PQgetisnull(_result, _rowno-1, i) ?
                     PARAM(null()) : PG2PARAM(_result, _rowno-1, i);
         }
@@ -384,7 +384,7 @@ namespace dbi {
         return _rsfields;
     }
 
-    unsigned int PgStatement::columns() {
+    uint PgStatement::columns() {
         return _cols;
     }
 
@@ -399,14 +399,14 @@ namespace dbi {
         return true;
     }
 
-    unsigned char* PgStatement::fetchValue(unsigned int r, unsigned int c, unsigned long *l) {
+    unsigned char* PgStatement::fetchValue(uint r, uint c, ulong *l) {
         checkReady("fetchValue()");
         _rowno = r;
         if (l) *l = PQgetlength(_result, r, c);
         return PQgetisnull(_result, r, c) ? 0 : (unsigned char*)PQgetvalue(_result, r, c);
     }
 
-    unsigned int PgStatement::currentRow() {
+    uint PgStatement::currentRow() {
         return _rowno;
     }
 
@@ -461,8 +461,8 @@ namespace dbi {
         conn = 0;
     }
 
-    unsigned int PgHandle::execute(string sql) {
-        unsigned int rows;
+    uint PgHandle::execute(string sql) {
+        uint rows;
         int done, tries;
         PGresult *result;
         string query  = sql;
@@ -477,15 +477,15 @@ namespace dbi {
 
         if (!done) boom(PQerrorMessage(conn));
 
-        rows = (unsigned int)PQNTUPLES(result);
+        rows = (uint)PQNTUPLES(result);
         PQclear(result);
         return rows;
     }
 
-    unsigned int PgHandle::execute(string sql, vector<Param> &bind) {
+    uint PgHandle::execute(string sql, vector<Param> &bind) {
         int *param_l;
         const char **param_v;
-        unsigned int rows;
+        uint rows;
         int done, tries;
         PGresult *result;
         string query = sql;
@@ -509,7 +509,7 @@ namespace dbi {
 
         delete []param_v;
         delete []param_l;
-        rows = (unsigned int)PQNTUPLES(result);
+        rows = (uint)PQNTUPLES(result);
         PQclear(result);
         return rows;
     }
@@ -595,7 +595,7 @@ namespace dbi {
         return true;
     };
 
-    void* PgHandle::call(string name, void* args, unsigned long l) {
+    void* PgHandle::call(string name, void* args, ulong l) {
         return NULL;
     }
 
@@ -672,9 +672,9 @@ namespace dbi {
             throw RuntimeError(m);
     }
 
-    unsigned long PgHandle::copyIn(string table, ResultRow &fields, IO* io) {
+    ulong PgHandle::copyIn(string table, ResultRow &fields, IO* io) {
         char sql[4096];
-        unsigned long nrows;
+        ulong nrows;
         snprintf(sql, 4095, "copy %s (%s) from stdin", table.c_str(), fields.join(", ").c_str());
         if (_trace)
             logMessage(_trace_fd, sql);

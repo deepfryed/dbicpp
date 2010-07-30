@@ -53,10 +53,11 @@ namespace dbi {
         string data;
         public:
         IO() {}
-        IO(const char *, unsigned long) {}
+        IO(const char *, ulong) {}
         virtual string &read(void) = 0;
+        virtual uint read(char *buffer, uint) = 0;
         virtual void write(const char *) = 0;
-        virtual void write(const char *, unsigned long) = 0;
+        virtual void write(const char *, ulong) = 0;
         virtual void truncate(void) = 0;
     };
 
@@ -65,19 +66,21 @@ namespace dbi {
         bool eof;
         string empty;
         string data;
+        uint loc;
         public:
-        IOStream() { eof = false; }
-        IOStream(const char *, unsigned long);
+        IOStream() { eof = false; loc = 0; }
+        IOStream(const char *, ulong);
         string &read(void);
+        uint read(char *buffer, uint);
         void write(const char *);
-        void write(const char *, unsigned long);
+        void write(const char *, ulong);
         void truncate(void);
     };
 
     class AbstractHandle {
         public:
-        virtual unsigned int execute(string sql) = 0;
-        virtual unsigned int execute(string sql, vector<Param> &bind) = 0;
+        virtual uint execute(string sql) = 0;
+        virtual uint execute(string sql, vector<Param> &bind) = 0;
         virtual AbstractStatement* prepare(string sql) = 0;
         virtual bool begin() = 0;
         virtual bool commit() = 0;
@@ -85,10 +88,10 @@ namespace dbi {
         virtual bool begin(string name) = 0;
         virtual bool commit(string name) = 0;
         virtual bool rollback(string name) = 0;
-        virtual void* call(string name, void*, unsigned long int) = 0;
+        virtual void* call(string name, void*, ulong) = 0;
         virtual bool close() = 0;
         virtual void cleanup() = 0;
-        virtual unsigned long copyIn(string table, ResultRow &fields, IO*) = 0;
+        virtual ulong copyIn(string table, ResultRow &fields, IO*) = 0;
 
         friend class ConnectionPool;
         friend class Request;
@@ -105,16 +108,16 @@ namespace dbi {
     class AbstractResultSet {
         public:
         void *context;
-        virtual unsigned int rows() = 0;
-        virtual unsigned int columns() = 0;
+        virtual uint rows() = 0;
+        virtual uint columns() = 0;
         virtual vector<string> fields() = 0;
         virtual ResultRow& fetchRow() = 0;
         virtual ResultRowHash& fetchRowHash() = 0;
         virtual bool finish() = 0;
-        virtual unsigned char* fetchValue(unsigned int, unsigned int, unsigned long*) = 0;
-        virtual unsigned int currentRow() = 0;
+        virtual unsigned char* fetchValue(uint, uint, ulong*) = 0;
+        virtual uint currentRow() = 0;
         virtual void cleanup() = 0;
-        virtual unsigned long lastInsertID() = 0;
+        virtual ulong lastInsertID() = 0;
         virtual void rewind() = 0;
         virtual vector<int>& types() = 0;
 
@@ -129,8 +132,8 @@ namespace dbi {
     class AbstractStatement : public AbstractResultSet {
         public:
         virtual string command() = 0;
-        virtual unsigned int execute() = 0;
-        virtual unsigned int execute(vector<Param> &bind) = 0;
+        virtual uint execute() = 0;
+        virtual uint execute(vector<Param> &bind) = 0;
     };
 
     class Driver {
@@ -154,7 +157,7 @@ namespace dbi {
         Handle(string driver, string user, string pass, string dbname);
         Handle(AbstractHandle *ah);
         ~Handle();
-        unsigned int execute(string sql);
+        uint execute(string sql);
         Statement prepare(string sql);
         Statement operator<<(string sql);
         bool begin();
@@ -163,10 +166,10 @@ namespace dbi {
         bool begin(string name);
         bool commit(string name);
         bool rollback(string name);
-        void* call(string name, void*, unsigned long int);
+        void* call(string name, void*, ulong);
         bool close();
         vector<string>& transactions();
-        unsigned long copyIn(string table, ResultRow &fields, IO*);
+        ulong copyIn(string table, ResultRow &fields, IO*);
         friend class Statement;
     };
 
@@ -183,12 +186,12 @@ namespace dbi {
         Statement(Handle *h);
         Statement(Handle *h, string sql);
         ~Statement();
-        unsigned int rows();
+        uint rows();
         void bind(long v);
         void bind(double v);
         void bind(Param v);
-        unsigned int execute();
-        unsigned int execute(ResultRow &bind);
+        uint execute();
+        uint execute(ResultRow &bind);
         Statement& operator<<(string sql);
         Statement& operator,(string v);
         Statement& operator%(string v);
@@ -198,17 +201,17 @@ namespace dbi {
         Statement& operator%(double v);
         Statement& operator,(dbi::null const &e);
         Statement& operator%(dbi::null const &e);
-        unsigned int  operator,(dbi::execute const &);
+        uint  operator,(dbi::execute const &);
         ResultRow& fetchRow();
         ResultRowHash& fetchRowHash();
-        unsigned int columns();
+        uint columns();
         vector<string> fields();
-        unsigned char* fetchValue(unsigned int r, unsigned int c, unsigned long*);
-        unsigned char* operator()(unsigned int r, unsigned int c);
-        unsigned int currentRow();
+        unsigned char* fetchValue(uint r, uint c, ulong*);
+        unsigned char* operator()(uint r, uint c);
+        uint currentRow();
         bool finish();
         void cleanup();
-        unsigned long lastInsertID();
+        ulong lastInsertID();
         void rewind();
         vector<int>& types();
     };

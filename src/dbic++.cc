@@ -152,26 +152,38 @@ namespace dbi {
         n += write(fd, "\n", 1);
     }
 
-    IOStream::IOStream(const char *v, unsigned long l) {
-        eof = false;
+    IOStream::IOStream(const char *v, ulong l) {
+        eof  = false;
         data = string(v, l);
+        loc  = 0;
     }
 
     void IOStream::write(const char *v) {
         data += string(v);
     }
 
-    void IOStream::write(const char *v, unsigned long l) {
+    void IOStream::write(const char *v, ulong l) {
         data += string(v, l);
     }
 
     string& IOStream::read() {
+        loc = data.length();
         if (eof)
             return empty;
         else {
             eof = true;
             return data;
         }
+    }
+
+    uint IOStream::read(char *buffer, uint max) {
+        if (loc < data.length()) {
+            max = data.length() - loc > max ? max : data.length() - loc;
+            memcpy(buffer, data.data() + loc, max);
+            loc += max;
+        }
+        else max = 0;
+        return max;
     }
 
     void IOStream::truncate() {

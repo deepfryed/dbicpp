@@ -40,7 +40,7 @@ namespace dbi {
         }
     }
 
-    unsigned int Statement::rows() {
+    uint Statement::rows() {
         return st->rows();
     }
 
@@ -137,19 +137,19 @@ namespace dbi {
         return st->fields();
     }
 
-    unsigned int Statement::columns() {
+    uint Statement::columns() {
         return st->columns();
     }
 
-    unsigned char* Statement::fetchValue(unsigned int r, unsigned int c, unsigned long *l = 0) {
+    unsigned char* Statement::fetchValue(uint r, uint c, ulong *l = 0) {
         return st->fetchValue(r, c, l);
     }
 
-    unsigned char* Statement::operator()(unsigned int r, unsigned int c) {
+    unsigned char* Statement::operator()(uint r, uint c) {
         return st->fetchValue(r, c, 0);
     }
 
-    unsigned int Statement::currentRow() {
+    uint Statement::currentRow() {
         return st->currentRow();
     }
 
@@ -157,8 +157,8 @@ namespace dbi {
         return st->types();
     }
 
-    unsigned int Statement::execute() {
-        unsigned int rc;
+    uint Statement::execute() {
+        uint rc;
         if (_trace)
             logMessage(_trace_fd, formatParams(st->command(), params));
         rc = st->execute(params);
@@ -166,14 +166,14 @@ namespace dbi {
         return rc;
     }
 
-    unsigned int Statement::execute(ResultRow &bind) {
+    uint Statement::execute(ResultRow &bind) {
         if (_trace)
             logMessage(_trace_fd, formatParams(st->command(), bind));
         return st->execute(bind);
     }
 
-    unsigned int Statement::operator,(dbi::execute const &e) {
-        unsigned int rc;
+    uint Statement::operator,(dbi::execute const &e) {
+        uint rc;
         if (_trace)
             logMessage(_trace_fd, formatParams(st->command(), params));
         rc = st->execute(params);
@@ -181,7 +181,7 @@ namespace dbi {
         return rc;
     }
 
-    unsigned long Statement::lastInsertID() {
+    ulong Statement::lastInsertID() {
         return st->lastInsertID();
     }
 
