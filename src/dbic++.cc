@@ -166,6 +166,15 @@ namespace dbi {
         data += string(v, l);
     }
 
+    void IOStream::writef(const char *fmt, ...) {
+        char buffer[65536];
+        va_list ap;
+        va_start(ap, fmt);
+        vsnprintf(buffer, 65535, fmt, ap);
+        va_end(ap);
+        data += string(buffer);
+    }
+
     string& IOStream::read() {
         loc = data.length();
         if (eof)
@@ -188,5 +197,31 @@ namespace dbi {
 
     void IOStream::truncate() {
         data = "";
+    }
+
+    IOFileStream::IOFileStream(const char *path, uint mode) {
+        fd = open(path, mode);
+        if (fd == -1) throw RuntimeError(strerror(errno));
+    }
+
+    string& IOFileStream::read() {
+        char buffer[16384];
+        uint count;
+        count = ::read(fd, buffer, 16384);
+        if (count > 0) {
+            data = string(buffer, count);
+            return data;
+        }
+        else
+            return empty;
+    }
+
+    uint IOFileStream::read(char *buffer, uint len) {
+        len = ::read(fd, buffer, len);
+        return len;
+    }
+
+    IOFileStream::~IOFileStream() {
+        if (fd > 0) close(fd);
     }
 }

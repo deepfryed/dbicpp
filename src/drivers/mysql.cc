@@ -78,15 +78,17 @@ namespace dbi {
 
 
     int LOCAL_INFILE_INIT(void **ptr, const char *filename, void *unused) {
-        *ptr = (void *)CopyInList[filename];
-        return 0;
+        *ptr = (void*)CopyInList[filename];
+        if (*ptr)
+            return 0;
+        else
+            return -1;
     }
 
     int LOCAL_INFILE_READ(void *ptr, char *buffer, uint len) {
         len = ((IO*)ptr)->read(buffer, len);
         return len;
     }
-
 
     void LOCAL_INFILE_END(void *ptr) {
         for (map<string, IO*>::iterator it = CopyInList.begin(); it != CopyInList.end(); it++) {
@@ -98,7 +100,7 @@ namespace dbi {
     }
 
     int LOCAL_INFILE_ERROR(void *ptr, char *error, uint len) {
-        strcpy(error, "Unknown error while bulk loading data");
+        strcpy(error, ptr ? "Unknown error while bulk loading data" : "Unable to find resource to copy data.");
         return CR_UNKNOWN_ERROR;
     }
 
@@ -796,6 +798,7 @@ namespace dbi {
 
         mysql_set_local_infile_handler(conn,
             LOCAL_INFILE_INIT, LOCAL_INFILE_READ, LOCAL_INFILE_END, LOCAL_INFILE_ERROR, 0);
+
     }
 
     MySqlHandle::~MySqlHandle() {

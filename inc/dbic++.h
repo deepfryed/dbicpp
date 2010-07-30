@@ -6,14 +6,17 @@
 #include <string>
 #include <cstdarg>
 #include <cstdio>
+#include <vector>
+#include <map>
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <dirent.h>
 #include <dlfcn.h>
 #include <pcrecpp.h>
-#include <sys/time.h>
 #include <uuid/uuid.h>
-#include <vector>
-#include <map>
 
 namespace dbi {
     struct null {};
@@ -64,9 +67,10 @@ namespace dbi {
     class IOStream : public IO {
         private:
         bool eof;
+        uint loc;
+        protected:
         string empty;
         string data;
-        uint loc;
         public:
         IOStream() { eof = false; loc = 0; }
         IOStream(const char *, ulong);
@@ -74,7 +78,19 @@ namespace dbi {
         uint read(char *buffer, uint);
         void write(const char *);
         void write(const char *, ulong);
+        void writef(const char *, ...);
         void truncate(void);
+    };
+
+    class IOFileStream : public IOStream {
+        private:
+        int fd;
+        public:
+        IOFileStream() {}
+        ~IOFileStream();
+        IOFileStream(const char *path, uint mode);
+        string &read(void);
+        uint read(char *buffer, uint);
     };
 
     class AbstractHandle {
