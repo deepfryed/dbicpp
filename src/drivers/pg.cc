@@ -105,6 +105,7 @@ namespace dbi {
         uint currentRow();
         void rewind();
         vector<int>& types();
+        void seek(uint);
     };
 
     class PgHandle : public AbstractHandle {
@@ -419,6 +420,10 @@ namespace dbi {
 
     void PgStatement::rewind() {
         _rowno = 0;
+    }
+
+    void PgStatement::seek(uint r) {
+        _rowno = r;
     }
 
     vector<int>& PgStatement::types() {

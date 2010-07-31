@@ -29,7 +29,6 @@ namespace dbi {
 #include "dbic++/cpool.h"
 
 #define DEFAULT_DRIVER_PATH "/usr/lib/dbic++"
-#define OPTIONAL_ARG(a, v) a ? a : v
 
 #define DBI_TYPE_INT     1
 #define DBI_TYPE_TIME    2
@@ -50,10 +49,6 @@ namespace dbi {
     class AbstractResultSet;
 
     class IO {
-        private:
-        bool eof;
-        string empty;
-        string data;
         public:
         IO() {}
         IO(const char *, ulong) {}
@@ -136,6 +131,7 @@ namespace dbi {
         virtual ulong lastInsertID() = 0;
         virtual void rewind() = 0;
         virtual vector<int>& types() = 0;
+        virtual void seek(uint) = 0;
 
         // ASYNC API
         // Returns false if done, true is still more probably yet to consume
@@ -230,6 +226,7 @@ namespace dbi {
         ulong lastInsertID();
         void rewind();
         vector<int>& types();
+        void seek(uint);
     };
 
     bool dbiInitialize(string path);

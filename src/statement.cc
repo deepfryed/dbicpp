@@ -189,4 +189,7 @@ namespace dbi {
         st->rewind();
     }
 
+    void Statement::seek(uint r) {
+        st->seek(r);
+    }
 }

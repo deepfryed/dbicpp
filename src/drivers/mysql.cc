@@ -185,6 +185,7 @@ namespace dbi {
         ResultRow _rsrow;
         ResultRowHash _rsrowhash;
         vector<int> _rstypes;
+        bool _fvempty;
 
         protected:
 
@@ -214,6 +215,7 @@ namespace dbi {
         void prepareResult();
         void rewind();
         vector<int>& types();
+        void seek(uint);
     };
 
 
@@ -246,6 +248,7 @@ namespace dbi {
         void prepareResult();
         void rewind();
         vector<int>& types();
+        void seek(uint);
     };
 
 
@@ -430,6 +433,7 @@ namespace dbi {
 
         if (failed) THROW_MYSQL_STMT_ERROR(_stmt);
 
+        _fvempty = true;
         _rows = bindResultAndGetAffectedRows();
         return _rows;
     }
@@ -457,6 +461,7 @@ namespace dbi {
 
         if (failed) THROW_MYSQL_STMT_ERROR(_stmt);
 
+        _fvempty = true;
         _rows = bindResultAndGetAffectedRows();
         return _rows;
     }
@@ -550,15 +555,21 @@ namespace dbi {
         return true;
     }
 
+    void MySqlStatement::seek(uint r) {
+        checkReady("seek()");
+        mysql_stmt_data_seek(_stmt, r);
+        _rowno = r;
+    }
+
     unsigned char* MySqlStatement::fetchValue(uint r, uint c, ulong *l) {
         int rc;
         ulong length;
         checkReady("fetchValue()");
 
         if (r >= _rows) return 0;
-        if (_rowno != r || r == 0) {
+        if (_rowno != r || _fvempty) {
             _rowno = r;
-            mysql_stmt_data_seek(_stmt, r);
+            _fvempty = false;
             rc = mysql_stmt_fetch(_stmt);
             if (rc != 0 && rc != MYSQL_DATA_TRUNCATED)
                 THROW_MYSQL_STMT_ERROR(_stmt);
@@ -682,13 +693,17 @@ namespace dbi {
         return true;
     }
 
+    void MySqlResultSet::seek(uint r) {
+        checkReady("seek()");
+        mysql_data_seek(result, r);
+        _rowno = r;
+    }
+
     unsigned char* MySqlResultSet::fetchValue(uint r, uint c, ulong *l) {
         checkReady("fetchValue()");
         if (r >= _rows) return 0;
-        if (_rowno != r) {
+        if (_rowno != r)
             _rowno = r;
-            mysql_data_seek(result, r);
-        }
 
         MYSQL_ROW row = mysql_fetch_row(result);
         ulong* lengths = mysql_fetch_lengths(result);
