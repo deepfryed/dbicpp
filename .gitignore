@@ -9,10 +9,10 @@ bench/bin/*
 !ruby/*.cc
 !ruby/*.rb
 ruby/*
-!bench/.gems/ruby
-bench/.gems/ruby/*/*
-bench/.gems/env*
-!bench/.gems/ruby/*/cache
+!bench/gems/ruby
+bench/gems/ruby/*/*
+bench/gems/env*
+!bench/gems/ruby/*/cache
 cmake_install.cmake
 CMakeFiles/
 CMakeCache.txt

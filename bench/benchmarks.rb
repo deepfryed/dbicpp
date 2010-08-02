@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 
-require_relative '.gems/environment'
+require_relative 'gems/environment'
 require 'benchmark'
 
 class Benchmarks

@@ -9,7 +9,7 @@ class Benchmarks
 
     def initialize driver, sql
       @driver = driver
-      @h = Swift::Adapter.new user: Etc.getlogin, db: 'dbicpp', driver: driver
+      @h = Swift::Adapter.new db: 'dbicpp', driver: driver
       @sth = @h.prepare sql
     end
 

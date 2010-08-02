@@ -1,4 +1,4 @@
-bundle_path '.gems'
+bundle_path 'gems'
 disable_rubygems
 disable_system_gems
 
