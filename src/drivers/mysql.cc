@@ -945,22 +945,21 @@ namespace dbi {
     }
 
     void MySqlHandle::boom(const char *m) {
+        snprintf(errormsg, 1024, "%s - %s", m ? m : "", mysql_error(conn));
         if (MYSQL_CONNECTION_ERROR(mysql_errno(conn)))
-            throw ConnectionError(m);
+            throw ConnectionError(errormsg);
         else
-            throw RuntimeError(m);
+            throw RuntimeError(errormsg);
     }
 
     void MySqlHandle::connectionError(const char *msg) {
-        string error(msg);
-        if (!msg) error = mysql_error(conn);
-        throw ConnectionError(error);
+        snprintf(errormsg, 1024, "%s - %s", msg ? msg : "", mysql_error(conn));
+        throw ConnectionError(errormsg);
     }
 
     void MySqlHandle::runtimeError(const char *msg) {
-        string error(msg);
-        if (!msg) error = mysql_error(conn);
-        throw RuntimeError(error);
+        snprintf(errormsg, 1024, "%s - %s", msg ? msg : "", mysql_error(conn));
+        throw RuntimeError(errormsg);
     }
 
     ulong MySqlHandle::copyIn(string table, ResultRow &fields, IO* io) {
