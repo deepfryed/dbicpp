@@ -1,3 +1,9 @@
+dbic++ (0.2.1.1) lucid; urgency=medium
+
+  * fixed mysql exception handling errors.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Tue, 03 Aug 2010 06:45:00 +1000
+
 dbic++ (0.2.1) lucid; urgency=low
 
   * mysql #write() is now done via infile handlers instead of a threaded named pipe writer.
