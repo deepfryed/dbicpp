@@ -1,4 +1,4 @@
-dbic++ (0.2.1.1) lucid; urgency=medium
+dbic++ (0.2.2) lucid; urgency=medium
 
   * fixed mysql exception handling errors.
 
