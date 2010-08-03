@@ -3,6 +3,7 @@
 #include <mysql/mysql.h>
 #include <mysql/mysql_com.h>
 #include <mysql/errmsg.h>
+#include <time.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -805,15 +806,17 @@ namespace dbi {
         if(!mysql_real_connect(conn, host.c_str(), user.c_str(), pass.c_str(), dbname.c_str(), _port, 0, 0))
             connectionError();
 
-        mysql_options(conn, MYSQL_OPT_RECONNECT,       &MYSQL_BOOL_TRUE);
-      //mysql_options(conn, MYSQL_OPT_CONNECT_TIMEOUT, &timeout);
-      //mysql_options(conn, MYSQL_OPT_READ_TIMEOUT,    &timeout);
-      //mysql_options(conn, MYSQL_OPT_WRITE_TIMEOUT,   &timeout);
-        mysql_options(conn, MYSQL_OPT_LOCAL_INFILE,    0);
-
+        mysql_set_character_set(conn, "utf8");
+        mysql_options(conn, MYSQL_OPT_RECONNECT,    &MYSQL_BOOL_TRUE);
+        mysql_options(conn, MYSQL_OPT_LOCAL_INFILE, 0);
         mysql_set_local_infile_handler(conn,
             LOCAL_INFILE_INIT, LOCAL_INFILE_READ, LOCAL_INFILE_END, LOCAL_INFILE_ERROR, 0);
 
+        tzset();
+        char sql[128];
+        int tzhour = -1 * timezone/3600, tzmin = abs(timezone) - abs(tzhour) * 3600;
+        sprintf(sql, "set time_zone = '%+02d:%02d'", tzhour, tzmin);
+        execute(sql);
     }
 
     MySqlHandle::~MySqlHandle() {

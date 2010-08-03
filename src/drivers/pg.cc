@@ -1,6 +1,7 @@
 #include "dbic++.h"
 #include <libpq-fe.h>
 #include <libpq/libpq-fs.h>
+#include <time.h>
 #include <unistd.h>
 
 #define DRIVER_NAME     "postgresql"
@@ -452,6 +453,12 @@ namespace dbi {
             throw ConnectionError(PQerrorMessage(conn));
 
         PQsetNoticeProcessor(conn, PQ_NOTICE, 0);
+        PQsetClientEncoding(conn, "utf8");
+        tzset();
+        char sql[128];
+        int tzhour = timezone/3600, tzmin = abs(timezone) - abs(tzhour) * 3600;
+        sprintf(sql, "set time zone 'UTC%+02d:%02d'", tzhour, tzmin);
+        execute(sql);
     }
 
     PgHandle::~PgHandle() {
