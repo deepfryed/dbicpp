@@ -832,6 +832,7 @@ namespace dbi {
     }
 
     uint MySqlHandle::execute(string sql) {
+        int rows;
         int failed, tries;
 
         MYSQL_PREPROCESS_QUERY(sql);
@@ -846,7 +847,13 @@ namespace dbi {
         } while (failed && tries < 2);
 
         if (failed) boom(mysql_error(conn));
-        return mysql_affected_rows(conn);
+        rows = mysql_affected_rows(conn);
+        if (rows < 0) {
+            MYSQL_RES *res = mysql_store_result(conn);
+            rows = mysql_num_rows(res);
+            mysql_free_result(res);
+        }
+        return rows;
     }
 
     uint MySqlHandle::execute(string sql, vector<Param> &bind) {
