@@ -221,6 +221,9 @@ namespace dbi {
 
 
     class MySqlResultSet : public AbstractResultSet {
+        private:
+        MYSQL_ROW _rowdata;
+        ulong* _rowdata_lengths;
         protected:
         MySqlHandle *handle;
         MYSQL_RES *result;
@@ -718,13 +721,15 @@ namespace dbi {
     unsigned char* MySqlResultSet::fetchValue(uint r, uint c, ulong *l) {
         checkReady("fetchValue()");
         if (r >= _rows) return 0;
-        if (_rowno != r)
+        if (_rowno != r || (r == 0 && c == 0)) {
             _rowno = r;
+            mysql_data_seek(result, r);
+            _rowdata         = mysql_fetch_row(result);
+            _rowdata_lengths = mysql_fetch_lengths(result);
+        }
 
-        MYSQL_ROW row = mysql_fetch_row(result);
-        ulong* lengths = mysql_fetch_lengths(result);
-        if (l) *l = lengths[c];
-        return (unsigned char*)row[c];
+        if (l) *l = _rowdata_lengths[c];
+        return (unsigned char*)_rowdata[c];
     }
 
     uint MySqlResultSet::currentRow() {
@@ -898,12 +903,14 @@ namespace dbi {
 
     AbstractResultSet* MySqlHandle::results() {
         AbstractResultSet *st = 0;
-        if (_statement) {
+
+        if (_statement)
             st = _statement;
-            _statement = 0;
-        }
         else if (_result)
             st = new MySqlResultSet(this, _result);
+
+        _statement = 0;
+        _result    = 0;
         return st;
     }
 
