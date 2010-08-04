@@ -234,6 +234,7 @@ namespace dbi {
         ResultRowHash _rsrowhash;
         public:
         MySqlResultSet(MySqlHandle *h);
+        MySqlResultSet(MySqlHandle *h, MYSQL_RES *);
         void checkReady(string m);
         uint rows();
         uint columns();
@@ -250,6 +251,7 @@ namespace dbi {
         void rewind();
         vector<int>& types();
         void seek(uint);
+        void fetchMeta(MYSQL_RES* result);
     };
 
 
@@ -257,6 +259,9 @@ namespace dbi {
         private:
         string _db;
         string _host;
+        string _sql;
+        MYSQL_RES *_result;
+        MySqlStatement *_statement;
 
         protected:
         MYSQL *conn;
@@ -274,6 +279,7 @@ namespace dbi {
         uint execute(string sql, vector<Param> &bind);
         int socket();
         MySqlResultSet* aexecute(string sql, vector<Param> &bind);
+        AbstractResultSet* results();
         void initAsync();
         bool isBusy();
         bool cancel();
@@ -635,6 +641,15 @@ namespace dbi {
         result = 0;
     }
 
+    MySqlResultSet::MySqlResultSet(MySqlHandle *h, MYSQL_RES *r) {
+        _rows  = 0;
+        _cols  = 0;
+        _rowno = 0;
+        handle = h;
+        result = r;
+        fetchMeta(result);
+    }
+
     void MySqlResultSet::checkReady(string m) {
         if (!result)
             throw RuntimeError((m + " cannot be called yet. ").c_str());
@@ -735,10 +750,14 @@ namespace dbi {
     }
 
     void MySqlResultSet::prepareResult() {
+        result = mysql_store_result(handle->conn);
+        fetchMeta(result);
+    }
+
+    void MySqlResultSet::fetchMeta(MYSQL_RES* result) {
         int n;
         MYSQL_FIELD *fields;
 
-        result = mysql_store_result(handle->conn);
         _rows  = mysql_num_rows(result);
         _rows  = _rows > 0 ? _rows : mysql_affected_rows(handle->conn);
         _cols  = mysql_num_fields(result);
@@ -798,6 +817,8 @@ namespace dbi {
         uint timeout = 120;
         uint _port   = atoi(port.c_str());
         tr_nesting   = 0;
+        _result      = 0;
+        _statement   = 0;
 
         conn  = mysql_init(0);
         _db   = dbname;
@@ -826,17 +847,29 @@ namespace dbi {
     void MySqlHandle::cleanup() {
         // This gets called only on dlclose, so the wrapper dbi::Handle
         // closes connections and frees memory.
+        if (_statement)
+            delete _statement;
+        if (_result)
+            mysql_free_result(_result);
         if (conn)
             mysql_close(conn);
-        conn = 0;
+        _statement = 0;
+        _result    = 0;
+        conn       = 0;
     }
 
     uint MySqlHandle::execute(string sql) {
         int rows;
         int failed, tries;
 
+        if (_statement) delete _statement;
+        if (_result) mysql_free_result(_result);
+        _sql       = sql;
+        _result    = 0;
+        failed     = 0;
+        tries      = 0;
+        _statement = 0;
         MYSQL_PREPROCESS_QUERY(sql);
-        failed = tries = 0;
         do {
             tries++;
             failed = mysql_real_query(conn, sql.c_str(), sql.length());
@@ -849,16 +882,29 @@ namespace dbi {
         if (failed) boom(mysql_error(conn));
         rows = mysql_affected_rows(conn);
         if (rows < 0) {
-            MYSQL_RES *res = mysql_store_result(conn);
-            rows = mysql_num_rows(res);
-            mysql_free_result(res);
+            _result = mysql_store_result(conn);
+            rows = mysql_num_rows(_result);
         }
         return rows;
     }
 
     uint MySqlHandle::execute(string sql, vector<Param> &bind) {
-        MySqlStatement st(sql, this);
-        return st.execute(bind);
+        if (_statement) delete _statement;
+        if (_result) mysql_free_result(_result);
+        _result    = 0;
+        _statement = new MySqlStatement(sql, this);
+        return _statement->execute(bind);
+    }
+
+    AbstractResultSet* MySqlHandle::results() {
+        AbstractResultSet *st = 0;
+        if (_statement) {
+            st = _statement;
+            _statement = 0;
+        }
+        else if (_result)
+            st = new MySqlResultSet(this, _result);
+        return st;
     }
 
     int MySqlHandle::socket() {

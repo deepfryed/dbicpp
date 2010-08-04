@@ -103,6 +103,8 @@ namespace dbi {
         virtual bool close() = 0;
         virtual void cleanup() = 0;
         virtual ulong copyIn(string table, ResultRow &fields, IO*) = 0;
+        // IMPORTANT: You need to call cleanup() on the result set before deleting it.
+        virtual AbstractResultSet* results() = 0;
 
         friend class ConnectionPool;
         friend class Request;
@@ -182,6 +184,8 @@ namespace dbi {
         bool close();
         vector<string>& transactions();
         ulong copyIn(string table, ResultRow &fields, IO*);
+        // IMPORTANT: You need to call cleanup() on the result set before deleting it.
+        AbstractResultSet* results();
         friend class Statement;
     };
 

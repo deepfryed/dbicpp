@@ -67,8 +67,6 @@ namespace dbi {
 
     class PgHandle;
     class PgStatement : public AbstractStatement {
-        protected:
-        PgHandle *handle;
         private:
         string _sql;
         string _uuid;
@@ -80,14 +78,18 @@ namespace dbi {
         ResultRowHash _rsrowhash;
         bool _async;
 
+        protected:
+        PgHandle *handle;
         void init();
         PGresult* prepare();
         void boom(const char *);
+        void fetchMeta(PGresult *);
 
         public:
         PgStatement();
         ~PgStatement();
-        PgStatement(string query,  PgHandle *h, bool async = false);
+        PgStatement(string query, PgHandle *h, bool async = false);
+        PgStatement(string query, PgHandle *h, PGresult *result);
         void cleanup();
         string command();
         void checkReady(string);
@@ -110,6 +112,9 @@ namespace dbi {
     };
 
     class PgHandle : public AbstractHandle {
+        private:
+        PGresult *_result;
+        string _sql;
         protected:
         PGconn *conn;
         int tr_nesting;
@@ -138,6 +143,7 @@ namespace dbi {
         void reconnect(bool barf = false);
         int checkResult(PGresult*, string, bool barf = false);
         ulong copyIn(string table, ResultRow &fields, IO*);
+        AbstractResultSet* results();
 
         friend class PgStatement;
     };
@@ -218,7 +224,20 @@ namespace dbi {
 
         // prepare is always sync - only execute is really async.
         PGresult *result = prepare();
+        fetchMeta(result);
+        PQclear(result);
+    }
 
+    PgStatement::PgStatement(string query, PgHandle *h, PGresult *result) {
+        init();
+        _sql    = query;
+        handle  = h;
+        _result = result;
+        _rows   = PQntuples(result);
+        fetchMeta(_result);
+    }
+
+    void PgStatement::fetchMeta(PGresult *result) {
         _cols  = (uint)PQnfields(result);
 
         for (int i = 0; i < (int)_cols; i++)
@@ -241,7 +260,6 @@ namespace dbi {
         }
 
         _rsrow.reserve(_cols);
-        PQclear(result);
     }
 
     void PgStatement::cleanup() {
@@ -433,6 +451,7 @@ namespace dbi {
 
     PgHandle::PgHandle() { tr_nesting = 0; }
     PgHandle::PgHandle(string user, string pass, string dbname, string h, string p) {
+        _result    = 0;
         tr_nesting = 0;
         string conninfo;
 
@@ -468,9 +487,12 @@ namespace dbi {
     void PgHandle::cleanup() {
         // This gets called only on dlclose, so the wrapper dbi::Handle
         // closes connections and frees memory.
+        if (_result)
+            PQclear(_result);
         if (conn)
             PQfinish(conn);
-        conn = 0;
+        conn    = 0;
+        _result = 0;
     }
 
     uint PgHandle::execute(string sql) {
@@ -478,6 +500,7 @@ namespace dbi {
         int done, tries;
         PGresult *result;
         string query  = sql;
+        _sql = sql;
 
         done = tries = 0;
         PQ_PREPROCESS_QUERY(query);
@@ -490,7 +513,8 @@ namespace dbi {
         if (!done) boom(PQerrorMessage(conn));
 
         rows = (uint)PQNTUPLES(result);
-        PQclear(result);
+        if (_result) PQclear(_result);
+        _result = result;
         return rows;
     }
 
@@ -501,6 +525,7 @@ namespace dbi {
         int done, tries;
         PGresult *result;
         string query = sql;
+        _sql = sql;
 
         done = tries = 0;
         PQ_PREPROCESS_QUERY(query);
@@ -522,8 +547,18 @@ namespace dbi {
         delete []param_v;
         delete []param_l;
         rows = (uint)PQNTUPLES(result);
-        PQclear(result);
+        if (_result) PQclear(_result);
+        _result = result;
         return rows;
+    }
+
+    AbstractResultSet* PgHandle::results() {
+        if (_result) {
+            PgStatement *st = new PgStatement(_sql, this, _result);
+            _result = 0;
+            return st;
+        }
+        return 0;
     }
 
     int PgHandle::socket() {

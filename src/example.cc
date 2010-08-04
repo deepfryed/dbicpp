@@ -22,7 +22,7 @@ void printResultRows(Statement &st) {
 
 void callback(AbstractResultSet *r) {
     for (int i = 0; i < r->rows(); i++) {
-        cout << r->fetchRowHash() << endl;
+        cout << r->fetchRow() << endl;
     }
 }
 
@@ -153,5 +153,12 @@ int main(int argc, char *argv[]) {
     Reactor::watch(pool.execute(sleep_sql + "(0.1), 3 AS id", callback));
     Reactor::run();
 
+    // async querying.
+    cout << endl;
+    cout << "-- result sets --" << endl;
+    h.execute("select * from users");
+    AbstractResultSet *rs = h.results();
+    callback(rs);
+    delete rs;
     cout << endl;
 }

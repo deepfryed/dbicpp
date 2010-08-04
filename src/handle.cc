@@ -81,4 +81,8 @@ namespace dbi {
     ulong Handle::copyIn(string table, ResultRow &fields, IO* io) {
         return h->copyIn(table, fields, io);
     }
+
+    AbstractResultSet* Handle::results() {
+        return h->results();
+    }
 }
