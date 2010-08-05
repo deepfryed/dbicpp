@@ -246,13 +246,14 @@ namespace dbi {
         for (int i = 0; i < (int)_cols; i++)
             _rsfields.push_back(PQfname(result, i));
 
-        // postgres oid types are all in pg_type. no clue why they're not in the headers.
+        // postgres types are all in pg_type. no clue why they're not in the headers.
         for (int i = 0; i < (int)_cols; i++) {
             switch(PQftype(result, i)) {
                 case   16: _rstypes.push_back(DBI_TYPE_BOOLEAN); break;
                 case   20:
                 case   21:
                 case   23: _rstypes.push_back(DBI_TYPE_INT); break;
+                case   25: _rstypes.push_back(DBI_TYPE_TEXT); break;
                 case  700:
                 case  701: _rstypes.push_back(DBI_TYPE_FLOAT); break;
                 case 1114:
@@ -267,10 +268,7 @@ namespace dbi {
 
     void PgStatement::cleanup() {
         finish();
-        // We really don't need this - prepared statements are cleared out when the connection closes.
-        // if (_uuid != "" && PQstatus(handle->conn) != CONNECTION_BAD)
-        //     handle->execute("deallocate \"" + _uuid + "\"");
-        // _uuid = "";
+        // TODO figure out if we need to deallocate statements.
     }
 
     string PgStatement::command() {
