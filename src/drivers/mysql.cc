@@ -297,6 +297,8 @@ namespace dbi {
         bool close();
         void reconnect();
         ulong copyIn(string table, ResultRow &fields, IO*);
+        void setTimeZoneOffset(int, int);
+        void setTimeZone(char *name);
 
         friend class MySqlStatement;
         friend class MySqlResultSet;
@@ -394,6 +396,12 @@ namespace dbi {
                     case MYSQL_TYPE_TIMESTAMP:  // TIMESTAMP field
                     case MYSQL_TYPE_DATETIME:   // DATETIME field
                         _rstypes.push_back(DBI_TYPE_TIME);
+                        break;
+                    case MYSQL_TYPE_TINY_BLOB:
+			        case MYSQL_TYPE_MEDIUM_BLOB:
+			        case MYSQL_TYPE_LONG_BLOB:
+			        case MYSQL_TYPE_BLOB:
+                        _rstypes.push_back(DBI_TYPE_BLOB);
                         break;
                     default:
                         _rstypes.push_back(DBI_TYPE_TEXT);
@@ -837,11 +845,18 @@ namespace dbi {
         mysql_options(conn, MYSQL_OPT_LOCAL_INFILE, 0);
         mysql_set_local_infile_handler(conn,
             LOCAL_INFILE_INIT, LOCAL_INFILE_READ, LOCAL_INFILE_END, LOCAL_INFILE_ERROR, 0);
+    }
 
-        tzset();
+   void MySqlHandle::setTimeZoneOffset(int tzhour, int tzmin) {
         char sql[128];
-        int tzhour = -1 * timezone/3600, tzmin = abs(timezone) - abs(tzhour) * 3600;
-        sprintf(sql, "set time_zone = '%+02d:%02d'", tzhour, tzmin);
+        // server parses TZ style format. man timzone for more info.
+        snprintf(sql, 127, "set time_zone = '%+02d:%02d'", tzhour, abs(tzmin));
+        execute(sql);
+    }
+
+    void MySqlHandle::setTimeZone(char *name) {
+        char sql[128];
+        snprintf(sql, 127, "set time_zone = '%s'", name);
         execute(sql);
     }
 

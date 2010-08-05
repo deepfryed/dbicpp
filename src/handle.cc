@@ -85,4 +85,12 @@ namespace dbi {
     AbstractResultSet* Handle::results() {
         return h->results();
     }
+
+    void Handle::setTimeZoneOffset(int tzhour, int tzmin) {
+        h->setTimeZoneOffset(tzhour, tzmin);
+    }
+
+    void Handle::setTimeZone(char *name) {
+        h->setTimeZone(name);
+    }
 }

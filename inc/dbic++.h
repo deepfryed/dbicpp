@@ -36,6 +36,7 @@ namespace dbi {
 #define DBI_TYPE_FLOAT   4
 #define DBI_TYPE_NUMERIC 5
 #define DBI_TYPE_BOOLEAN 6
+#define DBI_TYPE_BLOB    7
 
 namespace dbi {
 
@@ -105,6 +106,8 @@ namespace dbi {
         virtual ulong copyIn(string table, ResultRow &fields, IO*) = 0;
         // IMPORTANT: You need to call cleanup() on the result set before deleting it.
         virtual AbstractResultSet* results() = 0;
+        virtual void setTimeZoneOffset(int, int) = 0;
+        virtual void setTimeZone(char *) = 0;
 
         friend class ConnectionPool;
         friend class Request;
@@ -186,6 +189,8 @@ namespace dbi {
         ulong copyIn(string table, ResultRow &fields, IO*);
         // IMPORTANT: You need to call cleanup() on the result set before deleting it.
         AbstractResultSet* results();
+        void setTimeZoneOffset(int, int);
+        void setTimeZone(char *);
         friend class Statement;
     };
 

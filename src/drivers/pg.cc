@@ -144,6 +144,8 @@ namespace dbi {
         int checkResult(PGresult*, string, bool barf = false);
         ulong copyIn(string table, ResultRow &fields, IO*);
         AbstractResultSet* results();
+        void setTimeZoneOffset(int, int);
+        void setTimeZone(char *);
 
         friend class PgStatement;
     };
@@ -230,6 +232,7 @@ namespace dbi {
 
     PgStatement::PgStatement(string query, PgHandle *h, PGresult *result) {
         init();
+        _uuid   = "";
         _sql    = query;
         handle  = h;
         _result = result;
@@ -255,7 +258,7 @@ namespace dbi {
                 case 1114:
                 case 1184: _rstypes.push_back(DBI_TYPE_TIME); break;
                 case 1700: _rstypes.push_back(DBI_TYPE_NUMERIC); break;
-                  default: _rstypes.push_back(DBI_TYPE_TEXT); break;
+                  default: _rstypes.push_back(PQfformat(result, i) ? DBI_TYPE_BLOB : DBI_TYPE_TEXT); break;
             }
         }
 
@@ -264,6 +267,10 @@ namespace dbi {
 
     void PgStatement::cleanup() {
         finish();
+        // We really don't need this - prepared statements are cleared out when the connection closes.
+        // if (_uuid != "" && PQstatus(handle->conn) != CONNECTION_BAD)
+        //     handle->execute("deallocate \"" + _uuid + "\"");
+        // _uuid = "";
     }
 
     string PgStatement::command() {
@@ -411,7 +418,6 @@ namespace dbi {
     bool PgStatement::finish() {
         if (_result)
             PQclear(_result);
-
         _rowno  = 0;
         _rows   = 0;
         _result = 0;
@@ -473,10 +479,18 @@ namespace dbi {
 
         PQsetNoticeProcessor(conn, PQ_NOTICE, 0);
         PQsetClientEncoding(conn, "utf8");
-        tzset();
+    }
+
+    void PgHandle::setTimeZoneOffset(int tzhour, int tzmin) {
         char sql[128];
-        int tzhour = timezone/3600, tzmin = abs(timezone) - abs(tzhour) * 3600;
-        sprintf(sql, "set time zone 'UTC%+02d:%02d'", tzhour, tzmin);
+        // server parses TZ style format. man timzone for more info.
+        snprintf(sql, 127, "set time zone 'UTC%+02d:%02d'", -1* tzhour, abs(tzmin));
+        execute(sql);
+    }
+
+    void PgHandle::setTimeZone(char *name) {
+        char sql[128];
+        snprintf(sql, 127, "set time zone '%s'", name);
         execute(sql);
     }
 
