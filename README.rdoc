@@ -63,23 +63,23 @@ dbic++.
   require 'swift'
   require 'etc'
 
-  Swift.setup user: Etc.getlogin, driver: 'postgresql', db: 'dbicpp'
+  Swift.setup :default, Swift::DB::Postgres, db: 'dbicpp'
   Swift.trace true
 
-  Swift.db do
-    st = prepare "select id, name, email from users where id > ? AND id < ?"
+  Swift.db do |db|
+    st = db.prepare "select id, name, email from users where id > ? AND id < ?"
 
     st.execute(0, 10) do |row|
       puts row.values_at(:id, :name, :email).join("\t")
     end
 
     # Named save point.
-    transaction 'delete_stuff' do
-      execute "delete from users where id = ?", 2
+    db.transaction :delete_stuff
+      db.execute "delete from users where id = ?", 2
       begin
         # UUID save point.
-        transaction do
-          execute "delete from users"
+        db.transaction do
+          db.execute "delete from users"
           raise "changed my mind"
         end
       rescue => e
