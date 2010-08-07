@@ -91,7 +91,7 @@ namespace dbi {
         PGresult* prepare();
         void boom(const char *);
         void fetchMeta(PGresult *);
-        unsigned char* unescapeBytea(int, int, size_t*);
+        unsigned char* unescapeBytea(int, int, ulong*);
 
         public:
         PgStatement();
@@ -390,14 +390,16 @@ namespace dbi {
         return r.size() > 0 ? atol(r[0].value.c_str()) : 0;
     }
 
-    unsigned char* PgStatement::unescapeBytea(int r, int c, size_t *l) {
+    unsigned char* PgStatement::unescapeBytea(int r, int c, ulong *l) {
+        size_t len;
         if (_bytea) PQfreemem(_bytea);
-        _bytea = PQunescapeBytea((unsigned char *)PQgetvalue(_result, r, c), l);
+        _bytea = PQunescapeBytea((unsigned char *)PQgetvalue(_result, r, c), &len);
+        *l = (ulong)len;
         return _bytea;
     }
 
     ResultRow& PgStatement::fetchRow() {
-        size_t len;
+        ulong len;
         unsigned char *data;
         checkReady("fetchRow()");
 
@@ -421,7 +423,7 @@ namespace dbi {
     }
 
     ResultRowHash& PgStatement::fetchRowHash() {
-        size_t len;
+        ulong len;
         unsigned char *data;
         checkReady("fetchRowHash()");
 

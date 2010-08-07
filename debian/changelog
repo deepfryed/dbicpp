@@ -1,3 +1,10 @@
+dbic++ (0.2.4) lucid; urgency=high
+
+  * cleanup and using ulong instead size_t.
+  * updated README (Shane Hanna).
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Tue, 07 Aug 2010 16:20:00 +1000
+
 dbic++ (0.2.3) lucid; urgency=low
 
   * force utf8 encoding on connections.
