@@ -1,3 +1,12 @@
+dbic++ (0.2.3) lucid; urgency=low
+
+  * force utf8 encoding on connections.
+  * Handle#execute can return ResultSet
+  * timezone functions.
+  * blob support.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Sat, 07 Aug 2010 15:05:00 +1000
+
 dbic++ (0.2.2) lucid; urgency=medium
 
   * fixed mysql exception handling errors.
