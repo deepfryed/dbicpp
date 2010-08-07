@@ -507,7 +507,7 @@ namespace dbi {
                             _result->reallocateBindParam(c, length);
                         mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
                     }
-                    _rsrow.push_back(PARAM_BINARY((unsigned char*)_result->params[c].buffer, length));
+                    _rsrow.push_back(PARAM((unsigned char*)_result->params[c].buffer, length));
                 }
             }
         }
@@ -542,7 +542,7 @@ namespace dbi {
                         mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
                     }
                     _rsrowhash[_rsfields[c]] =
-                          PARAM_BINARY((unsigned char*)_result->params[c].buffer, length);
+                          PARAM((unsigned char*)_result->params[c].buffer, length);
                 }
             }
         }
@@ -684,7 +684,7 @@ namespace dbi {
             MYSQL_ROW row = mysql_fetch_row(result);
             ulong* lengths = mysql_fetch_lengths(result);
             for (n = 0; n < _cols; n++)
-                _rsrow.push_back(row[n] == 0 ? PARAM(null()) : PARAM_BINARY((unsigned char*)row[n], lengths[n]));
+                _rsrow.push_back(row[n] == 0 ? PARAM(null()) : PARAM((unsigned char*)row[n], lengths[n]));
         }
 
         return _rsrow;
@@ -700,7 +700,7 @@ namespace dbi {
             ulong* lengths = mysql_fetch_lengths(result);
             for (n = 0; n < _cols; n++)
                 _rsrowhash[_rsfields[n]] = (
-                    row[n] == 0 ? PARAM(null()) : PARAM_BINARY((unsigned char*)row[n], lengths[n])
+                    row[n] == 0 ? PARAM(null()) : PARAM((unsigned char*)row[n], lengths[n])
                 );
         }
 

@@ -11,6 +11,7 @@ namespace dbi {
         public:
         bool isnull;
         string value;
+        bool binary;
         operator bool() { return value.length() > 0; }
     };
 
@@ -18,6 +19,7 @@ namespace dbi {
     Param PARAM(string &s);
     Param PARAM(const char* s);
     Param PARAM(const dbi::null &e);
+    Param PARAM(unsigned char* data, ulong l);
     Param PARAM_BINARY(unsigned char* data, ulong l);
 
     ostream& operator<<(ostream &out, Param &p);

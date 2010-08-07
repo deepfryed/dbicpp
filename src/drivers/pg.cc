@@ -3,11 +3,14 @@
 #include <libpq/libpq-fs.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #define DRIVER_NAME     "postgresql"
 #define DRIVER_VERSION  "1.3"
 
-#define PG2PARAM(res, r, c) PARAM_BINARY((unsigned char*)PQgetvalue(res, r, c), PQgetlength(res, r, c))
+#define PG2PARAM(res, r, c) PARAM((unsigned char*)PQgetvalue(res, r, c), PQgetlength(res, r, c))
 
 namespace dbi {
 
@@ -50,16 +53,19 @@ namespace dbi {
         }
     }
 
-    void PQ_PROCESS_BIND(const char ***param_v, int **param_l, vector<Param> &bind) {
+    void PQ_PROCESS_BIND(const char ***param_v, int **param_l, int **param_f, vector<Param> &bind) {
         *param_v = new const char*[bind.size()];
         *param_l = new int[bind.size()];
+        *param_f = new int[bind.size()];
 
         for (uint i = 0; i < bind.size(); i++) {
             bool isnull = bind[i].isnull;
             (*param_v)[i] = isnull ? 0 : bind[i].value.data();
             (*param_l)[i] = isnull ? 0 : bind[i].value.length();
+            (*param_f)[i] = bind[i].binary ? 1 : 0;
         }
     }
+
 
     // ----------------------------------------------------------------------
     // Statement & Handle
@@ -77,6 +83,7 @@ namespace dbi {
         ResultRow _rsrow;
         ResultRowHash _rsrowhash;
         bool _async;
+        unsigned char *_bytea;
 
         protected:
         PgHandle *handle;
@@ -84,6 +91,7 @@ namespace dbi {
         PGresult* prepare();
         void boom(const char *);
         void fetchMeta(PGresult *);
+        unsigned char* unescapeBytea(int, int, size_t*);
 
         public:
         PgStatement();
@@ -162,6 +170,7 @@ namespace dbi {
         _cols   = 0;
         _uuid   = generateCompactUUID();
         _async  = false;
+        _bytea  = 0;
     }
 
     PGresult* PgStatement::prepare() {
@@ -250,6 +259,7 @@ namespace dbi {
         for (int i = 0; i < (int)_cols; i++) {
             switch(PQftype(result, i)) {
                 case   16: _rstypes.push_back(DBI_TYPE_BOOLEAN); break;
+                case   17: _rstypes.push_back(DBI_TYPE_BLOB); break;
                 case   20:
                 case   21:
                 case   23: _rstypes.push_back(DBI_TYPE_INT); break;
@@ -259,7 +269,7 @@ namespace dbi {
                 case 1114:
                 case 1184: _rstypes.push_back(DBI_TYPE_TIME); break;
                 case 1700: _rstypes.push_back(DBI_TYPE_NUMERIC); break;
-                  default: _rstypes.push_back(PQfformat(result, i) ? DBI_TYPE_BLOB : DBI_TYPE_TEXT); break;
+                  default: _rstypes.push_back(DBI_TYPE_TEXT); break;
             }
         }
 
@@ -267,8 +277,10 @@ namespace dbi {
     }
 
     void PgStatement::cleanup() {
-        finish();
         // TODO figure out if we need to deallocate statements.
+        finish();
+        if (_bytea)
+            PQfreemem(_bytea);
     }
 
     string PgStatement::command() {
@@ -314,21 +326,22 @@ namespace dbi {
     }
 
     uint PgStatement::execute(vector<Param> &bind) {
-        int *param_l, done, tries;
+        int *param_l, *param_f, done, tries;
         const char **param_v;
 
         finish();
-        PQ_PROCESS_BIND(&param_v, &param_l, bind);
+        PQ_PROCESS_BIND(&param_v, &param_l, &param_f, bind);
 
         if (_async) {
             done = tries = 0;
             while (!done && tries < 2) {
                 tries++;
                 done = PQsendQueryPrepared(handle->conn, _uuid.c_str(), bind.size(),
-                                       (const char* const *)param_v, (const int*)param_l, 0, 0);
+                                       (const char* const *)param_v, param_l, param_f, 0);
             }
             delete []param_v;
             delete []param_l;
+            delete []param_f;
 
             if (!done) boom(PQerrorMessage(handle->conn));
         }
@@ -338,17 +351,19 @@ namespace dbi {
                 while (!done && tries < 2) {
                     tries++;
                     _result = PQexecPrepared(handle->conn, _uuid.c_str(), bind.size(),
-                                       (const char* const *)param_v, (const int*)param_l, 0, 0);
+                                       (const char* const *)param_v, (const int*)param_l, (const int*)param_f, 0);
                     done = handle->checkResult(_result, _sql);
                     if (!done) prepare();
                 }
             } catch (Error &e) {
                 delete []param_v;
                 delete []param_l;
+                delete []param_f;
                 throw e;
             }
             delete []param_v;
             delete []param_l;
+            delete []param_f;
             _rows = (uint)PQNTUPLES(_result);
         }
 
@@ -375,31 +390,55 @@ namespace dbi {
         return r.size() > 0 ? atol(r[0].value.c_str()) : 0;
     }
 
+    unsigned char* PgStatement::unescapeBytea(int r, int c, size_t *l) {
+        if (_bytea) PQfreemem(_bytea);
+        _bytea = PQunescapeBytea((unsigned char *)PQgetvalue(_result, r, c), l);
+        return _bytea;
+    }
+
     ResultRow& PgStatement::fetchRow() {
+        size_t len;
+        unsigned char *data;
         checkReady("fetchRow()");
 
         _rsrow.clear();
 
         if (_rowno < _rows) {
+            for (uint i = 0; i < _cols; i++) {
+                if (PQgetisnull(_result, _rowno, i))
+                    _rsrow.push_back(PARAM(null()));
+                else if (_rstypes[i] != DBI_TYPE_BLOB)
+                    _rsrow.push_back(PG2PARAM(_result, _rowno, i));
+                else {
+                    data = unescapeBytea(_rowno, i, &len);
+                    _rsrow.push_back(PARAM(data, len));
+                }
+            }
             _rowno++;
-            for (uint i = 0; i < _cols; i++)
-                _rsrow.push_back(PQgetisnull(_result, _rowno-1, i) ?
-                    PARAM(null()) : PG2PARAM(_result, _rowno-1, i));
         }
 
         return _rsrow;
     }
 
     ResultRowHash& PgStatement::fetchRowHash() {
+        size_t len;
+        unsigned char *data;
         checkReady("fetchRowHash()");
 
         _rsrowhash.clear();
 
         if (_rowno < _rows) {
+            for (uint i = 0; i < _cols; i++) {
+                if (PQgetisnull(_result, _rowno, i))
+                    _rsrowhash[_rsfields[i]] = PARAM(null());
+                else if (_rstypes[i] != DBI_TYPE_BLOB)
+                    _rsrowhash[_rsfields[i]] = PG2PARAM(_result, _rowno, i);
+                else {
+                    data = unescapeBytea(_rowno, i, &len);
+                    _rsrowhash[_rsfields[i]] = PARAM(data, len);
+                }
+            }
             _rowno++;
-            for (uint i = 0; i < _cols; i++)
-                _rsrowhash[_rsfields[i]] = PQgetisnull(_result, _rowno-1, i) ?
-                    PARAM(null()) : PG2PARAM(_result, _rowno-1, i);
         }
 
         return _rsrowhash;
@@ -426,8 +465,16 @@ namespace dbi {
     unsigned char* PgStatement::fetchValue(uint r, uint c, ulong *l) {
         checkReady("fetchValue()");
         _rowno = r;
-        if (l) *l = PQgetlength(_result, r, c);
-        return PQgetisnull(_result, r, c) ? 0 : (unsigned char*)PQgetvalue(_result, r, c);
+        if (PQgetisnull(_result, r, c)) {
+            return 0;
+        }
+        else if (_rstypes[c] != DBI_TYPE_BLOB) {
+            if (l) *l = PQgetlength(_result, r, c);
+            return (unsigned char*)PQgetvalue(_result, r, c);
+        }
+        else {
+            return unescapeBytea(r, c, l);
+        }
     }
 
     uint PgStatement::currentRow() {
@@ -531,7 +578,7 @@ namespace dbi {
     }
 
     uint PgHandle::execute(string sql, vector<Param> &bind) {
-        int *param_l;
+        int *param_l, *param_f;
         const char **param_v;
         uint rows;
         int done, tries;
@@ -544,20 +591,22 @@ namespace dbi {
         try {
             while (!done && tries < 2) {
                 tries++;
-                PQ_PROCESS_BIND(&param_v, &param_l, bind);
+                PQ_PROCESS_BIND(&param_v, &param_l, &param_f, bind);
                 result = PQexecParams(conn, query.c_str(), bind.size(),
-                                        0, (const char* const *)param_v, param_l, 0, 0);
+                                        0, (const char* const *)param_v, param_l, param_f, 0);
                 done = checkResult(result, sql);
             }
         }
         catch (Error &e) {
             delete []param_v;
             delete []param_l;
+            delete []param_f;
             throw e;
         }
 
         delete []param_v;
         delete []param_l;
+        delete []param_f;
         rows = (uint)PQNTUPLES(result);
         if (_result) PQclear(_result);
         _result = result;
