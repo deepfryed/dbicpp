@@ -587,19 +587,17 @@ namespace dbi {
                 THROW_MYSQL_STMT_ERROR(_stmt);
         }
 
+        if (*_result->params[c].is_null) return 0;
+
         length = *(_result->params[c].length);
-        if (*_result->params[c].is_null) {
-            return 0;
+        if (l) *l = length;
+
+        if (length > _buffer_lengths[c]) {
+            if (length > _result->params[c].buffer_length)
+                _result->reallocateBindParam(c, length);
+            mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
         }
-        else {
-            if (l) *l = length;
-            if (length > _buffer_lengths[c]) {
-                if (length > _result->params[c].buffer_length)
-                    _result->reallocateBindParam(c, length);
-                mysql_stmt_fetch_column(_stmt, &_result->params[c], c, 0);
-            }
-            return (unsigned char*)_result->params[c].buffer;
-        }
+        return (unsigned char*)_result->params[c].buffer;
     }
 
     uint MySqlStatement::currentRow() {
