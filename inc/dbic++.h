@@ -108,6 +108,7 @@ namespace dbi {
         virtual AbstractResultSet* results() = 0;
         virtual void setTimeZoneOffset(int, int) = 0;
         virtual void setTimeZone(char *) = 0;
+        virtual string escape(string) = 0;
 
         friend class ConnectionPool;
         friend class Request;
@@ -191,6 +192,8 @@ namespace dbi {
         AbstractResultSet* results();
         void setTimeZoneOffset(int, int);
         void setTimeZone(char *);
+        string escape(string);
+
         friend class Statement;
     };
 

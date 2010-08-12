@@ -154,6 +154,7 @@ namespace dbi {
         AbstractResultSet* results();
         void setTimeZoneOffset(int, int);
         void setTimeZone(char *);
+        string escape(string);
 
         friend class PgStatement;
     };
@@ -801,6 +802,17 @@ namespace dbi {
         nrows = PQNTUPLES(res);
         PQclear(res);
         return nrows;
+    }
+
+    string PgHandle::escape(string value) {
+        int error;
+        char *dest = (char *)malloc(value.length() + 1);
+        PQescapeStringConn(conn, dest, value.data(), value.length(), &error);
+        string escaped(dest);
+        free(dest);
+        if (error)
+            throw RuntimeError(PQerrorMessage(conn));
+        return escaped;
     }
 }
 

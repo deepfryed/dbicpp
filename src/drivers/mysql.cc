@@ -299,6 +299,7 @@ namespace dbi {
         ulong copyIn(string table, ResultRow &fields, IO*);
         void setTimeZoneOffset(int, int);
         void setTimeZone(char *name);
+        string escape(string);
 
         friend class MySqlStatement;
         friend class MySqlResultSet;
@@ -1051,6 +1052,14 @@ namespace dbi {
         }
 
         return (ulong) mysql_affected_rows(conn);
+    }
+
+    string MySqlHandle::escape(string value) {
+        char *dest = (char *)malloc(value.length() + 1);
+        mysql_real_escape_string(conn, dest, value.data(), value.length());
+        string escaped(dest);
+        free(dest);
+        return escaped;
     }
 }
 

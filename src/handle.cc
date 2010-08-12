@@ -93,4 +93,8 @@ namespace dbi {
     void Handle::setTimeZone(char *name) {
         h->setTimeZone(name);
     }
+
+    string Handle::escape(string value) {
+        return h->escape(value);
+    }
 }
