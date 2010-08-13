@@ -96,7 +96,7 @@ dbic++.
 
 == INSTALL
 
-=== Dependencies
+=== Debian (or other flavors of linux)
 
 * cmake (cmake)
 * pcre3 development libraries (libpcre3-dev)
@@ -111,13 +111,18 @@ If you need to build debian packages, you may need the following in addition.
 * debhelper (debhelper)
 * devscripts (devscripts)
 
-=== Local install
+To build debian packages for your local architecture,
 
-  ./build
+  ./build -d
 
-=== System wide install
+It is recommended that for debian based distributions you use the builds from my
+ppa repository at https://launchpad.net/~deepfryed/+archive/ppa.
 
-  sudo ./build -i
+Add the following to /etc/apt/sources.list, run apt-get update as root and you should
+be able to install the latest packages.
+
+    deb http://ppa.launchpad.net/deepfryed/ppa/ubuntu lucid main
+    deb-src http://ppa.launchpad.net/deepfryed/ppa/ubuntu lucid main
 
 === MacOSX
 
@@ -131,26 +136,24 @@ You need to install the required dependencies first,
 
 You don't need both database ports if you only want to test or work with one of them.
 
-    ./build
-    ./demo [mysql|postgresql]
+=== Local install
 
-To install the libraries system wide,
+    ./build
+
+=== System wide install
 
     sudo ./build -i
 
-To cleanup/uninstall dbic++
+=== Cleanup and uninstall
 
     ./build -c
     sudo ./build -u
 
-=== Debian packages
+=== Running the demo
 
-To build debian packages for your local architecture,
+A c++ example lives in src/examples/demo.cc. You can run it as,
 
-  ./build -d
-
-You can also add the ppa repository at https://launchpad.net/~deepfryed/+archive/ppa and install
-the latest packages through apt.
+    ./demo [mysql|postgresql]
 
 === Populating MySQL time zone tables.
 
