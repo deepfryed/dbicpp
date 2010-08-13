@@ -25,6 +25,7 @@ else (MYSQL_LIBRARIES AND MYSQL_INCLUDE_DIRS)
       /usr/include
       /usr/local/include
       /opt/local/include
+      /opt/local/include/mysql5
       /sw/include
   )
 
@@ -35,6 +36,7 @@ else (MYSQL_LIBRARIES AND MYSQL_INCLUDE_DIRS)
       /usr/lib
       /usr/local/lib
       /opt/local/lib
+      /opt/local/lib/mysql5/mysql
       /sw/lib
   )
 

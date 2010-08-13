@@ -1,6 +1,6 @@
 #include "dbic++.h"
-#include <postgresql/libpq-fe.h>
-#include <postgresql/libpq/libpq-fs.h>
+#include <libpq-fe.h>
+#include <libpq/libpq-fs.h>
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>

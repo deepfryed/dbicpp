@@ -820,22 +820,25 @@ namespace dbi {
     }
 
     MySqlHandle::MySqlHandle(string user, string pass, string dbname, string host, string port) {
+        char no      = 0;
+        char yes     = 1;
         uint timeout = 120;
-        uint _port   = atoi(port.c_str());
         tr_nesting   = 0;
         _result      = 0;
         _statement   = 0;
+        uint _port   = atoi(port.c_str());
 
         conn  = mysql_init(0);
         _db   = dbname;
         _host = host;
 
+        mysql_options(conn, MYSQL_OPT_RECONNECT,    &MYSQL_BOOL_TRUE);
+        mysql_options(conn, MYSQL_OPT_LOCAL_INFILE, 0);
+
         if(!mysql_real_connect(conn, host.c_str(), user.c_str(), pass.c_str(), dbname.c_str(), _port, 0, 0))
             connectionError();
 
         mysql_set_character_set(conn, "utf8");
-        mysql_options(conn, MYSQL_OPT_RECONNECT,    &MYSQL_BOOL_TRUE);
-        mysql_options(conn, MYSQL_OPT_LOCAL_INFILE, 0);
         mysql_set_local_infile_handler(conn,
             LOCAL_INFILE_INIT, LOCAL_INFILE_READ, LOCAL_INFILE_END, LOCAL_INFILE_ERROR, 0);
     }

@@ -1,8 +1,10 @@
 objs
 libs
+lib
 !objs/.keepthis
 !libs/.keepthis
 *.o
+*.dylib
 example
 bench/bin/*
 !ruby/*.c

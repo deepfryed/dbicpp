@@ -29,7 +29,7 @@ namespace dbi {
         string filename;
         struct dirent *file;
         Driver* (*info)(void);
-        pcrecpp::RE re("\\.so\\.\\d+");
+        pcrecpp::RE re("\\.so\\.\\d+|\\.dylib");
 
         _trace          = false;
         _trace_fd       = 1;

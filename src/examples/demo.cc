@@ -60,12 +60,12 @@ int main(int argc, char *argv[]) {
 
     Statement st (h, "select id, name, email from users where id >= ? and id < ?");
 
-    if (driver == "postgresql") {
+    /*if (driver == "postgresql") {
         cout << endl;
         cout << "-- trying to kill connection for an auto-reconnect --" << endl;
         system("sudo kill `pgrep -U postgres -f postgres.*dbicpp`");
         sleep(1);
-    }
+    }*/
 
     // bind and execute the statement in one go.
     st % 1L, 10L, execute();
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
     Reactor::watch(pool.execute(sleep_sql + "(0.1), 3 AS id", callback));
     Reactor::run();
 
-    // async querying.
+    // single shot queries.
     cout << endl;
     cout << "-- result sets --" << endl;
     h.execute("select * from users");

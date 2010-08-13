@@ -18,6 +18,11 @@
 #include <pcrecpp.h>
 #include <uuid/uuid.h>
 
+#undef uint
+#undef ulong
+#define unint unsigned int
+#define ulong unsigned long
+
 namespace dbi {
     struct null {};
     struct execute {};
