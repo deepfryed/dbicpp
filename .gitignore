@@ -34,3 +34,4 @@ debian/stamp-autotools-files
 debian/stamp-makefile-build
 debian/tmp/
 test/
+demo

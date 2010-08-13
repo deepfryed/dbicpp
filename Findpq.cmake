@@ -1,0 +1,66 @@
+# - Try to find pq
+# Once done this will define
+#
+#  PQ_FOUND - system has pq
+#  PQ_INCLUDE_DIRS - the pq include directory
+#  PQ_LIBRARIES - Link these to use pq
+#  PQ_DEFINITIONS - Compiler switches required for using pq
+#
+#  Copyright (c) 2010 Bharanee Rathna <deepfryed@gmail.com>
+#
+#  Redistribution and use is allowed according to the terms of the New
+#  BSD license.
+#  For details see the accompanying COPYING-CMAKE-SCRIPTS file.
+#
+
+
+if (PQ_LIBRARIES AND PQ_INCLUDE_DIRS)
+  # in cache already
+  set(PQ_FOUND TRUE)
+else (PQ_LIBRARIES AND PQ_INCLUDE_DIRS)
+  find_path(PQ_INCLUDE_DIR
+    NAMES
+      postgresql/libpq-fe.h
+    PATHS
+      /usr/include
+      /usr/local/include
+      /opt/local/include
+      /sw/include
+  )
+
+  find_library(PQ_LIBRARY
+    NAMES
+      pq
+    PATHS
+      /usr/lib
+      /usr/local/lib
+      /opt/local/lib
+      /sw/lib
+  )
+
+  set(PQ_INCLUDE_DIRS
+    ${PQ_INCLUDE_DIR}
+  )
+  set(PQ_LIBRARIES
+    ${PQ_LIBRARY}
+)
+
+  if (PQ_INCLUDE_DIRS AND PQ_LIBRARIES)
+     set(PQ_FOUND TRUE)
+  endif (PQ_INCLUDE_DIRS AND PQ_LIBRARIES)
+
+  if (PQ_FOUND)
+    if (NOT pq_FIND_QUIETLY)
+      message(STATUS "Found pq: ${PQ_LIBRARIES}")
+    endif (NOT pq_FIND_QUIETLY)
+  else (PQ_FOUND)
+    if (pq_FIND_REQUIRED)
+      message(FATAL_ERROR "Could not find pq")
+    endif (pq_FIND_REQUIRED)
+  endif (PQ_FOUND)
+
+  # show the PQ_INCLUDE_DIRS and PQ_LIBRARIES variables only in the advanced view
+  mark_as_advanced(PQ_INCLUDE_DIRS PQ_LIBRARIES)
+
+endif (PQ_LIBRARIES AND PQ_INCLUDE_DIRS)
+
