@@ -99,7 +99,7 @@ dbic++.
 === Dependencies
 
 If you are building from source you need to install a few dependencies before
-you compile dbic++. To begin with youu need a working build environment with a
+you compile dbic++. To begin with you need a working build environment with a
 c++ compiler (XCode if you are a MacOSX user).
 
 ==== Debian or other flavors of linux.
