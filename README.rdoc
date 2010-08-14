@@ -96,7 +96,13 @@ dbic++.
 
 == INSTALL
 
-=== Debian (or other flavors of linux)
+=== Dependencies
+
+If you are building from source you need to install a few dependencies before
+you compile dbic++. To begin with youu need a working build environment with a
+c++ compiler (XCode if you are a MacOSX user).
+
+==== Debian or other flavors of linux.
 
 * cmake (cmake)
 * pcre3 development libraries (libpcre3-dev)
@@ -105,26 +111,13 @@ dbic++.
 * postgresql client libraries (libpq-dev)
 * libevent development libraries (libevent-dev)
 
-If you need to build debian packages, you may need the following in addition.
+If you need to build debian packages yourself, you may need the following in addition.
 
 * cdbs (cdbs)
 * debhelper (debhelper)
 * devscripts (devscripts)
 
-To build debian packages for your local architecture,
-
-  ./build -d
-
-It is recommended that for debian based distributions you use the builds from my
-ppa repository at https://launchpad.net/~deepfryed/+archive/ppa.
-
-Add the following to /etc/apt/sources.list, run apt-get update as root and you should
-be able to install the latest packages.
-
-    deb http://ppa.launchpad.net/deepfryed/ppa/ubuntu lucid main
-    deb-src http://ppa.launchpad.net/deepfryed/ppa/ubuntu lucid main
-
-=== MacOSX
+==== MacOSX
 
 You need to install the required dependencies first,
 
@@ -148,6 +141,21 @@ You don't need both database ports if you only want to test or work with one of 
 
     ./build -c
     sudo ./build -u
+
+=== Debian packages
+
+To build debian packages for your local architecture,
+
+  ./build -d
+
+It is recommended that for debian based distributions you use the builds from my
+ppa repository at https://launchpad.net/~deepfryed/+archive/ppa.
+
+Add the following to /etc/apt/sources.list, run apt-get update as root and you should
+be able to install the latest packages.
+
+    deb http://ppa.launchpad.net/deepfryed/ppa/ubuntu lucid main
+    deb-src http://ppa.launchpad.net/deepfryed/ppa/ubuntu lucid main
 
 === Running the demo
 
@@ -200,9 +208,9 @@ with stock database configs.
 
 == TODO
 
-=== Database Features
+=== Features
 
-* cursor support, function calls and a lot more.
+* Cursor support, generic interface to database specific api.
 
 == LICENSE
 
