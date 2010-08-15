@@ -2,13 +2,13 @@
 #include "dbic++/reactor.h"
 #include <unistd.h>
 
-/*----------------------------------------------------------------------------------
+/*--------------------------------------------------------------------------------------
 
    To compile:
 
-   g++ -Iinc -Llibs -rdynamic -o example example.cc -ldbic++ -ldl -lpcrecpp -levent -lpthread
+   g++ -Iinc -Llib -rdynamic -o demo demo.cc -ldbic++ -ldl -lpcrecpp -levent -lpthread
 
-----------------------------------------------------------------------------------*/
+--------------------------------------------------------------------------------------*/
 
 using namespace std;
 using namespace dbi;
