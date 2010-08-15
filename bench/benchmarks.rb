@@ -1,7 +1,7 @@
-#!/usr/bin/ruby
+#!/usr/bin/ruby1.9.1
 
-require_relative 'gems/environment'
 require 'benchmark'
+require_relative 'gems/environment'
 
 class Benchmarks
   @@registry = {}

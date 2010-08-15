@@ -102,20 +102,18 @@ If you are building from source you need to install a few dependencies before
 you compile dbic++. To begin with you need a working build environment with a
 c++ compiler (XCode if you are a MacOSX user).
 
-==== Debian or other flavors of linux.
+==== Most flavors of unix.
 
-* cmake (cmake)
-* pcre3 development libraries (libpcre3-dev)
-* uuid development libraries (uuid-dev)
-* mysql client libraries (libmysqlclient-dev)
-* postgresql client libraries (libpq-dev)
-* libevent development libraries (libevent-dev)
+* cmake
+* pcre3 development libraries
+* uuid development libraries
+* mysql client libraries
+* postgresql client libraries
+* libevent development libraries
 
-If you need to build debian packages yourself, you may need the following in addition.
+==== Debian
 
-* cdbs (cdbs)
-* debhelper (debhelper)
-* devscripts (devscripts)
+    sudo apt-get install cmake libpcre3-dev uuid-dev libmysqlclient-dev libpq-dev libevent-dev
 
 ==== MacOSX
 
@@ -125,15 +123,15 @@ You need to install the required dependencies first,
     sudo port install libevent
     sudo port install pcre
     sudo port install postgresql84
-    sudo port install mysql5 +server
+    sudo port install mysql5 mysql5-server
 
 You don't need both database ports if you only want to test or work with one of them.
 
-=== Local install
+=== Building libraries and demos
 
     ./build
 
-=== System wide install
+=== System wide install of libraries
 
     sudo ./build -i
 
@@ -142,11 +140,15 @@ You don't need both database ports if you only want to test or work with one of 
     ./build -c
     sudo ./build -u
 
-=== Debian packages
+=== Building Debian packages
+
+If you need to build debian packages yourself, you may need the following in addition.
+
+    sudo apt-get install cdbs debhelper devscripts
 
 To build debian packages for your local architecture,
 
-  ./build -d
+    ./build -d
 
 It is recommended that for debian based distributions you use the builds from my
 ppa repository at https://launchpad.net/~deepfryed/+archive/ppa.
@@ -159,26 +161,34 @@ be able to install the latest packages.
 
 === Running the demo
 
-A c++ example lives in src/examples/demo.cc. You can run it as,
+A few c++ examples can be found under src/examples/ and once you finish building the
+binaries can be found under demo/
 
-    ./demo [mysql|postgresql]
+    ./demo  [mysql|postgresql]
+    ./async [mysql|postgresql]
 
 === Populating MySQL time zone tables.
 
+This is not mandatory but would allow you to set timezones using Handle#setTimeZone
+method in dbic++.
+
 On most unix systems it can be done as,
 
-  mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql
+    mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql
 
 Refer to http://dev.mysql.com/doc/refman/5.1/en/mysql-tzinfo-to-sql.html.
 
 == Benchmarks
 
-You can run these yourself. Just create a database called 'dbicpp' on your
-local MySQL and PostgreSQL server.
+You can run these yourself if you're keen.
 
-  cd bench/
-  make clean
-  ./benchmarks.rb
+* Create a database called 'dbicpp' on your local MySQL and PostgreSQL server.
+* Make sure you have ruby 1.9.1 and rubygems installed.
+* Install ruby bindings from http://github.com/shanna/swift
+
+    cd bench/
+    make clean
+    ./benchmarks.rb
 
 The following results were obtained on a Core2DUO 2.53GHz, 4GB, 5200rpm drive
 with stock database configs.

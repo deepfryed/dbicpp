@@ -7,6 +7,7 @@ lib
 *.dylib
 example
 bench/bin/*
+!bench/bin/.keepthis
 !ruby/*.c
 !ruby/*.cc
 !ruby/*.rb
