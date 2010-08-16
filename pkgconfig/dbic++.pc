@@ -1,0 +1,11 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: dbi++
+Description: C++ database API
+Version: 0.2.5
+Requires:
+Cflags: -I${includedir}/
+Libs: -L${libdir} -ldbic++ -lpcrecpp -luuid

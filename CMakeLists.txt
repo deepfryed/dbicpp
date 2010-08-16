@@ -48,7 +48,7 @@ IF (MYSQL_FOUND)
 ENDIF()
 
 ADD_EXECUTABLE(demo/demo src/examples/demo.cc)
-TARGET_LINK_LIBRARIES(demo/demo dbic++ dl ${UUID_LIBRARIES} ${PCRE_LIBRARIES} ${EVENT_LIBRARIES})
+TARGET_LINK_LIBRARIES(demo/demo dbic++ dl ${UUID_LIBRARIES} ${PCRE_LIBRARIES})
 
 ADD_EXECUTABLE(demo/async src/examples/async.cc)
 TARGET_LINK_LIBRARIES(demo/async dbic++ dl ${UUID_LIBRARIES} ${PCRE_LIBRARIES} ${EVENT_LIBRARIES})
@@ -69,3 +69,15 @@ INSTALL(DIRECTORY inc/
         DESTINATION include
         FILES_MATCHING
         PATTERN "*")
+
+IF (APPLE)
+  INSTALL(DIRECTORY pkgconfig/
+    DESTINATION /opt/local/lib/pkgconfig
+    FILES_MATCHING
+    PATTERN "*")
+ELSE()
+  INSTALL(DIRECTORY pkgconfig/
+    DESTINATION lib/pkgconfig
+    FILES_MATCHING
+    PATTERN "*")
+ENDIF()
