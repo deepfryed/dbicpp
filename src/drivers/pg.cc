@@ -80,8 +80,6 @@ namespace dbi {
         vector<string> _rsfields;
         vector<int> _rstypes;
         uint _rowno, _rows, _cols;
-        ResultRow _rsrow;
-        ResultRowHash _rsrowhash;
         bool _async;
         unsigned char *_bytea;
 
@@ -108,12 +106,12 @@ namespace dbi {
         bool consumeResult();
         void prepareResult();
         ulong lastInsertID();
-        ResultRow& fetchRow();
-        ResultRowHash& fetchRowHash();
+        bool read(ResultRow &r);
+        bool read(ResultRowHash &r);
+        unsigned char* read(uint r, uint c, ulong *l = 0);
         vector<string> fields();
         bool finish();
-        unsigned char* fetchValue(uint r, uint c, ulong *l = 0);
-        uint currentRow();
+        uint tell();
         void rewind();
         vector<int>& types();
         void seek(uint);
@@ -150,7 +148,7 @@ namespace dbi {
         bool close();
         void reconnect(bool barf = false);
         int checkResult(PGresult*, string, bool barf = false);
-        ulong copyIn(string table, ResultRow &fields, IO*);
+        ulong write(string table, ResultRow &fields, IO*);
         AbstractResultSet* results();
         void setTimeZoneOffset(int, int);
         void setTimeZone(char *);
@@ -273,8 +271,6 @@ namespace dbi {
                   default: _rstypes.push_back(DBI_TYPE_TEXT); break;
             }
         }
-
-        _rsrow.reserve(_cols);
     }
 
     void PgStatement::cleanup() {
@@ -387,8 +383,8 @@ namespace dbi {
 
     ulong PgStatement::lastInsertID() {
         checkReady("lastInsertID()");
-        ResultRow r = fetchRow();
-        return r.size() > 0 ? atol(r[0].value.c_str()) : 0;
+        ResultRow r;
+        return read(r) && r.size() > 0 ? atol(r[0].value.c_str()) : 0;
     }
 
     unsigned char* PgStatement::unescapeBytea(int r, int c, ulong *l) {
@@ -399,52 +395,54 @@ namespace dbi {
         return _bytea;
     }
 
-    ResultRow& PgStatement::fetchRow() {
+    bool PgStatement::read(ResultRow &row) {
         ulong len;
         unsigned char *data;
-        checkReady("fetchRow()");
+        checkReady("read(ResultRow)");
 
-        _rsrow.clear();
+        row.clear();
 
         if (_rowno < _rows) {
             for (uint i = 0; i < _cols; i++) {
                 if (PQgetisnull(_result, _rowno, i))
-                    _rsrow.push_back(PARAM(null()));
+                    row.push_back(PARAM(null()));
                 else if (_rstypes[i] != DBI_TYPE_BLOB)
-                    _rsrow.push_back(PG2PARAM(_result, _rowno, i));
+                    row.push_back(PG2PARAM(_result, _rowno, i));
                 else {
                     data = unescapeBytea(_rowno, i, &len);
-                    _rsrow.push_back(PARAM(data, len));
+                    row.push_back(PARAM(data, len));
                 }
             }
             _rowno++;
+            return true;
         }
 
-        return _rsrow;
+        return false;
     }
 
-    ResultRowHash& PgStatement::fetchRowHash() {
+    bool PgStatement::read(ResultRowHash &rowhash) {
         ulong len;
         unsigned char *data;
-        checkReady("fetchRowHash()");
+        checkReady("read(ResultRowHash)");
 
-        _rsrowhash.clear();
+        rowhash.clear();
 
         if (_rowno < _rows) {
             for (uint i = 0; i < _cols; i++) {
                 if (PQgetisnull(_result, _rowno, i))
-                    _rsrowhash[_rsfields[i]] = PARAM(null());
+                    rowhash[_rsfields[i]] = PARAM(null());
                 else if (_rstypes[i] != DBI_TYPE_BLOB)
-                    _rsrowhash[_rsfields[i]] = PG2PARAM(_result, _rowno, i);
+                    rowhash[_rsfields[i]] = PG2PARAM(_result, _rowno, i);
                 else {
                     data = unescapeBytea(_rowno, i, &len);
-                    _rsrowhash[_rsfields[i]] = PARAM(data, len);
+                    rowhash[_rsfields[i]] = PARAM(data, len);
                 }
             }
             _rowno++;
+            return true;
         }
 
-        return _rsrowhash;
+        return false;
     }
 
     vector<string> PgStatement::fields() {
@@ -465,8 +463,8 @@ namespace dbi {
         return true;
     }
 
-    unsigned char* PgStatement::fetchValue(uint r, uint c, ulong *l) {
-        checkReady("fetchValue()");
+    unsigned char* PgStatement::read(uint r, uint c, ulong *l) {
+        checkReady("read()");
         _rowno = r;
         if (PQgetisnull(_result, r, c)) {
             return 0;
@@ -480,7 +478,7 @@ namespace dbi {
         }
     }
 
-    uint PgStatement::currentRow() {
+    uint PgStatement::tell() {
         return _rowno;
     }
 
@@ -783,7 +781,7 @@ namespace dbi {
             throw RuntimeError(m);
     }
 
-    ulong PgHandle::copyIn(string table, ResultRow &fields, IO* io) {
+    ulong PgHandle::write(string table, ResultRow &fields, IO* io) {
         char sql[4096];
         ulong nrows;
         snprintf(sql, 4095, "copy %s (%s) from stdin", table.c_str(), fields.join(", ").c_str());

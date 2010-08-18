@@ -14,10 +14,10 @@
 using namespace std;
 using namespace dbi;
 
-void callback(AbstractResultSet *r) {
-    for (int i = 0; i < r->rows(); i++) {
-        cout << r->fetchRowHash() << endl;
-    }
+void callback(AbstractResultSet *res) {
+    ResultRowHash r;
+    while (res->read(r))
+        cout << r << endl;
 }
 
 int main(int argc, char *argv[]) {

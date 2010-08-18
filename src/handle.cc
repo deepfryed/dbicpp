@@ -78,8 +78,8 @@ namespace dbi {
         return h->call(name, arg, l);
     }
 
-    ulong Handle::copyIn(string table, ResultRow &fields, IO* io) {
-        return h->copyIn(table, fields, io);
+    ulong Handle::write(string table, ResultRow &fields, IO* io) {
+        return h->write(table, fields, io);
     }
 
     AbstractResultSet* Handle::results() {

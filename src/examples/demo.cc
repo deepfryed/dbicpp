@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 
     // bind and execute the statement.
     sel % 1L, 10L, execute();
-    while (res = sel.fetchRowHash())
+    while (sel.read(res))
         cout << res["id"]    << "\t"
              << res["name"]  << "\t"
              << res["email"] << endl;
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
     cout << endl;
     cout << "-- select all rows --" << endl;
     sel  << "select * from users", execute();
-    while (res = sel.fetchRowHash())
+    while (sel.read(res))
         cout << res["id"]    << "\t"
              << res["name"]  << "\t"
              << res["email"] << endl;
@@ -87,13 +87,13 @@ int main(int argc, char *argv[]) {
 
     ResultRow fields(2, "name", "email");
     cout << "written rows: "
-         << h.copyIn("users", fields, &buffer)
+         << h.write("users", fields, &buffer)
          << endl;
 
     cout << endl;
     cout << "-- select all rows --" << endl;
     sel.execute();
-    while (res = sel.fetchRowHash())
+    while (sel.read(res))
         cout << res["id"]    << "\t"
              << res["name"]  << "\t"
              << res["email"] << endl;

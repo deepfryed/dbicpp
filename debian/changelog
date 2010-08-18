@@ -1,15 +1,24 @@
+dbic++ (0.2.6) lucid; urgency=medium
+
+  * Renamed methods.
+  * fetchRow(), fetchRowHash() and fetchValue() are all read() with different signatures.
+  * currentRow() becomes tell().
+  * copyIn() becomes write().
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Wed, 18 Aug 2010 10:30:00 +1000
+
 dbic++ (0.2.5) lucid; urgency=low
 
   * added Handle#escape.
 
- -- Bharanee Rathna <deepfryed@gmail.com>  Tue, 13 Aug 2010 08:24:00 +1000
+ -- Bharanee Rathna <deepfryed@gmail.com>  Fri, 13 Aug 2010 08:24:00 +1000
 
 dbic++ (0.2.4) lucid; urgency=high
 
   * cleanup and using ulong instead size_t.
   * updated README (Shane Hanna).
 
- -- Bharanee Rathna <deepfryed@gmail.com>  Tue, 07 Aug 2010 16:20:00 +1000
+ -- Bharanee Rathna <deepfryed@gmail.com>  Sat, 07 Aug 2010 16:20:00 +1000
 
 dbic++ (0.2.3) lucid; urgency=low
 

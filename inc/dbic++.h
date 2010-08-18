@@ -108,7 +108,7 @@ namespace dbi {
         virtual void* call(string name, void*, ulong) = 0;
         virtual bool close() = 0;
         virtual void cleanup() = 0;
-        virtual ulong copyIn(string table, ResultRow &fields, IO*) = 0;
+        virtual ulong write(string table, ResultRow &fields, IO*) = 0;
         // IMPORTANT: You need to call cleanup() on the result set before deleting it.
         virtual AbstractResultSet* results() = 0;
         virtual void setTimeZoneOffset(int, int) = 0;
@@ -133,16 +133,16 @@ namespace dbi {
         virtual uint rows() = 0;
         virtual uint columns() = 0;
         virtual vector<string> fields() = 0;
-        virtual ResultRow& fetchRow() = 0;
-        virtual ResultRowHash& fetchRowHash() = 0;
+        virtual bool read(ResultRow&) = 0;
+        virtual bool read(ResultRowHash&) = 0;
+        virtual unsigned char* read(uint, uint, ulong*) = 0;
         virtual bool finish() = 0;
-        virtual unsigned char* fetchValue(uint, uint, ulong*) = 0;
-        virtual uint currentRow() = 0;
+        virtual uint tell() = 0;
+        virtual void seek(uint) = 0;
         virtual void cleanup() = 0;
         virtual ulong lastInsertID() = 0;
         virtual void rewind() = 0;
         virtual vector<int>& types() = 0;
-        virtual void seek(uint) = 0;
 
         // ASYNC API
         // Returns false if done, true is still more probably yet to consume
@@ -192,7 +192,7 @@ namespace dbi {
         void* call(string name, void*, ulong);
         bool close();
         vector<string>& transactions();
-        ulong copyIn(string table, ResultRow &fields, IO*);
+        ulong write(string table, ResultRow &fields, IO*);
         // IMPORTANT: You need to call cleanup() on the result set before deleting it.
         AbstractResultSet* results();
         void setTimeZoneOffset(int, int);
@@ -231,19 +231,19 @@ namespace dbi {
         Statement& operator,(dbi::null const &e);
         Statement& operator%(dbi::null const &e);
         uint  operator,(dbi::execute const &);
-        ResultRow& fetchRow();
-        ResultRowHash& fetchRowHash();
+        bool read(ResultRow&);
+        bool read(ResultRowHash&);
         uint columns();
         vector<string> fields();
-        unsigned char* fetchValue(uint r, uint c, ulong*);
+        unsigned char* read(uint r, uint c, ulong*);
         unsigned char* operator()(uint r, uint c);
-        uint currentRow();
+        uint tell();
+        void seek(uint);
+        void rewind();
         bool finish();
         void cleanup();
         ulong lastInsertID();
-        void rewind();
         vector<int>& types();
-        void seek(uint);
     };
 
     bool dbiInitialize(string path);

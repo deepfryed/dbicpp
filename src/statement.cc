@@ -44,12 +44,12 @@ namespace dbi {
         return st->rows();
     }
 
-    ResultRow& Statement::fetchRow() {
-        return st->fetchRow();
+    bool Statement::read(ResultRow& r) {
+        return st->read(r);
     }
 
-    ResultRowHash& Statement::fetchRowHash() {
-        return st->fetchRowHash();
+    bool Statement::read(ResultRowHash &r) {
+        return st->read(r);
     }
 
     bool Statement::finish() {
@@ -141,16 +141,16 @@ namespace dbi {
         return st->columns();
     }
 
-    unsigned char* Statement::fetchValue(uint r, uint c, ulong *l = 0) {
-        return st->fetchValue(r, c, l);
+    unsigned char* Statement::read(uint r, uint c, ulong *l = 0) {
+        return st->read(r, c, l);
     }
 
     unsigned char* Statement::operator()(uint r, uint c) {
-        return st->fetchValue(r, c, 0);
+        return st->read(r, c, 0);
     }
 
-    uint Statement::currentRow() {
-        return st->currentRow();
+    uint Statement::tell() {
+        return st->tell();
     }
 
     vector<int>& Statement::types() {
