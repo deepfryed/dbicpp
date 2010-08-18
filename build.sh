@@ -34,6 +34,10 @@ realclean() {
   rm -rf bench/.gems/ruby/1.9.1/env*.rb bench/.gems/env*.rb
 }
 
+builddocs() {
+  naturaldocs -i src/ -i inc/ -o HTML doc/ -s doc/Web -p .
+}
+
 usage() {
   echo "
 
@@ -47,6 +51,7 @@ usage() {
     -i builds and installs dbic++ under /usr (root)
     -u uninstall dbic++ stuff from /usr (root)
     -r real clean - cleanups up build artifacts and local install files
+    -g generate HTML documentation using naturaldocs
 
   "
 }
@@ -86,7 +91,7 @@ local_build() {
   rm -f install_manifest.txt
 }
 
-while getopts "cdhilurs" OPTION
+while getopts "cdhilursg" OPTION
 do
   case $OPTION in
     c) cleanup; exit 0;;
@@ -97,6 +102,7 @@ do
     r) realclean; exit 0;;
     s) debian_source_build; exit 0;;
     h) usage; exit 0;;
+    g) builddocs; exit 0;;
     ?) usage; exit 0;;
   esac
 done

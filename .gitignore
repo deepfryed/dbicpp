@@ -39,3 +39,9 @@ debian/tmp/
 test/
 demo/*
 !demo/.keepthis
+Languages.txt
+Menu.txt
+Topics.txt
+Data/
+doc/*
+!doc/Web.css

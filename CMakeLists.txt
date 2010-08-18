@@ -71,13 +71,9 @@ INSTALL(DIRECTORY inc/
         PATTERN "*")
 
 IF (APPLE)
-  INSTALL(DIRECTORY pkgconfig/
-    DESTINATION /opt/local/lib/pkgconfig
-    FILES_MATCHING
-    PATTERN "*")
+  INSTALL(FILES pkgconfig/macosx/dbic++.pc
+    DESTINATION /opt/local/lib/pkgconfig)
 ELSE()
-  INSTALL(DIRECTORY pkgconfig/
-    DESTINATION lib/pkgconfig
-    FILES_MATCHING
-    PATTERN "*")
+  INSTALL(FILES pkgconfig/dbic++.pc
+    DESTINATION lib/pkgconfig)
 ENDIF()

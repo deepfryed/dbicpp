@@ -52,7 +52,7 @@ namespace dbi {
         return data[k];
     }
 
-    vector<string> ResultRowHash::columns(void) {
+    vector<string> ResultRowHash::fields(void) {
         vector<string> rs;
 
         for(map<string,Param>::iterator iter = data.begin(); iter != data.end(); ++iter)

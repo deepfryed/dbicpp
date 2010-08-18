@@ -33,6 +33,11 @@ namespace dbi {
         return h->execute(sql);
     }
 
+    uint Handle::execute(string sql, ResultRow &bind) {
+        if (_trace) logMessage(_trace_fd, sql);
+        return h->execute(sql, bind);
+    }
+
     Statement Handle::prepare(string sql) {
         return Statement(h->prepare(sql));
     }
