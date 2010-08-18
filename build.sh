@@ -35,7 +35,17 @@ realclean() {
 }
 
 builddocs() {
+  rm -rf Data/
+  rm -rf doc/{files2,index,index.html,javascript,search,styles}
   naturaldocs -i src/ -i inc/ -o HTML doc/ -s doc/Web -p .
+  if [ -e doc/files2/dbic++-h.html ]; then
+    mv doc/files2/dbic++-h.html doc/files2/dbicpp-h.html
+  fi
+  if [ -d doc/files2/dbic++ ]; then
+    mv doc/files2/dbic++ doc/files2/dbicpp
+  fi
+  for file in `grep -lr "dbic++/" doc/`;   do sed -i 's/dbic++\//dbicpp\//g' $file; done
+  for file in `grep -lr "dbic++-h" doc/`; do sed -i 's/dbic++-h/dbicpp-h/g' $file; done
 }
 
 usage() {

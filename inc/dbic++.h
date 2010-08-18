@@ -38,19 +38,20 @@ namespace dbi {
 #define DEFAULT_DRIVER_PATH "/usr/lib/dbic++"
 
 /*
-    Section: Basics
+    Section: About
 
-    About:
+    What is dbic++ ?:
 
-    dbic++ is a database client library which comes with support for the following databases,
+    dbic++ is a database client library written in C++ which comes with support for the following databases,
 
         * PostgreSQL >= 8.0
         * MySQL      >= 5.0
 
-
-    I'm working on drivers for the following, which will be available soon.
+    Drivers for the following will be available soon.
 
         * SQLite >= 3
+        * Oracle >= 9.2
+
 
     Main Features:
 
