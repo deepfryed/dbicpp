@@ -18,10 +18,12 @@
 #include <pcrecpp.h>
 #include <uuid/uuid.h>
 
-#undef uint
-#undef ulong
+#undef  uint
+#undef  ulong
 #define unint unsigned int
 #define ulong unsigned long
+
+#define DBI_VERSION      0.2.6
 
 namespace dbi {
     struct null {};
