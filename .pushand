@@ -1,5 +1,0 @@
-#!/bin/bash
-
-./build -g
-echo "url.purge /dbicpp.*" | nc -q1 127.0.0.1 8282
-exit 0
