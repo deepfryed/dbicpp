@@ -11,9 +11,10 @@
 
 using namespace std;
 
-char sql[4096], driver[4096];
-vector<string> bind;
 long max_iter;
+FILE* outfile = stdout;
+vector<string> bind;
+char sql[4096], driver[4096];
 
 #define MYSQL_ERROR(c) {\
     printf("ERROR: %s\n", mysql_error(c)); \
@@ -34,13 +35,14 @@ void parseOptions(int argc, char **argv) {
         { "sql",    required_argument, 0, 's' },
         { "bind",   required_argument, 0, 'b' },
         { "num",    required_argument, 0, 'n' },
-        { "driver", required_argument, 0, 'd' }
+        { "driver", required_argument, 0, 'd' },
+        { "output", optional_argument, 0, 'o' }
     };
 
     max_iter = 1;
     strcpy(driver, "mysql");
 
-    while ((c = getopt_long(argc, argv, "s:b:n:d:", long_options, &option_index)) >= 0) {
+    while ((c = getopt_long(argc, argv, "s:b:n:d:o:", long_options, &option_index)) >= 0) {
         if (c == 0) {
             c = long_options[option_index].val;
         }
@@ -49,6 +51,9 @@ void parseOptions(int argc, char **argv) {
             case 'b': bind.push_back(optarg); break;
             case 'n': max_iter = atol(optarg); break;
             case 'd': strcpy(driver, optarg); break;
+            case 'o': outfile = fopen(optarg, "w");
+                      if (!outfile) { perror("Unabled to open file"); exit(1); }
+                      break;
             default: exit(1);
         }
     }
@@ -139,9 +144,9 @@ int main(int argc, char*argv[]) {
                     mysql_stmt_fetch_column(stmt, &result[c], c, 0);
                 }
                 ((unsigned char*)result[c].buffer)[*result[c].length] = 0;
-                printf("%s\t", (unsigned char*)MYSQL_DATA(result, c));
+                fprintf(outfile, "%s\t", (unsigned char*)MYSQL_DATA(result, c));
             }
-            printf("\n");
+            fprintf(outfile, "\n");
         }
 
         mysql_stmt_free_result(stmt);

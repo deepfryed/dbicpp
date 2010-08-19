@@ -11,9 +11,10 @@
 
 using namespace std;
 
-char sql[4096], driver[4096];
-vector<string> bind;
 long max_iter;
+FILE *outfile = stdout;
+vector<string> bind;
+char sql[4096], driver[4096];
 
 void parseOptions(int argc, char **argv) {
     int option_index, c;
@@ -21,13 +22,14 @@ void parseOptions(int argc, char **argv) {
         { "sql",    required_argument, 0, 's' },
         { "bind",   required_argument, 0, 'b' },
         { "num",    required_argument, 0, 'n' },
-        { "driver", required_argument, 0, 'd' }
+        { "driver", required_argument, 0, 'd' },
+        { "output", optional_argument, 0, 'o' }
     };
 
     max_iter = 1;
     strcpy(driver, "mysql");
 
-    while ((c = getopt_long(argc, argv, "s:b:n:d:", long_options, &option_index)) >= 0) {
+    while ((c = getopt_long(argc, argv, "s:b:n:d:o:", long_options, &option_index)) >= 0) {
         if (c == 0) {
             c = long_options[option_index].val;
         }
@@ -36,13 +38,16 @@ void parseOptions(int argc, char **argv) {
             case 'b': bind.push_back(optarg); break;
             case 'n': max_iter = atol(optarg); break;
             case 'd': strcpy(driver, optarg); break;
+            case 'o': outfile = fopen(optarg, "w");
+                      if (!outfile) { perror("Unabled to open file"); exit(1); }
+                      break;
             default: exit(1);
         }
     }
 }
 
 void error (const char *msg) {
-    printf("ERROR: %s\n", msg);
+    fprintf(stderr, "ERROR: %s\n", msg);
     exit(1);
 }
 
@@ -56,9 +61,9 @@ int main(int argc, char *argv[]) {
             if (mysqlpp::StoreQueryResult res = query.store()) {
                 for (size_t i = 0; i < res.num_rows(); ++i) {
                     for (size_t j = 0; j < res.num_fields(); ++j) {
-                        printf("%s\t", res[i][j].c_str());
+                        fprintf(outfile, "%s\t", res[i][j].c_str());
                     }
-                    printf("\n");
+                    fprintf(outfile, "\n");
                 }
             }
             else {

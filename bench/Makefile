@@ -24,8 +24,6 @@ $(MYSQLPP_EXEC) : $(MYSQLPP_SRC) Makefile
 	g++ -O3 -I/usr/include/mysql -o $(MYSQLPP_EXEC) $(MYSQLPP_SRC) -lmysqlpp
 
 clean: rm all
-	./setup.rb mysql 50
-	./setup.rb postgresql 50
 
 rm:
 	rm -f bin/*

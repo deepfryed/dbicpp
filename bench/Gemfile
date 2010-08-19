@@ -1,8 +1,0 @@
-bundle_path 'gems'
-disable_rubygems
-disable_system_gems
-
-gem 'do_mysql'
-gem 'do_postgres'
-gem 'mysql2'
-gem 'pg'

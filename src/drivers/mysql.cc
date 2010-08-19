@@ -481,8 +481,8 @@ namespace dbi {
     bool MySqlStatement::read(ResultRow &row) {
         int c, rc;
         ulong length;
-        checkReady("read(ResultRow)");
         row.clear();
+        if (!_stmt->bind_result_done) return false;
 
         if (_rowno < _rows) {
             _rowno++;
@@ -515,9 +515,8 @@ namespace dbi {
     bool MySqlStatement::read(ResultRowHash &rowhash) {
         int c, rc;
         ulong length;
-        checkReady("read(ResultRowHash)");
-
         rowhash.clear();
+        if (!_stmt->bind_result_done) return false;
 
         if (_rowno < _rows) {
             _rowno++;
@@ -575,9 +574,9 @@ namespace dbi {
     unsigned char* MySqlStatement::read(uint r, uint c, ulong *l) {
         int rc;
         ulong length;
-        checkReady("read()");
 
-        if (r >= _rows) return 0;
+        if (!_stmt->bind_result_done || r >= _rows) return 0;
+
         if (_rowno != r || _fvempty) {
             _rowno = r;
             _fvempty = false;
@@ -673,8 +672,8 @@ namespace dbi {
 
     bool MySqlResultSet::read(ResultRow &row) {
         int n;
-        checkReady("read(ResultRow)");
         row.clear();
+        if (!result) return false;
 
         if (_rowno < _rows) {
             _rowno++;
@@ -691,8 +690,9 @@ namespace dbi {
 
     bool MySqlResultSet::read(ResultRowHash &rowhash) {
         int n;
-        checkReady("read(ResultRowHash)");
         rowhash.clear();
+        if (!result) return false;
+
         if (_rowno < _rows) {
             _rowno++;
             MYSQL_ROW rowdata = mysql_fetch_row(result);
@@ -721,8 +721,7 @@ namespace dbi {
     }
 
     unsigned char* MySqlResultSet::read(uint r, uint c, ulong *l) {
-        checkReady("read()");
-        if (r >= _rows) return 0;
+        if (!result || r >= _rows) return 0;
         if (_rowno != r || (r == 0 && c == 0)) {
             _rowno = r;
             mysql_data_seek(result, r);
