@@ -180,41 +180,36 @@ Refer to http://dev.mysql.com/doc/refman/5.1/en/mysql-tzinfo-to-sql.html.
 
 == Benchmarks
 
-You can run these yourself if you're keen.
-
-* Create a database called 'dbicpp' on your local MySQL and PostgreSQL server.
-* Make sure you have ruby 1.9.1 and rubygems installed.
-* Install ruby bindings from http://github.com/shanna/swift
-
-    cd bench/
-    make clean
-    ./benchmarks.rb
-
-The following results were obtained on a Core2DUO 2.53GHz, 4GB, 5200rpm drive
-with stock database configs.
+You can run these yourself if you're keen. The makefile might need some tweaks
+on non-debian based distributions. The following results were obtained on a
+Core2DUO 2.53GHz, 4GB, 5200rpm drive with stock database configs.
 
   * The dataset size is 50 rows of ~64 bytes each.
-  * 5000 "select * from ..." run back to back, fetching all rows and printing them.
+  * 5000 SELECT queries run back to back, fetching all rows and printing them.
 
-  mysql
-  =====
-                                      user     system      total        real
-  ruby: do                        3.350000   0.110000   3.460000 (  4.431064)
-  ruby: swift                     1.080000   0.110000   1.190000 (  1.905136)
-  c: libmysqlclient               0.000000   0.000000   0.230000 (  0.933122)
-  c++: libdbic++                  0.000000   0.010000   0.510000 (  1.163342)
-  ruby: mysql2                    2.150000   0.040000   2.190000 (  3.155557)
-  c++: libmysql++                 0.000000   0.000000   0.480000 (  1.437604)
+    cd bench/ && make 
 
-  postgresql
-  ==========
-                                      user     system      total        real
-  ruby: do                        3.470000   0.130000   3.600000 (  4.583538)
-  ruby: swift                     1.300000   0.070000   1.370000 (  2.010762)
-  ruby: libpq                     1.800000   0.120000   1.920000 (  2.815204)
-  c++: libdbic++                  0.000000   0.000000   0.560000 (  1.336096)
-  c: libpq                        0.010000   0.000000   0.510000 (  1.085639)
+    ./benchmarks.sh 
 
+    + Setting up sample data (50 rows)
+      * mysql
+      * postgresql
+    + Done
+
+    ./benchmarks.sh -w bench
+
+    + Benchmarking mysql
+
+      * mysql      user 0.36 sys 0.06 real 1.47
+      * mysql++    user 0.49 sys 0.02 real 1.62
+      * dbicpp     user 0.44 sys 0.08 real 1.63
+
+    + Benchmarking postgresql
+
+      * pq         user 0.40 sys 0.04 real 1.46
+      * dbicpp     user 0.69 sys 0.12 real 1.58
+
+    + Finished
 
 == TODO
 

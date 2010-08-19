@@ -11,7 +11,7 @@
 
 using namespace std;
 
-long max_iter;
+long max_iter = 1;
 FILE* outfile = stdout;
 vector<string> bind;
 char sql[4096], driver[4096];

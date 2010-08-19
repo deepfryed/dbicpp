@@ -6,7 +6,7 @@
 using namespace std;
 using namespace dbi;
 
-long max_iter;
+long max_iter = 1;
 FILE *outfile = stdout;
 ResultRow bind;
 char sql[4096], driver[4096];
