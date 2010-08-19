@@ -65,12 +65,51 @@ namespace dbi {
     At the very least you need to know how <AbstractHandle>, <AbstractStatement>, <Handle>,
     and <Statement> work. It is also recommended that you read through documentation on <Param>.
 
+    Examples:
+
+    dbic++ source distributions comes with some examples under src/examples/
+
     Compiling:
 
     To compile code that uses dbic++, use pkg-config to get the correct compiler flags.
 
     (begin code)
     g++ `pkg-config --libs --cflags dbic++` -o example example.cc
+    (end)
+
+    Benchmarks:
+
+    You can run these yourself if you're keen. The makefile might need some tweaks
+    on non-debian based distributions. The following results were obtained on a
+    Core2DUO 2.53GHz, 4GB, 5200rpm drive with stock database configs.
+
+    * The dataset size is 50 rows of ~64 bytes each.
+    * 5000 SELECT queries run back to back, fetching all rows and printing them.
+
+    (begin code)
+    cd bench/ && make
+
+    ./benchmarks.sh
+
+    + Setting up sample data (50 rows)
+      * mysql
+      * postgresql
+    + Done
+
+    ./benchmarks.sh -w bench
+
+    + Benchmarking mysql
+
+      * mysql      user 0.36 sys 0.06 real 1.47
+      * mysql++    user 0.49 sys 0.02 real 1.62
+      * dbicpp     user 0.44 sys 0.08 real 1.63
+
+    + Benchmarking postgresql
+
+      * pq         user 0.40 sys 0.04 real 1.46
+      * dbicpp     user 0.69 sys 0.12 real 1.58
+
+    + Finished
     (end)
 
 */
