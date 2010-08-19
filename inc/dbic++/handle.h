@@ -25,7 +25,7 @@ namespace dbi {
 
             Statement stmt (h, "select id, name from users where name like ? limit 5");
 
-            stmt % "jam%", execute();
+            stmt % "james%", execute();
 
             while (stmt.read(res)) {
                 cout << "id: "   << res["id"]

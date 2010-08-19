@@ -32,9 +32,9 @@ namespace dbi {
 
             Reactor::initialize();
 
-            Reactor::watch(pool.execute(sleep_sql + "(0.5), 1 as query_seq, * from users", callback));
-            Reactor::watch(pool.execute(sleep_sql + "(0.3), 2 as query_seq, * from users", callback));
-            Reactor::watch(pool.execute(sleep_sql + "(0.1), 3 as query_seq, * from users", callback));
+            Reactor::watch(pool.execute("select pg_sleep(0.5), 1 as query_seq, * from users", callback));
+            Reactor::watch(pool.execute("select pg_sleep(0.3), 2 as query_seq, * from users", callback));
+            Reactor::watch(pool.execute("select pg_sleep(0.1), 3 as query_seq, * from users", callback));
 
             // Reactor will terminate after all queries are run and callbacks return.
             Reactor::run();
