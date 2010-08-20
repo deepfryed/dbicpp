@@ -9,10 +9,15 @@ namespace dbi {
         This is used by Handle::write() at this time to write rows directly to
         a table via the underlying database bulk loader api.
 
+        Note:
+        Row data needs to be '\t' delimited and terminated by '\n'.
+        Databases will usually throw an exception when given CRLF terminated row data,
+        so suffice to say don't use CRLF terminator.
 
-        *Note*: Row data needs to be '\t' delimited and terminated by '\n'.
-                Databases will usually throw an exception when given CRLF
-                terminated row data, so suffice to say don't use CRLF terminator.
+        Tips:
+        You could use <IOStream> or <IOFileStream> which implement the interface.
+        Alternatively you could implement your own subclass which can be used to
+        bulk load data without buffering.
     */
     class IO {
         public:

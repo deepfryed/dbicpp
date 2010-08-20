@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
     buffer.write("sally\tsally@local\n");
     buffer.write("jonas\tjonas@local\n");
 
-    ResultRow fields(2, "name", "email");
+    FieldSet fields(2, "name", "email");
     cout << "written rows: "
          << h.write("users", fields, &buffer)
          << endl;

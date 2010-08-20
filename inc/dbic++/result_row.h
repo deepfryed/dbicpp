@@ -12,16 +12,6 @@ namespace dbi {
     class ResultRow : public vector<Param> {
         public:
         ResultRow() {}
-        /*
-            Constructor: ResultRow(int, ...)
-            Builds a row of a given length with string data, useful if you want
-            to quickly create a vector<Param> instance.
-
-            (begin code)
-            ResultRow fields(3, "id", "user", "name");
-            (end)
-
-        */
         ResultRow(int n, ...);
 
         /*
@@ -50,6 +40,24 @@ namespace dbi {
 
         operator bool() { return size() > 0; }
         friend ostream& operator<< (ostream &out, ResultRow &r);
+    };
+
+    /*
+        Class: FieldSet
+        A glorified vector<string> really, with some decorators.
+        See <IOStream> for an example where you can use this.
+    */
+    class FieldSet : public ResultRow {
+        public:
+        FieldSet() {}
+        /*
+            Constructor: FieldSet(int, ...)
+            (begin code)
+            FieldSet fields(3, "id", "user", "name");
+            (end)
+
+        */
+        FieldSet(int n, ...);
     };
 
 }

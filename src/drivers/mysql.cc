@@ -292,7 +292,7 @@ namespace dbi {
         void* call(string name, void* args, ulong l);
         bool close();
         void reconnect();
-        ulong write(string table, ResultRow &fields, IO*);
+        ulong write(string table, FieldSet &fields, IO*);
         void setTimeZoneOffset(int, int);
         void setTimeZone(char *name);
         string escape(string);
@@ -1031,7 +1031,7 @@ namespace dbi {
         throw RuntimeError(errormsg);
     }
 
-    ulong MySqlHandle::write(string table, ResultRow &fields, IO* io) {
+    ulong MySqlHandle::write(string table, FieldSet &fields, IO* io) {
         int fd;
         char buffer[4096];
         string filename = generateCompactUUID();

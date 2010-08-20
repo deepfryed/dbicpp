@@ -22,7 +22,7 @@ Main Features:
 
 Source:
 
-    You can get the source on <github at http://www.github.com/deepfryed/dbicpp>
+Clone the repository from <github at http://www.github.com/deepfryed/dbicpp> and have fun!
 
 Reading:
 
@@ -31,7 +31,8 @@ and <Statement> work. It is also recommended that you read through documentation
 
 Examples:
 
-dbic++ source distributions comes with some examples under src/examples/
+Checkout <Handle>, <IOStream> or <Reactor> for some quick examples. dbic++ source distribution
+also contains some examples that can be found under src/examples/.
 
 Compiling:
 

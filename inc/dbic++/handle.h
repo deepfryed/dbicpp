@@ -23,6 +23,9 @@ namespace dbi {
 
             Handle h ("mysql", getlogin(), "", "dbicpp");
 
+            // Set trace on and log queries to stderr
+            trace(true, fileno(stderr));
+
             Statement stmt (h, "select id, name from users where name like ? limit 5");
 
             stmt % "james%", execute();
@@ -86,20 +89,20 @@ namespace dbi {
         ~Handle();
 
         /*
-            Function: execute
+            Function: execute(string)
             See <AbstractHandle::execute(string)>
         */
         uint execute(string sql);
 
         /*
-            Function: execute
-            See <AbstractHandle::execute(string, ResultRow&)>
+            Function: execute(string, vector<Param>&)
+            See <AbstractHandle::execute(string, vector<Param>&)>
         */
-        uint execute(string sql, ResultRow &bind);
+        uint execute(string sql, vector<Param> &bind);
 
         /*
-            Function: prepare
-            prepares a SQL and returns a statement handle.
+            Function: prepare(string)
+            Prepares a SQL and returns a statement handle.
 
             Parameters:
             sql - SQL statement.
@@ -110,7 +113,7 @@ namespace dbi {
         Statement prepare(string sql);
 
         /*
-            Operator: <<
+            Operator: <<(string)
             This is an alias for prepare.
 
             Parameters:
@@ -140,19 +143,19 @@ namespace dbi {
         bool rollback();
 
         /*
-            Function: begin
+            Function: begin(string)
             See <AbstractHandle::begin(string)>
         */
         bool begin(string name)
 ;
         /*
-            Function: commit
+            Function: commit(string)
             See <AbstractHandle::commit(string)>
         */
         bool commit(string name);
 
         /*
-            Function: rollback
+            Function: rollback(string)
             See <AbstractHandle::rollback(string)>
         */
         bool rollback(string name);
@@ -176,10 +179,10 @@ namespace dbi {
         vector<string>& transactions();
 
         /*
-            Function: write
-            See <AbstractHandle::write(string, ResultRow&, IO*)>
+            Function: write(string, FieldSet&, IO*)
+            See <AbstractHandle::write(string, FieldSet&, IO*)>
         */
-        ulong write(string table, ResultRow &fields, IO*);
+        ulong write(string table, FieldSet &fields, IO*);
 
         /*
             Function: results
@@ -188,19 +191,19 @@ namespace dbi {
         AbstractResultSet* results();
 
         /*
-            Function: setTimeZoneOffset
+            Function: setTimeZoneOffset(int, int)
             See <AbstractHandle::setTimeZoneOffset(int, int)>
         */
         void setTimeZoneOffset(int hours, int mins);
 
         /*
-            Function: setTimeZone
+            Function: setTimeZone(char *)
             See <AbstractHandle::setTimeZone(char*)>
         */
         void setTimeZone(char *zone);
 
         /*
-            Function: escape
+            Function: escape(string)
             See <AbstractHandle::escape(string)>
         */
         string escape(string);

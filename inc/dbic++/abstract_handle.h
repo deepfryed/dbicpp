@@ -129,24 +129,24 @@ namespace dbi {
         virtual void cleanup() = 0;
 
         /*
-            Function: write(string, ResultRow&, IO*)
+            Function: write(string, FieldSet&, IO*)
             Bulk write data into a database table.
 
             Parameters:
             table  - table name.
-            fields - field names of type ResultRow.
+            fields - field names.
             io     - pointer to an IO object.
 
-            *Tip*: Use the ResultRow constructor to create a field name array.
+            *Tip*: Use the FieldSet constructor to create a field name array.
 
             (begin code)
-            ResultRow fields(3, "id", "name", "age");
+            FieldSet fields(3, "id", "name", "age");
             (end)
 
             Returns:
             rows   - The number of rows written to database.
         */
-        virtual ulong write(string table, ResultRow &fields, IO*) = 0;
+        virtual ulong write(string table, FieldSet &fields, IO*) = 0;
 
         /*
             Function: results

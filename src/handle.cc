@@ -33,7 +33,7 @@ namespace dbi {
         return h->execute(sql);
     }
 
-    uint Handle::execute(string sql, ResultRow &bind) {
+    uint Handle::execute(string sql, vector<Param> &bind) {
         if (_trace) logMessage(_trace_fd, sql);
         return h->execute(sql, bind);
     }
@@ -83,7 +83,7 @@ namespace dbi {
         return h->call(name, arg, l);
     }
 
-    ulong Handle::write(string table, ResultRow &fields, IO* io) {
+    ulong Handle::write(string table, FieldSet &fields, IO* io) {
         return h->write(table, fields, io);
     }
 

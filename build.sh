@@ -23,6 +23,7 @@ cleanup() {
   rm -rf debian/stamp-autotools-files
   rm -rf debian/stamp-makefile-build
   rm -rf debian/tmp/
+  rm -rf Data/ Languages.txt Topics.txt Menu.txt
 }
 
 realclean() {
@@ -30,8 +31,6 @@ realclean() {
   rm -rf lib/*
   rm -rf bench/bin/*
   rm -rf bench/src/*.o src/*.o src/drivers/*.o
-  rm -rf bench/.gems/ruby/1.9.1/specifications bench/.gems/ruby/1.9.1/gems bench/.gems/ruby/1.9.1/doc
-  rm -rf bench/.gems/ruby/1.9.1/env*.rb bench/.gems/env*.rb
 }
 
 builddocs() {

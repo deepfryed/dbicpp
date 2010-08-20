@@ -143,7 +143,7 @@ namespace dbi {
         bool close();
         void reconnect(bool barf = false);
         int checkResult(PGresult*, string, bool barf = false);
-        ulong write(string table, ResultRow &fields, IO*);
+        ulong write(string table, FieldSet &fields, IO*);
         AbstractResultSet* results();
         void setTimeZoneOffset(int, int);
         void setTimeZone(char *);
@@ -783,7 +783,7 @@ namespace dbi {
             throw RuntimeError(m);
     }
 
-    ulong PgHandle::write(string table, ResultRow &fields, IO* io) {
+    ulong PgHandle::write(string table, FieldSet &fields, IO* io) {
         char sql[4096];
         ulong nrows;
         snprintf(sql, 4095, "copy %s (%s) from stdin", table.c_str(), fields.join(", ").c_str());
@@ -799,7 +799,7 @@ namespace dbi {
         if (PQputCopyEnd(conn, 0) != 1)
                 throw RuntimeError(PQerrorMessage(conn));
         PGresult *res = PQgetResult(conn);
-        nrows = PQntuples(res);
+        nrows = atol(PQcmdTuples(res));
         PQclear(res);
         return nrows;
     }

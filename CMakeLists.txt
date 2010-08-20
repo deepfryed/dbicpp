@@ -68,7 +68,7 @@ INSTALL(TARGETS dbic++
 INSTALL(DIRECTORY inc/
         DESTINATION include
         FILES_MATCHING
-        PATTERN "*")
+        PATTERN "*.h")
 
 IF (APPLE)
   INSTALL(FILES pkgconfig/macosx/dbic++.pc
