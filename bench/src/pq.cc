@@ -94,14 +94,6 @@ int main(int argc, char*argv[]) {
     else if (PQstatus(conn) == CONNECTION_BAD)
         error(PQerrorMessage(conn));
 
-    int *bind_l = new int[bind.size()];
-    char **bind_v = new char*[bind.size()];
-
-    for (n = 0; n < bind.size(); n++) {
-        bind_v[n] = (char *)bind[n].data();
-        bind_l[n] = bind[n].length();
-    }
-
     string query(sql);
     pgPreProcessQuery(query);
     strcpy(sql, query.c_str());
@@ -109,8 +101,20 @@ int main(int argc, char*argv[]) {
     pgCheckResult(r);
 
     for (n = 0; n < (int)max_iter; n++) {
+        int *bind_l   = new int[bind.size()];
+        char **bind_v = new char*[bind.size()];
+
+        for (i = 0; i < bind.size(); i++) {
+            bind_v[i] = (char *)bind[i].data();
+            bind_l[i] = bind[i].length();
+        }
+
         r = PQexecPrepared(conn, "myquery", bind.size(), (const char* const *)bind_v, (const int *)bind_l, 0, 0);
         pgCheckResult(r);
+
+        delete [] bind_l;
+        delete [] bind_v;
+
         for (i = 0; i < PQntuples(r); i++) {
             for (j = 0; j < PQnfields(r); j++)
                 fprintf(outfile, "%s\t", PQVALUE(r, i, j));
@@ -118,9 +122,6 @@ int main(int argc, char*argv[]) {
         }
         PQclear(r);
     }
-
-    delete []bind_l;
-    delete []bind_v;
 
     PQfinish(conn);
 }

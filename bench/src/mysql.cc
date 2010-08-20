@@ -87,16 +87,7 @@ int main(int argc, char*argv[]) {
 
     cols = (int) mysql_stmt_field_count(stmt);
 
-    params = new MYSQL_BIND[bind.size()];
     result = new MYSQL_BIND[cols];
-
-    for (i = 0; i < (int)bind.size(); i++) {
-        memset(&params[i], 0, sizeof(MYSQL_BIND));
-        params[i].buffer        = (void *)bind[i].data();
-        params[i].buffer_length = bind[i].length();
-        params[i].is_null       = &MYSQL_FALSE;
-        params[i].buffer_type   = MYSQL_TYPE_STRING;
-    }
 
     for (i = 0; i < cols; i++) {
         memset(&result[i], 0, sizeof(MYSQL_BIND));
@@ -105,9 +96,6 @@ int main(int argc, char*argv[]) {
         result[i].is_null       = new my_bool;
         result[i].length        = new unsigned long;
     }
-
-    if (bind.size() > 0 && mysql_stmt_bind_param(stmt, params) != 0)
-        MYSQL_STMT_ERROR(stmt);
 
     if (mysql_stmt_bind_result(stmt, result) != 0)
         MYSQL_STMT_ERROR(stmt);
@@ -120,12 +108,25 @@ int main(int argc, char*argv[]) {
         for (c = 0; c < cols; c++)
             bs.push_back(result[c].buffer_length);
 
+        params = new MYSQL_BIND[bind.size()];
+        for (i = 0; i < (int)bind.size(); i++) {
+            memset(&params[i], 0, sizeof(MYSQL_BIND));
+            params[i].buffer        = (void *)bind[i].data();
+            params[i].buffer_length = bind[i].length();
+            params[i].is_null       = &MYSQL_FALSE;
+            params[i].buffer_type   = MYSQL_TYPE_STRING;
+        }
+
+        if (bind.size() > 0 && mysql_stmt_bind_param(stmt, params) != 0)
+            MYSQL_STMT_ERROR(stmt);
+
         if (mysql_stmt_execute(stmt) != 0)
             MYSQL_STMT_ERROR(stmt);
 
         if (mysql_stmt_store_result(stmt) != 0)
             MYSQL_STMT_ERROR(stmt);
 
+        delete [] params;
         rows = (int)mysql_stmt_num_rows(stmt);
 
         for (i = 0; i < rows; i++) {

@@ -8,8 +8,11 @@
 #include <cstring>
 #include <vector>
 #include <unistd.h>
+#include <pcrecpp.h>
+
 
 using namespace std;
+using namespace pcrecpp;
 
 long max_iter = 1;
 FILE *outfile = stdout;
@@ -51,13 +54,36 @@ void error (const char *msg) {
     exit(1);
 }
 
+void interpolateBind(string &query, vector<string> &bind) {
+    int n = 0;
+    string orig = query;
+    char repl[8192];
+    string var;
+
+    RE re("(?<!')(\\?)(?!')");
+    while (re.PartialMatch(query, &var)) {
+        if (n >= bind.size()) {
+            fprintf(stderr, "Only %d parameters provided for query: %s", (int)bind.size(), orig.c_str());
+            exit(1);
+        }
+
+        mysql_escape_string(repl+1, bind[n].c_str(), bind[n].length());
+        repl[0] = '\'';
+        repl[bind[n].length() + 1] = '\'';
+        repl[bind[n].length() + 2] = 0;
+        re.Replace(repl, &query);
+    }
+}
+
 int main(int argc, char *argv[]) {
     // Connect to the sample database.
     parseOptions(argc, argv);
     mysqlpp::Connection conn(false);
     if (conn.connect("dbicpp", "127.0.0.1", getlogin(), "")) {
         for (int n = 0; n < max_iter; n++) {
-            mysqlpp::Query query = conn.query(sql);
+            string complete_sql = sql;
+            interpolateBind(complete_sql, bind);
+            mysqlpp::Query query = conn.query(complete_sql);
             if (mysqlpp::StoreQueryResult res = query.store()) {
                 for (size_t i = 0; i < res.num_rows(); ++i) {
                     for (size_t j = 0; j < res.num_fields(); ++j) {

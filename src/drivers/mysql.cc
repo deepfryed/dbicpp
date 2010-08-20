@@ -566,7 +566,6 @@ namespace dbi {
     }
 
     void MySqlStatement::seek(uint r) {
-        checkReady("seek()");
         mysql_stmt_data_seek(_stmt, r);
         _rowno = r;
     }
@@ -661,12 +660,10 @@ namespace dbi {
     }
 
     uint MySqlResultSet::columns() {
-        checkReady("columns()");
         return _cols;
     }
 
     vector<string> MySqlResultSet::fields() {
-        checkReady("fields()");
         return _rsfields;
     }
 
@@ -715,7 +712,6 @@ namespace dbi {
     }
 
     void MySqlResultSet::seek(uint r) {
-        checkReady("seek()");
         mysql_data_seek(result, r);
         _rowno = r;
     }
@@ -742,7 +738,6 @@ namespace dbi {
     }
 
     ulong MySqlResultSet::lastInsertID() {
-        checkReady("lastInsertID()");
         return mysql_insert_id(handle->conn);
     }
 

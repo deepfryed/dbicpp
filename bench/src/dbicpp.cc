@@ -48,6 +48,7 @@ int main(int argc, char *argv[]) {
     Handle h(driver, getlogin(), "", "dbicpp");
     Statement st(h, sql);
     ResultRow row;
+    row.reserve(20);
 
     for (n = 0; n < max_iter; n++) {
         rows = (int) st.execute(bind);

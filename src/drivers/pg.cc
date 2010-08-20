@@ -22,11 +22,6 @@ namespace dbi {
         "%s", "text"
     };
 
-    inline int PQNTUPLES(PGresult *r) {
-        int n = PQntuples(r);
-        return n > 0 ? n : atoi(PQcmdTuples(r));
-    }
-
     void PQ_NOTICE(void *arg, const char *message) {
         if (_trace) logMessage(_trace_fd, message);
     }
@@ -290,12 +285,13 @@ namespace dbi {
     }
 
     uint PgStatement::rows() {
-        checkReady("rows()");
         return _rows;
     }
 
     uint PgStatement::execute() {
+        uint ctuples = 0;
         int done, tries;
+
         finish();
 
         if (_async) {
@@ -315,14 +311,15 @@ namespace dbi {
                 done = handle->checkResult(_result, _sql);
                 if (!done) prepare();
             }
-            _rows = (uint)PQNTUPLES(_result);
+            _rows   = (uint)PQntuples(_result);
+            ctuples = (uint)atoi(PQcmdTuples(_result));
         }
 
-        // will return 0 for async queries.
-        return _rows;
+        return ctuples > 0 ? ctuples : _rows;
     }
 
     uint PgStatement::execute(vector<Param> &bind) {
+        uint ctuples = 0;
         int *param_l, *param_f, done, tries;
         const char **param_v;
 
@@ -358,14 +355,16 @@ namespace dbi {
                 delete []param_f;
                 throw e;
             }
+
             delete []param_v;
             delete []param_l;
             delete []param_f;
-            _rows = (uint)PQNTUPLES(_result);
+
+            _rows   = (uint)PQntuples(_result);
+            ctuples = (uint)atoi(PQcmdTuples(_result));
         }
 
-        // will return 0 for async queries.
-        return _rows;
+        return ctuples > 0 ? ctuples : _rows;
     }
 
     bool PgStatement::consumeResult() {
@@ -376,13 +375,12 @@ namespace dbi {
     void PgStatement::prepareResult() {
         PGresult *response;
         _result = PQgetResult(handle->conn);
-        _rows   = (uint)PQNTUPLES(_result);
+        _rows   = (uint)PQntuples(_result);
         while ((response = PQgetResult(handle->conn))) PQclear(response);
         handle->checkResult(_result, _sql, true);
     }
 
     ulong PgStatement::lastInsertID() {
-        checkReady("lastInsertID()");
         ResultRow r;
         return read(r) && r.size() > 0 ? atol(r[0].value.c_str()) : 0;
     }
@@ -398,7 +396,6 @@ namespace dbi {
     bool PgStatement::read(ResultRow &row) {
         ulong len;
         unsigned char *data;
-        checkReady("read(ResultRow)");
 
         row.clear();
 
@@ -423,7 +420,6 @@ namespace dbi {
     bool PgStatement::read(ResultRowHash &rowhash) {
         ulong len;
         unsigned char *data;
-        checkReady("read(ResultRowHash)");
 
         rowhash.clear();
 
@@ -464,7 +460,6 @@ namespace dbi {
     }
 
     unsigned char* PgStatement::read(uint r, uint c, ulong *l) {
-        checkReady("read()");
         _rowno = r;
         if (PQgetisnull(_result, r, c)) {
             return 0;
@@ -556,7 +551,7 @@ namespace dbi {
     }
 
     uint PgHandle::execute(string sql) {
-        uint rows;
+        uint rows, ctuples = 0;
         int done, tries;
         PGresult *result;
         string query  = sql;
@@ -572,16 +567,19 @@ namespace dbi {
 
         if (!done) boom(PQerrorMessage(conn));
 
-        rows = (uint)PQNTUPLES(result);
         if (_result) PQclear(_result);
         _result = result;
-        return rows;
+
+        rows    = (uint)PQntuples(result);
+        ctuples = (uint)atoi(PQcmdTuples(result));
+
+        return ctuples > 0 ? ctuples : rows;
     }
 
     uint PgHandle::execute(string sql, vector<Param> &bind) {
         int *param_l, *param_f;
         const char **param_v;
-        uint rows;
+        uint rows, ctuples = 0;
         int done, tries;
         PGresult *result;
         string query = sql;
@@ -608,10 +606,14 @@ namespace dbi {
         delete []param_v;
         delete []param_l;
         delete []param_f;
-        rows = (uint)PQNTUPLES(result);
+
         if (_result) PQclear(_result);
         _result = result;
-        return rows;
+
+        rows    = (uint)PQntuples(result);
+        ctuples = (uint)atoi(PQcmdTuples(result));
+
+        return ctuples > 0 ? ctuples : rows;
     }
 
     AbstractResultSet* PgHandle::results() {
@@ -797,7 +799,7 @@ namespace dbi {
         if (PQputCopyEnd(conn, 0) != 1)
                 throw RuntimeError(PQerrorMessage(conn));
         PGresult *res = PQgetResult(conn);
-        nrows = PQNTUPLES(res);
+        nrows = PQntuples(res);
         PQclear(res);
         return nrows;
     }

@@ -3,29 +3,33 @@
 rows=50
 runs=5000
 work=setup
-mysql_query="select SQL_NO_CACHE id, name, created_at from users where id > 1 and created_at < now()"
-pgsql_query="select id, name, created_at from users where id > 1 and created_at < now()"
+mysql_query="select SQL_NO_CACHE id, name, created_at from users where id > ? and created_at < now()"
+pgsql_query="select id, name, created_at from users where id > ? and created_at < now()"
 
+dir=$(readlink -f $(dirname $0))
+export DBICPP_LIBDIR=$dir/../lib/dbic++
 
 setup() {
   echo "+ Setting up sample data ($rows rows)"
 
+  exe=$dir/bin/dbicpp
   for driver in mysql postgresql; do
     echo "  * $driver"
-    ./bin/dbicpp -d $driver -o /dev/null -s "drop table if exists users"
-    ./bin/dbicpp -d $driver -o /dev/null -s "create table users(id serial, name text, created_at timestamp, primary key(id))"
-    ./bin/dbicpp -d $driver -o /dev/null -s "insert into users(name, created_at) values(?, now())" -b "Jimmy James" -n $rows
+    $exe -d $driver -s "drop table if exists users"
+    $exe -d $driver -s "create table users(id serial, name text, created_at timestamp, primary key(id))"
+    $exe -d $driver -s "insert into users(name, created_at) values(?, now())" -b "Jimmy James" -n $rows
   done
 
   echo "+ Done"
 }
 
 benchmark() {
+  timer=/usr/bin/time
   echo
   echo "+ Benchmarking mysql"
   echo
   for file in mysql mysql++ dbicpp; do
-    stats=`/usr/bin/time -f "user %U sys %S real %e" ./bin/$file -d mysql -s "$mysql_query" -n $runs -o /dev/null 2>&1`
+    stats=`$timer -f "user %U sys %S real %e" $dir/bin/$file -d mysql -b 1 -s "$mysql_query" -n $runs -o /dev/null 2>&1`
     printf "  * %-10s %s" $file "$stats"
     echo
   done
@@ -34,7 +38,7 @@ benchmark() {
   echo "+ Benchmarking postgresql"
   echo
   for file in pq dbicpp; do
-    stats=`/usr/bin/time -f "user %U sys %S real %e" ./bin/$file -s "$pgsql_query" -n $runs -o /dev/null 2>&1`
+    stats=`$timer -f "user %U sys %S real %e" $dir/bin/$file -d postgresql -b 1 -s "$pgsql_query" -n $runs -o /dev/null 2>&1`
     printf "  * %-10s %s" $file "$stats"
     echo
   done
@@ -51,7 +55,7 @@ usage() {
     -h print this help message.
     -r inserts this many rows into database (default 50)
     -n number of iterations (default 5000)
-    -w [setup|bench]
+    -w [setup|run]
   "
 }
 
@@ -68,6 +72,6 @@ done
 
 case $work in
   setup) setup;;
-  bench) benchmark;;
-  *)     usage; exit 1;;
+    run) benchmark;;
+      *) usage; exit 1;;
 esac

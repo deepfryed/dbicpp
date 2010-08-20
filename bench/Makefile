@@ -21,7 +21,7 @@ $(MYSQL_EXEC) : $(MYSQL_SRC) Makefile
 	g++ -O3 -o $(MYSQL_EXEC) $(MYSQL_SRC) -lmysqlclient
 
 $(MYSQLPP_EXEC) : $(MYSQLPP_SRC) Makefile
-	g++ -O3 -I/usr/include/mysql -o $(MYSQLPP_EXEC) $(MYSQLPP_SRC) -lmysqlpp
+	g++ -O3 -I/usr/include/mysql -o $(MYSQLPP_EXEC) $(MYSQLPP_SRC) -lmysqlpp -lpcrecpp
 
 clean: rm all
 
