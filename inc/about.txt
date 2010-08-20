@@ -24,6 +24,10 @@ Source:
 
 Clone the repository from <github at http://www.github.com/deepfryed/dbicpp> and have fun!
 
+Installing:
+
+Read the instructions on <github at http://github.com/deepfryed/dbicpp/blob/master/README.rdoc>.
+
 Reading:
 
 At the very least you need to know how <AbstractHandle>, <AbstractStatement>, <Handle>,
@@ -33,8 +37,6 @@ Examples:
 
 Checkout <Handle>, <IOStream> or <Reactor> for some quick examples. dbic++ source distribution
 also contains some examples that can be found under src/examples/.
-
-Compiling:
 
 To compile code that uses dbic++, use pkg-config to get the correct compiler flags.
 
