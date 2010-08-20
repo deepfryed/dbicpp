@@ -28,7 +28,7 @@ body {
 .ContentPage,
 .IndexPage,
 .FramedMenuPage {
-    background-color: #E8E8E8;
+    background-color: #f2f2f2;
     }
 .FramedContentPage,
 .FramedIndexPage,
@@ -315,7 +315,7 @@ blockquote {
 
     #MainTopic .CTitle {
         font-size: 20pt;
-        color: #FFFFFF; background-color: #7070C0;
+        color: #FFFFFF; background-color: #2D7F1F;
         padding: 10px 15px 10px 15px;
         border-width: 0 0 3px 0; border-color: #000000;
         margin-left: 0; margin-right: 0 }
@@ -817,3 +817,36 @@ blockquote {
 .prettyprint .atv { color: #080; }
 .prettyprint .dec { color: #606; }
 
+
+#github {
+  position: absolute;
+  right: 0; top: 0;
+  overflow: hidden;
+  width: 200px;
+  height: 200px;
+}
+
+.ribbon {
+  background-color: #000;
+  left: 42px; top: 40px;
+  position: relative;
+  font-size: 14px;
+  /* 45 deg ccw rotation */
+  -moz-transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+  /* shadow */
+  -moz-box-shadow: 0 0 1em #888;
+  -webkit-box-shadow: 0 0 1em #888;
+}
+.ribbon a {
+  border: 1px solid #faa;
+  color: #fff;
+  display: block;
+  font: bold 81.25% 'Helvetiva Neue', Helvetica, Arial, sans-serif;
+  margin: 0.05em 0 0.075em 0;
+  padding: 0.5em 3.5em;
+  text-align: center;
+  text-decoration: none;
+  /* shadow */
+  text-shadow: 0 0 0.5em #444;
+}

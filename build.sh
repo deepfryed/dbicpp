@@ -53,10 +53,14 @@ builddocs() {
 
   mv doc/files2/* doc/
   for file in `grep -lr "../../"    doc/dbicpp`;        do sed -i 's/\.\.\/\.\./../g' $file; done
-  for file in `grep -lr "../"       doc/dbicpp-h.html`; do sed -i 's/\.\.\///g'       $file; done
+  for file in `grep -lr "../"       doc/*.html`; do sed -i 's/\.\.\///g'       $file; done
 
   rm -f doc/index.html
-  cd doc && ln -s dbicpp-h.html index.html && cd ..
+  cd doc && ln -s about-txt.html index.html && cd ..
+
+  for file in `find doc/ -type f -name "*.html"`; do
+    echo '<div id="github"><div class="ribbon"><a href="http://github.com/deepfryed/dbicpp">GitHub</a></div></div>' >> $file
+  done
 }
 
 usage() {
