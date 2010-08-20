@@ -1,14 +1,14 @@
 = C++ database interface
 
-dbic++ is a Perl DBI style database client library abstraction which comes with support for
-the following databases.
+dbic++ is a database client library written in C++ which comes with support for the following databases,
 
 * PostgreSQL >= 8.0
 * MySQL      >= 5.0
 
-I'm working on drivers for the following, which will be available soon.
+Drivers for the following will be available soon.
 
 * SQLite >= 3
+* Oracle >= 9.2
 
 == Main Features
 
@@ -39,13 +39,13 @@ I'm working on drivers for the following, which will be available soon.
       st.execute();
 
       ResultRow r;
-      while (r = st.fetchRow())
+      while (st.read(r))
           cout << r.join("\t") << endl;
 
       // or you can do
       st.rewind();
       ResultRowHash rh;
-      while (rh = st.fetchRowHash())
+      while (st.read(rh))
           cout << rh["id"]    << "\t"
                << rh["name"]  << "\t"
                << rh["email"] << endl;
@@ -53,7 +53,7 @@ I'm working on drivers for the following, which will be available soon.
       st.finish();
   }
 
-See src/example.cc for more specific examples.
+See src/examples for more specific examples.
 
 === Ruby
 
@@ -164,8 +164,8 @@ be able to install the latest packages.
 A few c++ examples can be found under src/examples/ and once you finish building the
 binaries can be found under demo/
 
-    ./demo  [mysql|postgresql]
-    ./async [mysql|postgresql]
+    ./demo/demo  [mysql|postgresql]
+    ./demo/async [mysql|postgresql]
 
 === Populating MySQL time zone tables.
 
