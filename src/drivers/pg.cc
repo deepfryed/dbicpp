@@ -672,13 +672,13 @@ namespace dbi {
 
     bool PgHandle::commit() {
         execute("COMMIT");
-        tr_nesting--;
+        tr_nesting = 0;
         return true;
     };
 
     bool PgHandle::rollback() {
         execute("ROLLBACK");
-        tr_nesting--;
+        tr_nesting = 0;
         return true;
     };
 
