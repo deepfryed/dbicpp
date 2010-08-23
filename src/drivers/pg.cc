@@ -269,10 +269,12 @@ namespace dbi {
     }
 
     void PgStatement::cleanup() {
-        // TODO figure out if we need to deallocate statements.
         finish();
         if (_bytea)
             PQfreemem(_bytea);
+        // NOTE dont think we need to deallocate prepared statements. Just playing nice.
+        if (_cols > 0 && _uuid.length() == 32 && PQstatus(handle->conn) != CONNECTION_BAD)
+            handle->execute("deallocate \"" + _uuid + "\"");
     }
 
     string PgStatement::command() {
