@@ -58,7 +58,7 @@ builddocs() {
   cd doc && ln -s about-txt.html index.html && cd ..
 
   for file in `find doc/ -type f -name "*.html"`; do
-    echo '<div id="github"><div class="ribbon"><a href="http://github.com/deepfryed/dbicpp">GitHub</a></div></div>' >> $file
+    echo '<a href="http://github.com/deepfryed/dbicpp"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub" /></a>' >> $file
   done
 }
 
