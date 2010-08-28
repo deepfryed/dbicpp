@@ -125,10 +125,21 @@ namespace dbi {
         _trace_fd = fd;
     }
 
-    string formatParams(string sql, ResultRow &p) {
+    string join(vector<Param> &p, string delim) {
+        unsigned i;
+        stringstream out;
+        if (p.size() > 0) {
+            for (i = 0; i < p.size() - 1; i++)
+                out << p[i] << delim;
+            out << p[p.size()-1];
+        }
+        return out.str();
+    }
+
+    string formatParams(string sql, vector<Param> &p) {
         string message(sql);
 
-        if (p.size() > 0) message += " ~ " + p.join(", ");
+        if (p.size() > 0) message += " ~ " + join(p, ", ");
         return message;
     }
 

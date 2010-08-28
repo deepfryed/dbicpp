@@ -217,10 +217,10 @@ namespace dbi {
         uint execute();
 
         /*
-            Function: execute(ResultRow&)
+            Function: execute(vector<Param>&)
             See <AbstractStatement::execute(vector<Param>&)>
         */
-        uint execute(ResultRow &bind);
+        uint execute(vector<Param> &bind);
 
         /*
             Function: read(ResultRow&)

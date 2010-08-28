@@ -38,7 +38,7 @@ namespace dbi {
     void trace(bool flag, int fd);
 
     void logMessage(int fd, string msg);
-    string formatParams(string sql, ResultRow &p);
+    string formatParams(string sql, vector<Param> &p);
 
     string generateCompactUUID();
 }

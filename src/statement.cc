@@ -166,7 +166,7 @@ namespace dbi {
         return rc;
     }
 
-    uint Statement::execute(ResultRow &bind) {
+    uint Statement::execute(vector<Param> &bind) {
         if (_trace)
             logMessage(_trace_fd, formatParams(st->command(), bind));
         return st->execute(bind);
