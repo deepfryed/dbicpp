@@ -801,6 +801,7 @@ namespace dbi {
         if (PQputCopyEnd(conn, 0) != 1)
                 throw RuntimeError(PQerrorMessage(conn));
         PGresult *res = PQgetResult(conn);
+        checkResult(res, sql, true);
         nrows = atol(PQcmdTuples(res));
         PQclear(res);
         return nrows;
