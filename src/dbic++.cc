@@ -163,7 +163,7 @@ namespace dbi {
         n += write(fd, "\n", 1);
     }
 
-    IOStream::IOStream(const char *v, ulong l) {
+    IOStream::IOStream(const char *v, uint64_t l) {
         eof  = false;
         data = string(v, l);
         loc  = 0;
@@ -173,7 +173,7 @@ namespace dbi {
         data += string(v);
     }
 
-    void IOStream::write(const char *v, ulong l) {
+    void IOStream::write(const char *v, uint64_t l) {
         data += string(v, l);
     }
 
@@ -196,7 +196,7 @@ namespace dbi {
         }
     }
 
-    uint IOStream::read(char *buffer, uint max) {
+    uint32_t IOStream::read(char *buffer, uint32_t max) {
         if (loc < data.length()) {
             max = data.length() - loc > max ? max : data.length() - loc;
             memcpy(buffer, data.data() + loc, max);
@@ -210,14 +210,14 @@ namespace dbi {
         data = "";
     }
 
-    IOFileStream::IOFileStream(const char *path, uint mode) {
+    IOFileStream::IOFileStream(const char *path, uint32_t mode) {
         fd = open(path, mode);
         if (fd == -1) throw RuntimeError(strerror(errno));
     }
 
     string& IOFileStream::read() {
         char buffer[16384];
-        uint count;
+        uint32_t count;
         count = ::read(fd, buffer, 16384);
         if (count > 0) {
             data = string(buffer, count);
@@ -227,7 +227,7 @@ namespace dbi {
             return empty;
     }
 
-    uint IOFileStream::read(char *buffer, uint len) {
+    uint32_t IOFileStream::read(char *buffer, uint32_t len) {
         len = ::read(fd, buffer, len);
         return len;
     }

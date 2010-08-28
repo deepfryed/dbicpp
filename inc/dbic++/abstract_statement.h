@@ -26,7 +26,7 @@ namespace dbi {
             Returns:
             rows - number of rows affected or returned.
         */
-        virtual uint execute() = 0;
+        virtual uint32_t execute() = 0;
 
         /*
             Function: execute(vector<Param>&)
@@ -39,7 +39,7 @@ namespace dbi {
             Returns:
             rows - number of rows affected or returned.
         */
-        virtual uint execute(vector<Param> &bind) = 0;
+        virtual uint32_t execute(vector<Param> &bind) = 0;
     };
 }
 

@@ -1,3 +1,13 @@
+dbic++ (0.2.7) lucid; urgency=medium
+
+  * c99 types.
+  * error check after #write.
+  * cleanup & docs.
+  * deallocate prepared statements in destructor.
+  * transaction nesting fixes.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Sun, 29 Aug 2010 07:40:00 +1000
+
 dbic++ (0.2.6) lucid; urgency=medium
 
   * Renamed methods.

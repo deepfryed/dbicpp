@@ -28,12 +28,12 @@ namespace dbi {
         delete h;
     }
 
-    uint Handle::execute(string sql) {
+    uint32_t Handle::execute(string sql) {
         if (_trace) logMessage(_trace_fd, sql);
         return h->execute(sql);
     }
 
-    uint Handle::execute(string sql, vector<Param> &bind) {
+    uint32_t Handle::execute(string sql, vector<Param> &bind) {
         if (_trace) logMessage(_trace_fd, sql);
         return h->execute(sql, bind);
     }
@@ -79,11 +79,11 @@ namespace dbi {
         return trx;
     }
 
-    void* Handle::call(string name, void* arg, ulong l) {
+    void* Handle::call(string name, void* arg, uint64_t l) {
         return h->call(name, arg, l);
     }
 
-    ulong Handle::write(string table, FieldSet &fields, IO* io) {
+    uint64_t Handle::write(string table, FieldSet &fields, IO* io) {
         return h->write(table, fields, io);
     }
 

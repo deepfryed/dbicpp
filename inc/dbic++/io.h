@@ -23,17 +23,17 @@ namespace dbi {
         public:
         IO() {}
         /*
-            Constructor: IO(const char*, ulong)
+            Constructor: IO(const char*, uint64_t)
             Initializes an IO object with data.
 
             Parameters:
             data - char pointer to string data (you cannot use this api to load blob)
-            len  - ulong value specifying the length.
+            len  - uint64_t value specifying the length.
         */
-        IO(const char *data, ulong len) {}
+        IO(const char *data, uint64_t len) {}
 
         virtual string &read(void) = 0;
-        virtual uint read(char *buffer, uint) = 0;
+        virtual uint32_t read(char *buffer, uint32_t) = 0;
 
         /*
             Function: write(const char*)
@@ -45,14 +45,14 @@ namespace dbi {
         virtual void write(const char *data) = 0;
 
         /*
-            Function: write(const char*, ulong)
+            Function: write(const char*, uint64_t)
             Appends the given data to the io object.
 
             Parameters:
             data - char pointer to string data (you cannot use this api to load blob)
-            len  - ulong value specifying the length.
+            len  - uint64_t value specifying the length.
         */
-        virtual void write(const char *data, ulong len) = 0;
+        virtual void write(const char *data, uint64_t len) = 0;
 
         /*
             Function: truncate

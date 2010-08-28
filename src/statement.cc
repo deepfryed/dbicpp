@@ -40,7 +40,7 @@ namespace dbi {
         }
     }
 
-    uint Statement::rows() {
+    uint32_t Statement::rows() {
         return st->rows();
     }
 
@@ -137,19 +137,19 @@ namespace dbi {
         return st->fields();
     }
 
-    uint Statement::columns() {
+    uint32_t Statement::columns() {
         return st->columns();
     }
 
-    unsigned char* Statement::read(uint r, uint c, ulong *l = 0) {
+    unsigned char* Statement::read(uint32_t r, uint32_t c, uint64_t *l = 0) {
         return st->read(r, c, l);
     }
 
-    unsigned char* Statement::operator()(uint r, uint c) {
+    unsigned char* Statement::operator()(uint32_t r, uint32_t c) {
         return st->read(r, c, 0);
     }
 
-    uint Statement::tell() {
+    uint32_t Statement::tell() {
         return st->tell();
     }
 
@@ -157,8 +157,8 @@ namespace dbi {
         return st->types();
     }
 
-    uint Statement::execute() {
-        uint rc;
+    uint32_t Statement::execute() {
+        uint32_t rc;
         if (_trace)
             logMessage(_trace_fd, formatParams(st->command(), params));
         rc = st->execute(params);
@@ -166,14 +166,14 @@ namespace dbi {
         return rc;
     }
 
-    uint Statement::execute(vector<Param> &bind) {
+    uint32_t Statement::execute(vector<Param> &bind) {
         if (_trace)
             logMessage(_trace_fd, formatParams(st->command(), bind));
         return st->execute(bind);
     }
 
-    uint Statement::operator,(dbi::execute const &e) {
-        uint rc;
+    uint32_t Statement::operator,(dbi::execute const &e) {
+        uint32_t rc;
         if (_trace)
             logMessage(_trace_fd, formatParams(st->command(), params));
         rc = st->execute(params);
@@ -181,7 +181,7 @@ namespace dbi {
         return rc;
     }
 
-    ulong Statement::lastInsertID() {
+    uint64_t Statement::lastInsertID() {
         return st->lastInsertID();
     }
 
@@ -189,7 +189,7 @@ namespace dbi {
         st->rewind();
     }
 
-    void Statement::seek(uint r) {
+    void Statement::seek(uint32_t r) {
         st->seek(r);
     }
 }

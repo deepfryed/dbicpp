@@ -50,15 +50,15 @@ namespace dbi {
     */
     Param PARAM(const dbi::null &e);
     /*
-        Function: PARAM(unsigned char*, ulong)
+        Function: PARAM(unsigned char*, uint64_t)
         Creates a Param given a string that may not be '\0' terminated.
     */
-    Param PARAM(unsigned char* data, ulong l);
+    Param PARAM(unsigned char* data, uint64_t l);
     /*
-        Function: PARAM_BINARY(unsigned char*, ulong)
+        Function: PARAM_BINARY(unsigned char*, uint64_t)
         Creates a Param given binary data.
     */
-    Param PARAM_BINARY(unsigned char* data, ulong l);
+    Param PARAM_BINARY(unsigned char* data, uint64_t l);
 
     ostream& operator<<(ostream &out, Param &p);
 

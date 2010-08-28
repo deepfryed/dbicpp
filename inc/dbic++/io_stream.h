@@ -50,7 +50,7 @@ namespace dbi {
     class IOStream : public IO {
         private:
         bool eof;
-        uint loc;
+        uint32_t loc;
         protected:
         string empty;
         string data;
@@ -58,10 +58,10 @@ namespace dbi {
         IOStream() { eof = false; loc = 0; }
 
         /*
-            Constructor: IOStream(const char*, ulong)
-            See <IO::IO(const char*, ulong)>
+            Constructor: IOStream(const char*, uint64_t)
+            See <IO::IO(const char*, uint64_t)>
         */
-        IOStream(const char *, ulong);
+        IOStream(const char *, uint64_t);
 
         /*
             Function: write(const char*)
@@ -70,10 +70,10 @@ namespace dbi {
         void write(const char *);
 
         /*
-            Function: write(const char*, ulong)
-            See <IO::write(const char*, ulong)>
+            Function: write(const char*, uint64_t)
+            See <IO::write(const char*, uint64_t)>
         */
-        void write(const char *, ulong);
+        void write(const char *, uint64_t);
 
         /*
             Function: writef(const char *fmt, ...)
@@ -91,7 +91,7 @@ namespace dbi {
         void truncate(void);
 
         string &read(void);
-        uint read(char *buffer, uint);
+        uint32_t read(char *buffer, uint32_t);
     };
 }
 

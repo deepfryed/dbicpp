@@ -19,7 +19,7 @@ namespace dbi {
             Returns:
             rows - rows in result.
         */
-        virtual uint rows() = 0;
+        virtual uint32_t rows() = 0;
 
         /*
             Function: columns
@@ -28,7 +28,7 @@ namespace dbi {
             Returns:
             columns - columns in result.
         */
-        virtual uint columns() = 0;
+        virtual uint32_t columns() = 0;
 
         /*
             Function: fields
@@ -64,13 +64,13 @@ namespace dbi {
         virtual bool read(ResultRowHash& row) = 0;
 
         /*
-            Function: read(uint, uint, ulong*)
+            Function: read(uint32_t, uint32_t, uint64_t*)
             Reads a field at a given position from result.
 
             Parameters:
             rowno - row number (0 - rows()-1)
             colno - column number (0 - columns()-1)
-            len   - pointer to ulong that is populated with field length if provided.
+            len   - pointer to uint64_t that is populated with field length if provided.
 
             Returns:
             char* - pointer to data value or NULL if it was a NULL value.
@@ -78,7 +78,7 @@ namespace dbi {
             *Important*: The pointer returned should not be freed and the address may be
                         reused in subsequent calls.
         */
-        virtual unsigned char* read(uint r, uint c, ulong* len) = 0;
+        virtual unsigned char* read(uint32_t r, uint32_t c, uint64_t* len) = 0;
 
         /*
             Function: finish
@@ -98,7 +98,7 @@ namespace dbi {
             Returns:
             rowno - row number.
         */
-        virtual uint tell() = 0;
+        virtual uint32_t tell() = 0;
 
         /*
             Function: seek
@@ -107,7 +107,7 @@ namespace dbi {
             Parameters:
             rowno - row number.
         */
-        virtual void seek(uint) = 0;
+        virtual void seek(uint32_t) = 0;
 
         /*
             Function: rewind
@@ -120,7 +120,7 @@ namespace dbi {
             Returns the last numeric value automatically inserted.
 
             Returns:
-            id - ulong value.
+            id - uint64_t value.
 
             *Important*: You need to add a RETURNING clause when using PostgreSQL.
 
@@ -132,7 +132,7 @@ namespace dbi {
                 cout << "inserted row with id: " << stmt.lastInsertID() << endl;
             (end)
         */
-        virtual ulong lastInsertID() = 0;
+        virtual uint64_t lastInsertID() = 0;
 
         /*
             Function: types

@@ -32,7 +32,7 @@ namespace dbi {
             Returns:
             rows - number of rows affected or returned.
         */
-        virtual uint execute(string sql) = 0;
+        virtual uint32_t execute(string sql) = 0;
 
         /*
             Function: execute(string, vector<Param>&)
@@ -45,7 +45,7 @@ namespace dbi {
             Returns:
             rows - number of rows affected or returned.
         */
-        virtual uint execute(string sql, vector<Param> &bind) = 0;
+        virtual uint32_t execute(string sql, vector<Param> &bind) = 0;
 
         /*
             Function: begin
@@ -110,7 +110,7 @@ namespace dbi {
         */
         virtual bool rollback(string name) = 0;
 
-        virtual void* call(string name, void*, ulong) = 0;
+        virtual void* call(string name, void*, uint64_t) = 0;
 
         /*
             Function: close
@@ -146,7 +146,7 @@ namespace dbi {
             Returns:
             rows   - The number of rows written to database.
         */
-        virtual ulong write(string table, FieldSet &fields, IO*) = 0;
+        virtual uint64_t write(string table, FieldSet &fields, IO*) = 0;
 
         /*
             Function: results

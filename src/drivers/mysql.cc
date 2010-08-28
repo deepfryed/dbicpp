@@ -86,7 +86,7 @@ namespace dbi {
             return -1;
     }
 
-    int LOCAL_INFILE_READ(void *ptr, char *buffer, uint len) {
+    int LOCAL_INFILE_READ(void *ptr, char *buffer, uint32_t len) {
         len = ((IO*)ptr)->read(buffer, len);
         return len;
     }
@@ -100,7 +100,7 @@ namespace dbi {
         }
     }
 
-    int LOCAL_INFILE_ERROR(void *ptr, char *error, uint len) {
+    int LOCAL_INFILE_ERROR(void *ptr, char *error, uint32_t len) {
         strcpy(error, ptr ? "Unknown error while bulk loading data" : "Unable to find resource to copy data.");
         return CR_UNKNOWN_ERROR;
     }
@@ -135,7 +135,7 @@ namespace dbi {
             deallocateBindParams();
         }
 
-        void reallocateBindParam(int c, ulong length) {
+        void reallocateBindParam(int c, uint64_t length) {
             if (!ro_buffer) {
                 delete [] (unsigned char*)params[c].buffer;
                 params[c].buffer  = (void*)new unsigned char[length];
@@ -150,7 +150,7 @@ namespace dbi {
 
             if (!ro_buffer) {
                 for (int i = 0; i < count; i++) {
-                    params[i].length  = new ulong;
+                    params[i].length  = new uint64_t;
                     params[i].is_null = new char;
                     params[i].buffer  = (void*)new unsigned char[__MYSQL_BIND_BUFFER_LEN];
                     params[i].buffer_length = __MYSQL_BIND_BUFFER_LEN;
@@ -181,8 +181,8 @@ namespace dbi {
         MYSQL_STMT *_stmt;
         MySqlBind *_result;
         vector<string> _rsfields;
-        vector<ulong> _buffer_lengths;
-        uint _rowno, _rows, _cols;
+        vector<uint64_t> _buffer_lengths;
+        uint32_t _rowno, _rows, _cols;
         vector<int> _rstypes;
         bool _fvempty;
 
@@ -190,7 +190,7 @@ namespace dbi {
 
         MySqlHandle *handle;
         void init();
-        uint bindResultAndGetAffectedRows();
+        uint32_t bindResultAndGetAffectedRows();
         void boom(const char*);
 
         public:
@@ -199,58 +199,58 @@ namespace dbi {
         void cleanup();
         string command();
         void checkReady(string m);
-        uint rows();
-        uint execute();
-        uint execute(vector<Param> &bind);
-        ulong lastInsertID();
+        uint32_t rows();
+        uint32_t execute();
+        uint32_t execute(vector<Param> &bind);
+        uint64_t lastInsertID();
         bool read(ResultRow &r);
         bool read(ResultRowHash &r);
         vector<string> fields();
-        uint columns();
+        uint32_t columns();
         bool finish();
-        unsigned char* read(uint r, uint c, ulong *l = 0);
-        uint tell();
+        unsigned char* read(uint32_t r, uint32_t c, uint64_t *l = 0);
+        uint32_t tell();
         bool consumeResult();
         void prepareResult();
         void rewind();
         vector<int>& types();
-        void seek(uint);
+        void seek(uint32_t);
     };
 
 
     class MySqlResultSet : public AbstractResultSet {
         private:
         MYSQL_ROW _rowdata;
-        ulong* _rowdata_lengths;
+        uint64_t* _rowdata_lengths;
         protected:
         MySqlHandle *handle;
         MYSQL_RES *result;
         void fetchMeta(MYSQL_RES* result);
         private:
-        uint _rows;
-        uint _cols;
-        uint _rowno;
+        uint32_t _rows;
+        uint32_t _cols;
+        uint32_t _rowno;
         vector<string> _rsfields;
         vector<int> _rstypes;
         public:
         MySqlResultSet(MySqlHandle *h);
         MySqlResultSet(MySqlHandle *h, MYSQL_RES *);
         void checkReady(string m);
-        uint rows();
-        uint columns();
+        uint32_t rows();
+        uint32_t columns();
         vector<string> fields();
         bool read(ResultRow &r);
         bool read(ResultRowHash &r);
         bool finish();
-        unsigned char* read(uint r, uint c, ulong *l = 0);
-        uint tell();
+        unsigned char* read(uint32_t r, uint32_t c, uint64_t *l = 0);
+        uint32_t tell();
         void cleanup();
-        ulong lastInsertID();
+        uint64_t lastInsertID();
         bool consumeResult();
         void prepareResult();
         void rewind();
         vector<int>& types();
-        void seek(uint);
+        void seek(uint32_t);
     };
 
 
@@ -274,8 +274,8 @@ namespace dbi {
         MySqlHandle(string user, string pass, string dbname, string host, string port);
         ~MySqlHandle();
         void cleanup();
-        uint execute(string sql);
-        uint execute(string sql, vector<Param> &bind);
+        uint32_t execute(string sql);
+        uint32_t execute(string sql, vector<Param> &bind);
         int socket();
         MySqlResultSet* aexecute(string sql, vector<Param> &bind);
         AbstractResultSet* results();
@@ -289,10 +289,10 @@ namespace dbi {
         bool begin(string name);
         bool commit(string name);
         bool rollback(string name);
-        void* call(string name, void* args, ulong l);
+        void* call(string name, void* args, uint64_t l);
         bool close();
         void reconnect();
-        ulong write(string table, FieldSet &fields, IO*);
+        uint64_t write(string table, FieldSet &fields, IO*);
         void setTimeZoneOffset(int, int);
         void setTimeZone(char *name);
         string escape(string);
@@ -318,8 +318,8 @@ namespace dbi {
         _uuid   = generateCompactUUID();
     }
 
-    uint MySqlStatement::bindResultAndGetAffectedRows() {
-        uint i;
+    uint32_t MySqlStatement::bindResultAndGetAffectedRows() {
+        uint32_t i;
         MYSQL_RES *res = mysql_stmt_result_metadata(_stmt);
 
         if (res) {
@@ -361,7 +361,7 @@ namespace dbi {
         if (mysql_stmt_prepare(_stmt, query.c_str(), query.length()) != 0)
             THROW_MYSQL_STMT_ERROR(_stmt);
 
-        _cols   = (uint)mysql_stmt_field_count(_stmt);
+        _cols   = (uint32_t)mysql_stmt_field_count(_stmt);
 
         _result = new MySqlBind(_cols);
 
@@ -421,11 +421,11 @@ namespace dbi {
             throw RuntimeError((m + " cannot be called yet. call execute() first").c_str());
     }
 
-    uint MySqlStatement::rows() {
+    uint32_t MySqlStatement::rows() {
         return _rows;
     }
 
-    uint MySqlStatement::execute() {
+    uint32_t MySqlStatement::execute() {
         int failed, tries;
         finish();
 
@@ -446,7 +446,7 @@ namespace dbi {
         return _rows;
     }
 
-    uint MySqlStatement::execute(vector<Param> &bind) {
+    uint32_t MySqlStatement::execute(vector<Param> &bind) {
         int failed, tries;
         finish();
 
@@ -474,13 +474,13 @@ namespace dbi {
         return _rows;
     }
 
-    ulong MySqlStatement::lastInsertID() {
+    uint64_t MySqlStatement::lastInsertID() {
         return mysql_stmt_insert_id(_stmt);
     }
 
     bool MySqlStatement::read(ResultRow &row) {
         int c, rc;
-        ulong length;
+        uint64_t length;
         row.clear();
         if (!_stmt->bind_result_done) return false;
 
@@ -514,7 +514,7 @@ namespace dbi {
 
     bool MySqlStatement::read(ResultRowHash &rowhash) {
         int c, rc;
-        ulong length;
+        uint64_t length;
         rowhash.clear();
         if (!_stmt->bind_result_done) return false;
 
@@ -552,7 +552,7 @@ namespace dbi {
         return _rsfields;
     }
 
-    uint MySqlStatement::columns() {
+    uint32_t MySqlStatement::columns() {
         return _cols;
     }
 
@@ -565,14 +565,14 @@ namespace dbi {
         return true;
     }
 
-    void MySqlStatement::seek(uint r) {
+    void MySqlStatement::seek(uint32_t r) {
         mysql_stmt_data_seek(_stmt, r);
         _rowno = r;
     }
 
-    unsigned char* MySqlStatement::read(uint r, uint c, ulong *l) {
+    unsigned char* MySqlStatement::read(uint32_t r, uint32_t c, uint64_t *l) {
         int rc;
-        ulong length;
+        uint64_t length;
 
         if (!_stmt->bind_result_done || r >= _rows) return 0;
 
@@ -597,7 +597,7 @@ namespace dbi {
         return (unsigned char*)_result->params[c].buffer;
     }
 
-    uint MySqlStatement::tell() {
+    uint32_t MySqlStatement::tell() {
         return _rowno;
     }
 
@@ -655,11 +655,11 @@ namespace dbi {
             throw RuntimeError((m + " cannot be called yet. ").c_str());
     }
 
-    uint MySqlResultSet::rows() {
+    uint32_t MySqlResultSet::rows() {
         return _rows;
     }
 
-    uint MySqlResultSet::columns() {
+    uint32_t MySqlResultSet::columns() {
         return _cols;
     }
 
@@ -675,7 +675,7 @@ namespace dbi {
         if (_rowno < _rows) {
             _rowno++;
             MYSQL_ROW rowdata = mysql_fetch_row(result);
-            ulong* lengths = mysql_fetch_lengths(result);
+            uint64_t* lengths = mysql_fetch_lengths(result);
             for (n = 0; n < _cols; n++)
                 row.push_back(rowdata[n] == 0 ? PARAM(null()) : PARAM((unsigned char*)rowdata[n], lengths[n]));
 
@@ -693,7 +693,7 @@ namespace dbi {
         if (_rowno < _rows) {
             _rowno++;
             MYSQL_ROW rowdata = mysql_fetch_row(result);
-            ulong* lengths = mysql_fetch_lengths(result);
+            uint64_t* lengths = mysql_fetch_lengths(result);
             for (n = 0; n < _cols; n++)
                 rowhash[_rsfields[n]] = (
                     rowdata[n] == 0 ? PARAM(null()) : PARAM((unsigned char*)rowdata[n], lengths[n])
@@ -711,12 +711,12 @@ namespace dbi {
         return true;
     }
 
-    void MySqlResultSet::seek(uint r) {
+    void MySqlResultSet::seek(uint32_t r) {
         mysql_data_seek(result, r);
         _rowno = r;
     }
 
-    unsigned char* MySqlResultSet::read(uint r, uint c, ulong *l) {
+    unsigned char* MySqlResultSet::read(uint32_t r, uint32_t c, uint64_t *l) {
         if (!result || r >= _rows) return 0;
         if (_rowno != r || (r == 0 && c == 0)) {
             _rowno = r;
@@ -729,7 +729,7 @@ namespace dbi {
         return (unsigned char*)_rowdata[c];
     }
 
-    uint MySqlResultSet::tell() {
+    uint32_t MySqlResultSet::tell() {
         return _rowno;
     }
 
@@ -737,7 +737,7 @@ namespace dbi {
         finish();
     }
 
-    ulong MySqlResultSet::lastInsertID() {
+    uint64_t MySqlResultSet::lastInsertID() {
         return mysql_insert_id(handle->conn);
     }
 
@@ -817,11 +817,11 @@ namespace dbi {
     MySqlHandle::MySqlHandle(string user, string pass, string dbname, string host, string port) {
         char no      = 0;
         char yes     = 1;
-        uint timeout = 120;
+        uint32_t timeout = 120;
         tr_nesting   = 0;
         _result      = 0;
         _statement   = 0;
-        uint _port   = atoi(port.c_str());
+        uint32_t _port   = atoi(port.c_str());
 
         conn  = mysql_init(0);
         _db   = dbname;
@@ -869,7 +869,7 @@ namespace dbi {
         conn       = 0;
     }
 
-    uint MySqlHandle::execute(string sql) {
+    uint32_t MySqlHandle::execute(string sql) {
         int rows;
         int failed, tries;
 
@@ -899,7 +899,7 @@ namespace dbi {
         return rows;
     }
 
-    uint MySqlHandle::execute(string sql, vector<Param> &bind) {
+    uint32_t MySqlHandle::execute(string sql, vector<Param> &bind) {
         if (_statement) delete _statement;
         if (_result) mysql_free_result(_result);
         _result    = 0;
@@ -989,7 +989,7 @@ namespace dbi {
         return true;
     };
 
-    void* MySqlHandle::call(string name, void* args, ulong l) {
+    void* MySqlHandle::call(string name, void* args, uint64_t l) {
         return NULL;
     }
 
@@ -1031,7 +1031,7 @@ namespace dbi {
         throw RuntimeError(errormsg);
     }
 
-    ulong MySqlHandle::write(string table, FieldSet &fields, IO* io) {
+    uint64_t MySqlHandle::write(string table, FieldSet &fields, IO* io) {
         int fd;
         char buffer[4096];
         string filename = generateCompactUUID();
@@ -1049,7 +1049,7 @@ namespace dbi {
             boom(buffer);
         }
 
-        return (ulong) mysql_affected_rows(conn);
+        return (uint64_t) mysql_affected_rows(conn);
     }
 
     string MySqlHandle::escape(string value) {

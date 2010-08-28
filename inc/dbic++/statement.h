@@ -70,13 +70,13 @@ namespace dbi {
             Function: rows
             See <AbstractResultSet::rows()>
         */
-        uint rows();
+        uint32_t rows();
 
         /*
             Function: columns
             See <AbstractResultSet::columns()>
         */
-        uint columns();
+        uint32_t columns();
 
         /*
             Function: fields
@@ -204,7 +204,7 @@ namespace dbi {
                 stmt % 1L, "jon%", execute();
             (end)
         */
-        uint       operator,(dbi::execute const &);
+        uint32_t       operator,(dbi::execute const &);
 
         /*
             Function: execute
@@ -214,13 +214,13 @@ namespace dbi {
             Returns:
             rows - The number of rows affected or returned.
         */
-        uint execute();
+        uint32_t execute();
 
         /*
             Function: execute(vector<Param>&)
             See <AbstractStatement::execute(vector<Param>&)>
         */
-        uint execute(vector<Param> &bind);
+        uint32_t execute(vector<Param> &bind);
 
         /*
             Function: read(ResultRow&)
@@ -235,28 +235,28 @@ namespace dbi {
         bool read(ResultRowHash&);
 
         /*
-            Function: read(uint, uint, ulong*)
-            See <AbstractResultSet::read(uint, uint, ulong*)>
+            Function: read(uint32_t, uint32_t, uint64_t*)
+            See <AbstractResultSet::read(uint32_t, uint32_t, uint64_t*)>
         */
-        unsigned char* read(uint r, uint c, ulong*);
+        unsigned char* read(uint32_t r, uint32_t c, uint64_t*);
 
         /*
-            Operator: (uint, uint)
-            Alias for read(uint, uint)
+            Operator: (uint32_t, uint32_t)
+            Alias for read(uint32_t, uint32_t)
         */
-        unsigned char* operator()(uint r, uint c);
+        unsigned char* operator()(uint32_t r, uint32_t c);
 
         /*
             Function: tell
             See <AbstractResultSet::tell()>
         */
-        uint tell();
+        uint32_t tell();
 
         /*
             Function: seek
             See <AbstractResultSet::seek()>
         */
-        void seek(uint);
+        void seek(uint32_t);
 
         /*
             Function: rewind
@@ -280,7 +280,7 @@ namespace dbi {
             Function: lastInsertID
             See <AbstractResultSet::lastInsertID()>
         */
-        ulong lastInsertID();
+        uint64_t lastInsertID();
     };
 }
 

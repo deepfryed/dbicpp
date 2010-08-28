@@ -92,13 +92,13 @@ namespace dbi {
             Function: execute(string)
             See <AbstractHandle::execute(string)>
         */
-        uint execute(string sql);
+        uint32_t execute(string sql);
 
         /*
             Function: execute(string, vector<Param>&)
             See <AbstractHandle::execute(string, vector<Param>&)>
         */
-        uint execute(string sql, vector<Param> &bind);
+        uint32_t execute(string sql, vector<Param> &bind);
 
         /*
             Function: prepare(string)
@@ -182,7 +182,7 @@ namespace dbi {
             Function: write(string, FieldSet&, IO*)
             See <AbstractHandle::write(string, FieldSet&, IO*)>
         */
-        ulong write(string table, FieldSet &fields, IO*);
+        uint64_t write(string table, FieldSet &fields, IO*);
 
         /*
             Function: results
@@ -208,7 +208,7 @@ namespace dbi {
         */
         string escape(string);
 
-        void* call(string name, void*, ulong);
+        void* call(string name, void*, uint64_t);
         friend class Statement;
     };
 }

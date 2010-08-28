@@ -17,11 +17,7 @@
 #include <dlfcn.h>
 #include <pcrecpp.h>
 #include <uuid/uuid.h>
-
-#undef  uint
-#undef  ulong
-#define uint  unsigned int
-#define ulong unsigned long
+#include <stdint.h>
 
 #define DBI_VERSION      0.2.6
 

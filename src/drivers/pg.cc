@@ -53,7 +53,7 @@ namespace dbi {
         *param_l = new int[bind.size()];
         *param_f = new int[bind.size()];
 
-        for (uint i = 0; i < bind.size(); i++) {
+        for (uint32_t i = 0; i < bind.size(); i++) {
             bool isnull = bind[i].isnull;
             (*param_v)[i] = isnull ? 0 : bind[i].value.data();
             (*param_l)[i] = isnull ? 0 : bind[i].value.length();
@@ -74,7 +74,7 @@ namespace dbi {
         PGresult *_result;
         vector<string> _rsfields;
         vector<int> _rstypes;
-        uint _rowno, _rows, _cols;
+        uint32_t _rowno, _rows, _cols;
         bool _async;
         unsigned char *_bytea;
 
@@ -84,7 +84,7 @@ namespace dbi {
         PGresult* prepare();
         void boom(const char *);
         void fetchMeta(PGresult *);
-        unsigned char* unescapeBytea(int, int, ulong*);
+        unsigned char* unescapeBytea(int, int, uint64_t*);
 
         public:
         PgStatement();
@@ -94,22 +94,22 @@ namespace dbi {
         void cleanup();
         string command();
         void checkReady(string);
-        uint rows();
-        uint columns();
-        uint execute();
-        uint execute(vector<Param>&);
+        uint32_t rows();
+        uint32_t columns();
+        uint32_t execute();
+        uint32_t execute(vector<Param>&);
         bool consumeResult();
         void prepareResult();
-        ulong lastInsertID();
+        uint64_t lastInsertID();
         bool read(ResultRow &r);
         bool read(ResultRowHash &r);
-        unsigned char* read(uint r, uint c, ulong *l = 0);
+        unsigned char* read(uint32_t r, uint32_t c, uint64_t *l = 0);
         vector<string> fields();
         bool finish();
-        uint tell();
+        uint32_t tell();
         void rewind();
         vector<int>& types();
-        void seek(uint);
+        void seek(uint32_t);
     };
 
     class PgHandle : public AbstractHandle {
@@ -125,8 +125,8 @@ namespace dbi {
         PgHandle(string user, string pass, string dbname, string h, string p);
         ~PgHandle();
         void cleanup();
-        uint execute(string sql);
-        uint execute(string sql, vector<Param> &bind);
+        uint32_t execute(string sql);
+        uint32_t execute(string sql, vector<Param> &bind);
         int socket();
         PgStatement* aexecute(string sql, vector<Param> &bind);
         void initAsync();
@@ -139,11 +139,11 @@ namespace dbi {
         bool begin(string name);
         bool commit(string name);
         bool rollback(string name);
-        void* call(string name, void* args, ulong l);
+        void* call(string name, void* args, uint64_t l);
         bool close();
         void reconnect(bool barf = false);
         int checkResult(PGresult*, string, bool barf = false);
-        ulong write(string table, FieldSet &fields, IO*);
+        uint64_t write(string table, FieldSet &fields, IO*);
         AbstractResultSet* results();
         void setTimeZoneOffset(int, int);
         void setTimeZone(char *);
@@ -244,7 +244,7 @@ namespace dbi {
     }
 
     void PgStatement::fetchMeta(PGresult *result) {
-        _cols  = (uint)PQnfields(result);
+        _cols  = (uint32_t)PQnfields(result);
 
         for (int i = 0; i < (int)_cols; i++)
             _rsfields.push_back(PQfname(result, i));
@@ -286,12 +286,12 @@ namespace dbi {
             throw RuntimeError((m + " cannot be called yet. call execute() first").c_str());
     }
 
-    uint PgStatement::rows() {
+    uint32_t PgStatement::rows() {
         return _rows;
     }
 
-    uint PgStatement::execute() {
-        uint ctuples = 0;
+    uint32_t PgStatement::execute() {
+        uint32_t ctuples = 0;
         int done, tries;
 
         finish();
@@ -313,15 +313,15 @@ namespace dbi {
                 done = handle->checkResult(_result, _sql);
                 if (!done) prepare();
             }
-            _rows   = (uint)PQntuples(_result);
-            ctuples = (uint)atoi(PQcmdTuples(_result));
+            _rows   = (uint32_t)PQntuples(_result);
+            ctuples = (uint32_t)atoi(PQcmdTuples(_result));
         }
 
         return ctuples > 0 ? ctuples : _rows;
     }
 
-    uint PgStatement::execute(vector<Param> &bind) {
-        uint ctuples = 0;
+    uint32_t PgStatement::execute(vector<Param> &bind) {
+        uint32_t ctuples = 0;
         int *param_l, *param_f, done, tries;
         const char **param_v;
 
@@ -362,8 +362,8 @@ namespace dbi {
             delete []param_l;
             delete []param_f;
 
-            _rows   = (uint)PQntuples(_result);
-            ctuples = (uint)atoi(PQcmdTuples(_result));
+            _rows   = (uint32_t)PQntuples(_result);
+            ctuples = (uint32_t)atoi(PQcmdTuples(_result));
         }
 
         return ctuples > 0 ? ctuples : _rows;
@@ -377,32 +377,32 @@ namespace dbi {
     void PgStatement::prepareResult() {
         PGresult *response;
         _result = PQgetResult(handle->conn);
-        _rows   = (uint)PQntuples(_result);
+        _rows   = (uint32_t)PQntuples(_result);
         while ((response = PQgetResult(handle->conn))) PQclear(response);
         handle->checkResult(_result, _sql, true);
     }
 
-    ulong PgStatement::lastInsertID() {
+    uint64_t PgStatement::lastInsertID() {
         ResultRow r;
         return read(r) && r.size() > 0 ? atol(r[0].value.c_str()) : 0;
     }
 
-    unsigned char* PgStatement::unescapeBytea(int r, int c, ulong *l) {
+    unsigned char* PgStatement::unescapeBytea(int r, int c, uint64_t *l) {
         size_t len;
         if (_bytea) PQfreemem(_bytea);
         _bytea = PQunescapeBytea((unsigned char *)PQgetvalue(_result, r, c), &len);
-        *l = (ulong)len;
+        *l = (uint64_t)len;
         return _bytea;
     }
 
     bool PgStatement::read(ResultRow &row) {
-        ulong len;
+        uint64_t len;
         unsigned char *data;
 
         row.clear();
 
         if (_rowno < _rows) {
-            for (uint i = 0; i < _cols; i++) {
+            for (uint32_t i = 0; i < _cols; i++) {
                 if (PQgetisnull(_result, _rowno, i))
                     row.push_back(PARAM(null()));
                 else if (_rstypes[i] != DBI_TYPE_BLOB)
@@ -420,13 +420,13 @@ namespace dbi {
     }
 
     bool PgStatement::read(ResultRowHash &rowhash) {
-        ulong len;
+        uint64_t len;
         unsigned char *data;
 
         rowhash.clear();
 
         if (_rowno < _rows) {
-            for (uint i = 0; i < _cols; i++) {
+            for (uint32_t i = 0; i < _cols; i++) {
                 if (PQgetisnull(_result, _rowno, i))
                     rowhash[_rsfields[i]] = PARAM(null());
                 else if (_rstypes[i] != DBI_TYPE_BLOB)
@@ -447,7 +447,7 @@ namespace dbi {
         return _rsfields;
     }
 
-    uint PgStatement::columns() {
+    uint32_t PgStatement::columns() {
         return _cols;
     }
 
@@ -461,7 +461,7 @@ namespace dbi {
         return true;
     }
 
-    unsigned char* PgStatement::read(uint r, uint c, ulong *l) {
+    unsigned char* PgStatement::read(uint32_t r, uint32_t c, uint64_t *l) {
         _rowno = r;
         if (PQgetisnull(_result, r, c)) {
             return 0;
@@ -475,7 +475,7 @@ namespace dbi {
         }
     }
 
-    uint PgStatement::tell() {
+    uint32_t PgStatement::tell() {
         return _rowno;
     }
 
@@ -490,7 +490,7 @@ namespace dbi {
         _rowno = 0;
     }
 
-    void PgStatement::seek(uint r) {
+    void PgStatement::seek(uint32_t r) {
         _rowno = r;
     }
 
@@ -552,8 +552,8 @@ namespace dbi {
         _result = 0;
     }
 
-    uint PgHandle::execute(string sql) {
-        uint rows, ctuples = 0;
+    uint32_t PgHandle::execute(string sql) {
+        uint32_t rows, ctuples = 0;
         int done, tries;
         PGresult *result;
         string query  = sql;
@@ -572,16 +572,16 @@ namespace dbi {
         if (_result) PQclear(_result);
         _result = result;
 
-        rows    = (uint)PQntuples(result);
-        ctuples = (uint)atoi(PQcmdTuples(result));
+        rows    = (uint32_t)PQntuples(result);
+        ctuples = (uint32_t)atoi(PQcmdTuples(result));
 
         return ctuples > 0 ? ctuples : rows;
     }
 
-    uint PgHandle::execute(string sql, vector<Param> &bind) {
+    uint32_t PgHandle::execute(string sql, vector<Param> &bind) {
         int *param_l, *param_f;
         const char **param_v;
-        uint rows, ctuples = 0;
+        uint32_t rows, ctuples = 0;
         int done, tries;
         PGresult *result;
         string query = sql;
@@ -612,8 +612,8 @@ namespace dbi {
         if (_result) PQclear(_result);
         _result = result;
 
-        rows    = (uint)PQntuples(result);
-        ctuples = (uint)atoi(PQcmdTuples(result));
+        rows    = (uint32_t)PQntuples(result);
+        ctuples = (uint32_t)atoi(PQcmdTuples(result));
 
         return ctuples > 0 ? ctuples : rows;
     }
@@ -708,7 +708,7 @@ namespace dbi {
         return true;
     };
 
-    void* PgHandle::call(string name, void* args, ulong l) {
+    void* PgHandle::call(string name, void* args, uint64_t l) {
         return NULL;
     }
 
@@ -785,9 +785,9 @@ namespace dbi {
             throw RuntimeError(m);
     }
 
-    ulong PgHandle::write(string table, FieldSet &fields, IO* io) {
+    uint64_t PgHandle::write(string table, FieldSet &fields, IO* io) {
         char sql[4096];
-        ulong nrows;
+        uint64_t nrows;
         snprintf(sql, 4095, "copy %s (%s) from stdin", table.c_str(), fields.join(", ").c_str());
         if (_trace)
             logMessage(_trace_fd, sql);
