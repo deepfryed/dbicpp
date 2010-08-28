@@ -150,7 +150,7 @@ namespace dbi {
 
             if (!ro_buffer) {
                 for (int i = 0; i < count; i++) {
-                    params[i].length  = new uint64_t;
+                    params[i].length  = new unsigned long;
                     params[i].is_null = new char;
                     params[i].buffer  = (void*)new unsigned char[__MYSQL_BIND_BUFFER_LEN];
                     params[i].buffer_length = __MYSQL_BIND_BUFFER_LEN;
@@ -221,7 +221,7 @@ namespace dbi {
     class MySqlResultSet : public AbstractResultSet {
         private:
         MYSQL_ROW _rowdata;
-        uint64_t* _rowdata_lengths;
+        unsigned long* _rowdata_lengths;
         protected:
         MySqlHandle *handle;
         MYSQL_RES *result;
@@ -674,8 +674,8 @@ namespace dbi {
 
         if (_rowno < _rows) {
             _rowno++;
-            MYSQL_ROW rowdata = mysql_fetch_row(result);
-            uint64_t* lengths = mysql_fetch_lengths(result);
+            MYSQL_ROW rowdata      = mysql_fetch_row(result);
+            unsigned long *lengths = mysql_fetch_lengths(result);
             for (n = 0; n < _cols; n++)
                 row.push_back(rowdata[n] == 0 ? PARAM(null()) : PARAM((unsigned char*)rowdata[n], lengths[n]));
 
@@ -692,8 +692,8 @@ namespace dbi {
 
         if (_rowno < _rows) {
             _rowno++;
-            MYSQL_ROW rowdata = mysql_fetch_row(result);
-            uint64_t* lengths = mysql_fetch_lengths(result);
+            MYSQL_ROW rowdata      = mysql_fetch_row(result);
+            unsigned long *lengths = mysql_fetch_lengths(result);
             for (n = 0; n < _cols; n++)
                 rowhash[_rsfields[n]] = (
                     rowdata[n] == 0 ? PARAM(null()) : PARAM((unsigned char*)rowdata[n], lengths[n])
