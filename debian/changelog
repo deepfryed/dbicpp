@@ -1,3 +1,9 @@
+dbic++ (0.3.0) lucid; urgency=medium
+
+  * version bump to 0.3.0.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Sun, 29 Aug 2010 17:20:00 +1000
+
 dbic++ (0.2.71) lucid; urgency=high
 
   * fixed i386 build failure due to type incompatibility.
