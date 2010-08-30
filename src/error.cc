@@ -10,11 +10,7 @@ namespace dbi {
     }
 
     const char* Error::what() const throw() {
-        char *demangled_klass = __cxxabiv1::__cxa_demangle(typeid(*this).name(), 0, 0, 0);
-        string klass = string(demangled_klass);
-        delete demangled_klass;
-        snprintf((char*)msgbuffer, 8192, "%s", ("[ " + klass + " ] " + message).c_str());
-        return (const char *)msgbuffer;
+        return message.c_str();
     }
 
     Error::~Error() throw() {}
