@@ -18,9 +18,13 @@ ADD_LIBRARY(dbic++ STATIC ${SOURCES})
 
 SET(CMAKE_INSTALL_LIBDIR lib CACHE PATH "Output directory for libraries")
 
+
+# TODO including container.cc and error.cc is a workaround to address
+#      dynamic symbol resolution problems. need to change the way linking works.
+
 IF (PQ_FOUND)
   INCLUDE_DIRECTORIES(${PQ_INCLUDE_DIRS})
-  ADD_LIBRARY(dbdpg SHARED src/drivers/pg.cc)
+  ADD_LIBRARY(dbdpg SHARED src/drivers/pg.cc src/container.cc src/error.cc)
   IF (APPLE)
     TARGET_LINK_LIBRARIES(dbdpg dbic++ ${PQ_LIBRARIES} ${UUID_LIBRARIES} ${PCRE_LIBRARIES})
   ELSE ()
@@ -35,7 +39,7 @@ ENDIF()
 
 IF (MYSQL_FOUND)
   INCLUDE_DIRECTORIES(${MYSQL_INCLUDE_DIRS})
-  ADD_LIBRARY(dbdmysql SHARED src/drivers/mysql.cc)
+  ADD_LIBRARY(dbdmysql SHARED src/drivers/mysql.cc src/container.cc src/error.cc)
   IF (APPLE)
     TARGET_LINK_LIBRARIES(dbdmysql dbic++ ${MYSQL_LIBRARIES} ${UUID_LIBRARIES} ${PCRE_LIBRARIES})
   ELSE()

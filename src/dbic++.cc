@@ -76,6 +76,7 @@ namespace dbi {
         }
 
         closedir(dir);
+        atexit(dbiShutdown);
         return true;
     }
 
