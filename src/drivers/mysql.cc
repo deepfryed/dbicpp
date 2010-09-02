@@ -393,6 +393,9 @@ namespace dbi {
                     case MYSQL_TYPE_DATETIME:   // DATETIME field
                         _rstypes.push_back(DBI_TYPE_TIME);
                         break;
+                    case MYSQL_TYPE_DATE:
+                        _rstypes.push_back(DBI_TYPE_DATE);
+                        break;
                     default:
                         _rstypes.push_back((_stmt->fields[n].flags & BINARY_FLAG) ? DBI_TYPE_BLOB : DBI_TYPE_TEXT);
                         break;

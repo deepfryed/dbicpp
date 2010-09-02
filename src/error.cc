@@ -10,7 +10,8 @@ namespace dbi {
     }
 
     const char* Error::what() const throw() {
-        return message.c_str();
+        snprintf((char*)messagebuffer, 8192, "%s", message.c_str());
+        return messagebuffer;
     }
 
     Error::~Error() throw() {}

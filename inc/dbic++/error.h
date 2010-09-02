@@ -15,6 +15,7 @@ namespace dbi {
         ~Error() throw();
         protected:
         string message;
+        char messagebuffer[8192];
     };
 
     class ConnectionError : public Error {

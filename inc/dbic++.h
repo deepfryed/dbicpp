@@ -19,7 +19,7 @@
 #include <uuid/uuid.h>
 #include <stdint.h>
 
-#define DBI_VERSION      0.3.0
+#define DBI_VERSION      0.3.1
 
 namespace dbi {
     struct null {};
@@ -40,6 +40,7 @@ namespace dbi {
 #define DBI_TYPE_NUMERIC 5
 #define DBI_TYPE_BOOLEAN 6
 #define DBI_TYPE_BLOB    7
+#define DBI_TYPE_DATE    8
 
 namespace dbi {
     extern bool _trace;

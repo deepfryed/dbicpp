@@ -260,6 +260,7 @@ namespace dbi {
                 case   25: _rstypes.push_back(DBI_TYPE_TEXT); break;
                 case  700:
                 case  701: _rstypes.push_back(DBI_TYPE_FLOAT); break;
+                case 1082: _rstypes.push_back(DBI_TYPE_DATE); break;
                 case 1114:
                 case 1184: _rstypes.push_back(DBI_TYPE_TIME); break;
                 case 1700: _rstypes.push_back(DBI_TYPE_NUMERIC); break;

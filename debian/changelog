@@ -1,3 +1,10 @@
+dbic++ (0.3.1) lucid; urgency=medium
+
+  * added support for date type.
+  * fixed dynamic symbol resolution errors.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Thu, 02 Sep 2010 12:00:00 +1000
+
 dbic++ (0.3.0) lucid; urgency=medium
 
   * version bump to 0.3.0.
