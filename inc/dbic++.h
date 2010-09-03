@@ -33,14 +33,15 @@ namespace dbi {
 
 #define DEFAULT_DRIVER_PATH "/usr/lib/dbic++"
 
-#define DBI_TYPE_INT     1
-#define DBI_TYPE_TIME    2
-#define DBI_TYPE_TEXT    3
-#define DBI_TYPE_FLOAT   4
-#define DBI_TYPE_NUMERIC 5
-#define DBI_TYPE_BOOLEAN 6
-#define DBI_TYPE_BLOB    7
-#define DBI_TYPE_DATE    8
+#define DBI_TYPE_INT       1
+#define DBI_TYPE_TIME      2
+#define DBI_TYPE_TEXT      3
+#define DBI_TYPE_FLOAT     4
+#define DBI_TYPE_NUMERIC   5
+#define DBI_TYPE_BOOLEAN   6
+#define DBI_TYPE_BLOB      7
+#define DBI_TYPE_DATE      8
+#define DBI_TYPE_TIMESTAMP 9
 
 namespace dbi {
     extern bool _trace;

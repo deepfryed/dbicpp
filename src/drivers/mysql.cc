@@ -391,7 +391,7 @@ namespace dbi {
                         break;
                     case MYSQL_TYPE_TIMESTAMP:  // TIMESTAMP field
                     case MYSQL_TYPE_DATETIME:   // DATETIME field
-                        _rstypes.push_back(DBI_TYPE_TIME);
+                        _rstypes.push_back(DBI_TYPE_TIMESTAMP);
                         break;
                     case MYSQL_TYPE_DATE:
                         _rstypes.push_back(DBI_TYPE_DATE);
@@ -791,7 +791,7 @@ namespace dbi {
                     break;
                 case MYSQL_TYPE_TIMESTAMP:  // TIMESTAMP field
                 case MYSQL_TYPE_DATETIME:   // DATETIME field
-                    _rstypes.push_back(DBI_TYPE_TIME);
+                    _rstypes.push_back(DBI_TYPE_TIMESTAMP);
                     break;
                 default:
                     _rstypes.push_back(DBI_TYPE_TEXT);
@@ -969,8 +969,10 @@ namespace dbi {
     };
 
     bool MySqlHandle::begin(string name) {
-        if (tr_nesting == 0)
+        if (tr_nesting == 0) {
             begin();
+            tr_nesting = 0;
+        }
         execute("SAVEPOINT " + name);
         tr_nesting++;
         return true;
@@ -979,7 +981,7 @@ namespace dbi {
     bool MySqlHandle::commit(string name) {
         execute("RELEASE SAVEPOINT " + name);
         tr_nesting--;
-        if (tr_nesting == 1)
+        if (tr_nesting == 0)
             commit();
         return true;
     };
@@ -987,7 +989,7 @@ namespace dbi {
     bool MySqlHandle::rollback(string name) {
         execute("ROLLBACK TO SAVEPOINT " + name);
         tr_nesting--;
-        if (tr_nesting == 1)
+        if (tr_nesting == 0)
             rollback();
         return true;
     };

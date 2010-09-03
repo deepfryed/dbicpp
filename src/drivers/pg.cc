@@ -262,7 +262,7 @@ namespace dbi {
                 case  701: _rstypes.push_back(DBI_TYPE_FLOAT); break;
                 case 1082: _rstypes.push_back(DBI_TYPE_DATE); break;
                 case 1114:
-                case 1184: _rstypes.push_back(DBI_TYPE_TIME); break;
+                case 1184: _rstypes.push_back(DBI_TYPE_TIMESTAMP); break;
                 case 1700: _rstypes.push_back(DBI_TYPE_NUMERIC); break;
                   default: _rstypes.push_back(DBI_TYPE_TEXT); break;
             }
@@ -686,8 +686,10 @@ namespace dbi {
     };
 
     bool PgHandle::begin(string name) {
-        if (tr_nesting == 0)
+        if (tr_nesting == 0) {
             begin();
+            tr_nesting = 0;
+        }
         execute("SAVEPOINT " + name);
         tr_nesting++;
         return true;
@@ -696,7 +698,7 @@ namespace dbi {
     bool PgHandle::commit(string name) {
         execute("RELEASE SAVEPOINT " + name);
         tr_nesting--;
-        if (tr_nesting == 1)
+        if (tr_nesting == 0)
             commit();
         return true;
     };
@@ -704,7 +706,7 @@ namespace dbi {
     bool PgHandle::rollback(string name) {
         execute("ROLLBACK TO SAVEPOINT " + name);
         tr_nesting--;
-        if (tr_nesting == 1)
+        if (tr_nesting == 0)
             rollback();
         return true;
     };

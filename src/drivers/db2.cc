@@ -9,12 +9,6 @@ namespace dbi {
 
     using namespace std;
 
-    #define CHECK_SUCCESS(rc, type, handle) \
-        if (rc != SQL_SUCCESS) { \
-            db2error(type, handle); \
-            exit(0); \
-        } \
-
     void db2error(short type, SQLHANDLE handle) {
         SQLCHAR     message[SQL_MAX_MESSAGE_LENGTH+1];
         SQLCHAR     sqlstate[SQL_SQLSTATE_SIZE+1];
@@ -28,17 +22,33 @@ namespace dbi {
         throw RuntimeError(messages);
     }
 
-    class DB2Result : public AbstractResult {
+    void CHECK_HANDLE_RESULT(SQLHANDLE handle, int rc) {
+        if (rc != SQL_SUCCESS) {
+            SQLEndTran(SQL_HANDLE_DBC, handle, SQL_ROLLBACK);
+            db2error(SQL_HANDLE_DBC, handle);
+        }
+    }
+
+    void CHECK_STATEMENT_RESULT(SQLHANDLE handle, SQLHANDLE stmt, int rc) {
+        if (rc != SQL_SUCCESS) {
+            SQLEndTran(SQL_HANDLE_DBC, handle, SQL_ROLLBACK);
+            db2error(SQL_HANDLE_DBC, stmt);
+        }
+    }
+
+    class DB2Statement : public AbstractStatement {
         protected:
+        string sql;
         uint32_t _rowno, _rows;
         vector<ResultRow> results;
         vector<string>    _rsfields;
         vector<int>       _rstypes;
         SQLHANDLE stmt;
         SQLSMALLINT _columns;
+        SQLHANDLE handle;
+        void checkResult(int);
 
         public:
-        DB2Result();
         uint32_t columns();
         uint32_t rows();
         vector<string> fields();
@@ -54,20 +64,13 @@ namespace dbi {
         void rewind();
         vector<int>& types();
         void seek(uint32_t);
-        ~DB2Result();
-    };
 
-    class DB2Statement : public DB2Result {
-        protected:
-        string sql;
-        SQLHANDLE handle;
-
-        public:
+        // Statement specific stuff
         DB2Statement(SQLHANDLE, string);
         ~DB2Statement();
         uint32_t execute();
         uint32_t execute(vector<Param> &bind);
-        void cleanup();
+        string command();
     };
 
     class DB2Handle : public AbstractHandle {
@@ -76,6 +79,8 @@ namespace dbi {
         DB2Statement *stmt;
         void setup();
         void TCPIPConnect(string, string, string, string, string);
+        int tr_nesting;
+        void checkResult(int);
 
         public:
         DB2Handle();
@@ -84,7 +89,7 @@ namespace dbi {
         ~DB2Handle();
         uint32_t execute(string);
         uint32_t execute(string, vector<Param> &);
-        AbstractStatement* prepare(string);
+        DB2Statement* prepare(string);
         bool begin();
         bool commit();
         bool rollback();
@@ -99,9 +104,9 @@ namespace dbi {
         void setTimeZone(char*);
         void cleanup();
         string escape(string);
+        AbstractResult* results();
 
         // ASYNC
-        AbstractResult* results();
         int socket();
         AbstractResult* aexecute(string, vector<Param> &);
         void initAsync();
@@ -111,26 +116,90 @@ namespace dbi {
 
 
     // -----------------------------------------------------------------------------
-    // DB2Result
+    // DB2Statement
     // -----------------------------------------------------------------------------
 
-    DB2Result::DB2Result() {
-        _rowno = _rows = 0;
-    };
+    void DB2Statement::checkResult(int rc) {
+        CHECK_STATEMENT_RESULT(handle, stmt, rc);
+    }
 
-    uint32_t DB2Result::rows() {
+    DB2Statement::DB2Statement(SQLHANDLE handle, string sql) {
+        int i, j, rc;
+        SQLCHAR buffer[1024];
+        SQLSMALLINT type, length;
+        _rowno = _rows = 0;
+        this->handle = handle;
+        this->sql    = sql;
+        SQLAllocHandle(SQL_HANDLE_STMT, handle, &stmt);
+        checkResult(SQLPrepare(stmt, (SQLCHAR*)sql.c_str(), SQL_NTS));
+        SQLNumResultCols(stmt, &_columns);
+
+        for (i = 0; i < _columns; i++) {
+            SQLDescribeCol(stmt, i+1, buffer, 1024, &length, &type, 0, 0, 0);
+            for (j = 0; j < length; j++) buffer[j] = tolower(buffer[j]);
+            _rsfields.push_back(string((char*)buffer, length));
+            switch(type) {
+                case SQL_BIGINT:
+                case SQL_INTEGER:
+                case SQL_SMALLINT:
+                    _rstypes.push_back(DBI_TYPE_INT); break;
+
+                case SQL_BINARY:
+                case SQL_BLOB:
+                case SQL_BLOB_LOCATOR:
+                case SQL_VARBINARY:
+                    _rstypes.push_back(DBI_TYPE_BLOB); break;
+
+                case SQL_DECIMAL:
+                case SQL_DOUBLE:
+                case SQL_NUMERIC:
+                case SQL_REAL:
+                    _rstypes.push_back(DBI_TYPE_NUMERIC); break;
+
+                case SQL_DECFLOAT:
+                case SQL_FLOAT:
+                    _rstypes.push_back(DBI_TYPE_FLOAT); break;
+
+                case SQL_TYPE_DATE:
+                    _rstypes.push_back(DBI_TYPE_DATE); break;
+
+                case SQL_TYPE_TIMESTAMP:
+                    _rstypes.push_back(DBI_TYPE_TIMESTAMP); break;
+
+                /*
+                case SQL_GRAPHIC:
+                case SQL_LONGVARBINARY:
+                case SQL_LONGVARCHAR:
+                case SQL_LONGVARGRAPHIC:
+                case SQL_TYPE_TIME:
+                case SQL_VARGRAPHIC:
+                case SQL_XML:
+                case SQL_CHAR:
+                case SQL_CLOB:
+                case SQL_CLOB_LOCATOR:
+                case SQL_DBCLOB:
+                case SQL_DBCLOB_LOCATOR:
+                case SQL_VARCHAR:
+                */
+                default:
+                    _rstypes.push_back(DBI_TYPE_TEXT); break;
+            }
+        }
+    }
+
+    uint32_t DB2Statement::rows() {
         return _rows;
     }
 
-    uint32_t DB2Result::columns() {
+    uint32_t DB2Statement::columns() {
         return _columns;
     }
 
-    vector<string> DB2Result::fields() {
+    vector<string> DB2Statement::fields() {
         return _rsfields;
     }
 
-    bool DB2Result::read(ResultRow &r) {
+    bool DB2Statement::read(ResultRow &r) {
         if (_rowno < _rows) {
             r = results[_rowno++];
             return true;
@@ -138,98 +207,100 @@ namespace dbi {
         return false;
     }
 
-    // TODO
-    bool DB2Result::read(ResultRowHash &r) {
+    bool DB2Statement::read(ResultRowHash &r) {
+        if (_rowno < _rows) {
+            r.clear();
+            for (int i = 0; i < _columns; i++)
+                r[_rsfields[i]] = results[_rowno][i];
+            _rowno++;
+            return true;
+        }
         return false;
     }
 
-    // TODO
-    unsigned char* DB2Result::read(uint32_t r, uint32_t c, uint64_t *l) {
+    unsigned char* DB2Statement::read(uint32_t r, uint32_t c, uint64_t *l) {
+        if (r < _rows && c < _columns) {
+            if (l) *l = results[r][c].value.length();
+            return results[r][c].isnull ? 0 : (unsigned char*)results[r][c].value.data();
+        }
         return 0;
     }
 
-    // TODO
-    bool DB2Result::finish() {
-        return false;
+    bool DB2Statement::finish() {
+        SQLCloseCursor(stmt);
+        return true;
     }
 
-    uint32_t DB2Result::tell() {
+    uint32_t DB2Statement::tell() {
         return _rowno;
     }
 
-    void DB2Result::seek(uint32_t r) {
+    void DB2Statement::seek(uint32_t r) {
         _rowno = r >= 0 && r < _rows ? r : _rowno;
     }
 
-    void DB2Result::rewind() {
+    void DB2Statement::rewind() {
         _rowno = 0;
     }
 
-    vector<int>& DB2Result::types() {
+    vector<int>& DB2Statement::types() {
         return _rstypes;
     }
 
-    bool DB2Result::consumeResult() {
+    // TODO BLOB
+    // TODO NULL
+    bool DB2Statement::consumeResult() {
         ResultRow r;
         SQLINTEGER length;
-        char databuffer[8192];
+        unsigned char *buffer = new unsigned char[8192];
+        uint64_t buffer_length = 8192;
         while (SQLFetch(stmt) != SQL_NO_DATA_FOUND) {
             r.clear();
             for (int i = 1; i <= _columns; i++ ) {
-                // TODO BLOB
-                // TODO refetch if length > 8k
-                SQLGetData(stmt, i, SQL_C_CHAR, databuffer, 8192, &length);
-                r.push_back(PARAM(databuffer));
+                SQLGetData(stmt, i, SQL_C_CHAR, buffer, buffer_length, &length);
+                if (length > buffer_length) {
+                    delete [] buffer;
+                    buffer = new unsigned char[length + 1];
+                    buffer_length = length + 1;
+                }
+                r.push_back(PARAM(buffer, length));
             }
             results.push_back(r);
             _rows++;
         }
+        delete [] buffer;
         return true;
     }
 
-    void DB2Result::prepareResult() {
+    void DB2Statement::prepareResult() {
         _rows = _rowno = 0;
         results.clear();
     }
 
-    void DB2Result::cleanup() {
-        if (stmt)
-            SQLFreeHandle(SQL_HANDLE_STMT, stmt);
-        stmt = 0;
-    }
-
-    DB2Result::~DB2Result() {
-        cleanup();
-    }
-
     // TODO
-    uint64_t DB2Result::lastInsertID() {
+    uint64_t DB2Statement::lastInsertID() {
         return 0;
-    }
-
-
-    // -----------------------------------------------------------------------------
-    // DB2Statement
-    // -----------------------------------------------------------------------------
-
-    DB2Statement::DB2Statement(SQLHANDLE handle, string sql) : DB2Result() {
-        this->handle = handle;
-        this->sql    = sql;
-        SQLAllocHandle(SQL_HANDLE_STMT, handle, &stmt);
     }
 
     uint32_t DB2Statement::execute() {
+        SQLINTEGER cmdrows = 0;
+        finish();
         prepareResult();
-        int rc = SQLExecDirect(stmt, (SQLCHAR*)sql.c_str(), SQL_NTS);
-        CHECK_SUCCESS(rc, SQL_HANDLE_STMT, stmt);
-        SQLNumResultCols(stmt, &_columns);
+        checkResult(SQLExecute(stmt));
+        SQLRowCount(stmt, &cmdrows);
         consumeResult();
-        return rows();
+        return cmdrows > 0 ? cmdrows : _rows;
     }
 
-    // TODO
+    // TODO BLOB
     uint32_t DB2Statement::execute(vector<Param> &bind) {
-        return 0;
+        int i, rc;
+        for (i = 0; i < bind.size(); i++) {
+            rc = SQLBindParameter(
+                stmt, i+1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 15, 3, (void*)bind[i].value.data(), 8192, 0);
+            checkResult(rc);
+        }
+        return execute();
     }
 
     void DB2Statement::cleanup() {
@@ -242,16 +313,25 @@ namespace dbi {
         cleanup();
     }
 
+    string DB2Statement::command() {
+        return sql;
+    }
+
 
     // -----------------------------------------------------------------------------
-    // DB2Statement
+    // DB2Handle
     // -----------------------------------------------------------------------------
 
     DB2Handle::DB2Handle() { }
 
+    void DB2Handle::checkResult(int rc) {
+        CHECK_HANDLE_RESULT(handle, rc);
+    }
+
+    // TODO error checks.
     void DB2Handle::setup() {
-        // TODO error checks.
         stmt = 0;
+        tr_nesting = 0;
         SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env);
         SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
         SQLAllocHandle(SQL_HANDLE_DBC, env, &handle);
@@ -283,7 +363,7 @@ namespace dbi {
             (SQLCHAR*)user.c_str(),   SQL_NTS,
             (SQLCHAR*)pass.c_str(),   SQL_NTS
         );
-        CHECK_SUCCESS(rc, SQL_HANDLE_DBC, handle);
+        checkResult(rc);
     }
 
     DB2Handle::DB2Handle(string user, string pass, string dbname, string host, string port) {
@@ -291,20 +371,19 @@ namespace dbi {
         TCPIPConnect(user, pass, dbname, host, port);
     }
 
-    AbstractStatement* DB2Handle::prepare(string sql) {
-        return (AbstractStatement*) new DB2Statement(handle, sql);
+    DB2Statement* DB2Handle::prepare(string sql) {
+        return new DB2Statement(handle, sql);
     }
 
     uint32_t DB2Handle::execute(string sql) {
         if (stmt) delete stmt;
-        stmt = (DB2Statement*) prepare(sql);
+        stmt = prepare(sql);
         return stmt->execute();
     }
 
-    // TODO
     uint32_t DB2Handle::execute(string sql, vector<Param> &bind) {
         if (stmt) delete stmt;
-        stmt = (DB2Statement*) prepare(sql);
+        stmt = prepare(sql);
         return stmt->execute(bind);
     }
 
@@ -320,9 +399,13 @@ namespace dbi {
         cleanup();
     }
 
-    // TODO
     string DB2Handle::escape(string value) {
-        return "";
+        SQLINTEGER length;
+        SQLCHAR *buffer = new SQLCHAR[value.length()*2+1];
+        SQLNativeSql(handle, (SQLCHAR*)value.data(), value.length(), buffer, value.length()*2, &length);
+        value = string((char*)buffer, length);
+        delete [] buffer;
+        return value;
     }
 
     // TODO
@@ -330,31 +413,54 @@ namespace dbi {
         return 0;
     }
 
-    // TODO
     bool DB2Handle::begin() {
+        SQLEndTran(SQL_HANDLE_DBC, handle, SQL_ROLLBACK);
+        SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (void*)"off", 3);
+        tr_nesting = 1;
+        return true;
     }
 
-    // TODO
     bool DB2Handle::rollback() {
+        SQLEndTran(SQL_HANDLE_DBC, handle, SQL_ROLLBACK);
+        SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (void*)"on", 2);
+        tr_nesting = 0;
+        return true;
     }
 
-    // TODO
     bool DB2Handle::commit() {
+        SQLEndTran(SQL_HANDLE_DBC, handle, SQL_COMMIT);
+        SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (void*)"on", 2);
+        tr_nesting = 0;
+        return true;
     }
 
-    // TODO
     bool DB2Handle::begin(string name) {
+        if (tr_nesting == 0) {
+            begin();
+            tr_nesting = 0;
+        }
+        string sql = ("SAVEPOINT " + name);
+        checkResult(SQLExecDirect(handle, (SQLCHAR*)sql.data(), sql.length()));
+        tr_nesting++;
+        return true;
     }
 
-    // TODO
     bool DB2Handle::rollback(string name) {
+        string sql = ("ROLLBACK TO SAVEPOINT " + name);
+        checkResult(SQLExecDirect(handle, (SQLCHAR*)sql.data(), sql.length()));
+        tr_nesting--;
+        if (tr_nesting == 0) rollback();
+        return true;
     }
 
-    // TODO
     bool DB2Handle::commit(string name) {
+        string sql = ("RELEASE SAVEPOINT " + name);
+        checkResult(SQLExecDirect(handle, (SQLCHAR*)sql.data(), sql.length()));
+        tr_nesting--;
+        if (tr_nesting == 0) commit();
+        return true;
     }
 
-    // TODO
     void* DB2Handle::call(string name, void* args, uint64_t len) {
         return 0;
     }
@@ -363,39 +469,48 @@ namespace dbi {
     void DB2Handle::reconnect() {
     }
 
-    // TODO
+    // NOT SUPPORTED
     void DB2Handle::setTimeZoneOffset(int hour, int min) {
+        throw RuntimeError("DB2 unsupported API setTimeZoneOffset");
     }
 
-    // TODO
+    // NOT SUPPORTED
     void DB2Handle::setTimeZone(char *name) {
+        throw RuntimeError("DB2 unsupported API setTimeZone");
     }
 
 
     AbstractResult* DB2Handle::results() {
-        return 0;
+        AbstractResult *res = stmt;
+        stmt = 0;
+        return res;
     }
 
+    // TODO
     int DB2Handle::socket() {
         return 0;
     }
 
+    // TODO
     AbstractResult* DB2Handle::aexecute(string sql, vector<Param> &bind) {
         return 0;
     }
 
+    // TODO
     void DB2Handle::initAsync() {
     }
 
+    // TODO
     bool DB2Handle::isBusy() {
         return false;
     }
 
+    // TODO
     bool DB2Handle::cancel() {
         return false;
     }
 
-
+    // TODO
     bool DB2Handle::close() {
         return false;
     }
