@@ -87,7 +87,7 @@ namespace dbi {
         return h->write(table, fields, io);
     }
 
-    AbstractResultSet* Handle::results() {
+    AbstractResult* Handle::results() {
         return h->results();
     }
 

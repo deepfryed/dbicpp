@@ -47,7 +47,7 @@ namespace dbi {
     extern int  _trace_fd;
 
     class AbstractStatement;
-    class AbstractResultSet;
+    class AbstractResult;
 }
 
 #include "dbic++/util.h"
@@ -55,7 +55,7 @@ namespace dbi {
 #include "dbic++/io_stream.h"
 #include "dbic++/io_filestream.h"
 #include "dbic++/abstract_handle.h"
-#include "dbic++/abstract_resultset.h"
+#include "dbic++/abstract_result.h"
 #include "dbic++/abstract_statement.h"
 #include "dbic++/handle.h"
 #include "dbic++/statement.h"

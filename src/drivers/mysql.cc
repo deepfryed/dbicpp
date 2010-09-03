@@ -218,7 +218,7 @@ namespace dbi {
     };
 
 
-    class MySqlResultSet : public AbstractResultSet {
+    class MySqlResult : public AbstractResult {
         private:
         MYSQL_ROW _rowdata;
         unsigned long* _rowdata_lengths;
@@ -233,8 +233,8 @@ namespace dbi {
         vector<string> _rsfields;
         vector<int> _rstypes;
         public:
-        MySqlResultSet(MySqlHandle *h);
-        MySqlResultSet(MySqlHandle *h, MYSQL_RES *);
+        MySqlResult(MySqlHandle *h);
+        MySqlResult(MySqlHandle *h, MYSQL_RES *);
         void checkReady(string m);
         uint32_t rows();
         uint32_t columns();
@@ -277,8 +277,8 @@ namespace dbi {
         uint32_t execute(string sql);
         uint32_t execute(string sql, vector<Param> &bind);
         int socket();
-        MySqlResultSet* aexecute(string sql, vector<Param> &bind);
-        AbstractResultSet* results();
+        MySqlResult* aexecute(string sql, vector<Param> &bind);
+        AbstractResult* results();
         void initAsync();
         bool isBusy();
         bool cancel();
@@ -298,7 +298,7 @@ namespace dbi {
         string escape(string);
 
         friend class MySqlStatement;
-        friend class MySqlResultSet;
+        friend class MySqlResult;
     };
 
 
@@ -633,10 +633,10 @@ namespace dbi {
     }
 
     // ----------------------------------------------------------------------
-    // MySqlResultSet
+    // MySqlResult
     // ----------------------------------------------------------------------
 
-    MySqlResultSet::MySqlResultSet(MySqlHandle *h) {
+    MySqlResult::MySqlResult(MySqlHandle *h) {
         _rows  = 0;
         _cols  = 0;
         _rowno = 0;
@@ -644,7 +644,7 @@ namespace dbi {
         result = 0;
     }
 
-    MySqlResultSet::MySqlResultSet(MySqlHandle *h, MYSQL_RES *r) {
+    MySqlResult::MySqlResult(MySqlHandle *h, MYSQL_RES *r) {
         _rows  = 0;
         _cols  = 0;
         _rowno = 0;
@@ -653,24 +653,24 @@ namespace dbi {
         fetchMeta(result);
     }
 
-    void MySqlResultSet::checkReady(string m) {
+    void MySqlResult::checkReady(string m) {
         if (!result)
             throw RuntimeError((m + " cannot be called yet. ").c_str());
     }
 
-    uint32_t MySqlResultSet::rows() {
+    uint32_t MySqlResult::rows() {
         return _rows;
     }
 
-    uint32_t MySqlResultSet::columns() {
+    uint32_t MySqlResult::columns() {
         return _cols;
     }
 
-    vector<string> MySqlResultSet::fields() {
+    vector<string> MySqlResult::fields() {
         return _rsfields;
     }
 
-    bool MySqlResultSet::read(ResultRow &row) {
+    bool MySqlResult::read(ResultRow &row) {
         int n;
         row.clear();
         if (!result) return false;
@@ -688,7 +688,7 @@ namespace dbi {
         return false;
     }
 
-    bool MySqlResultSet::read(ResultRowHash &rowhash) {
+    bool MySqlResult::read(ResultRowHash &rowhash) {
         int n;
         rowhash.clear();
         if (!result) return false;
@@ -707,19 +707,19 @@ namespace dbi {
         return false;
     }
 
-    bool MySqlResultSet::finish() {
+    bool MySqlResult::finish() {
         if (result)
             mysql_free_result(result);
         result = 0;
         return true;
     }
 
-    void MySqlResultSet::seek(uint32_t r) {
+    void MySqlResult::seek(uint32_t r) {
         mysql_data_seek(result, r);
         _rowno = r;
     }
 
-    unsigned char* MySqlResultSet::read(uint32_t r, uint32_t c, uint64_t *l) {
+    unsigned char* MySqlResult::read(uint32_t r, uint32_t c, uint64_t *l) {
         if (!result || r >= _rows) return 0;
         if (_rowno != r || (r == 0 && c == 0)) {
             _rowno = r;
@@ -732,20 +732,20 @@ namespace dbi {
         return (unsigned char*)_rowdata[c];
     }
 
-    uint32_t MySqlResultSet::tell() {
+    uint32_t MySqlResult::tell() {
         return _rowno;
     }
 
-    void MySqlResultSet::cleanup() {
+    void MySqlResult::cleanup() {
         finish();
     }
 
-    uint64_t MySqlResultSet::lastInsertID() {
+    uint64_t MySqlResult::lastInsertID() {
         return mysql_insert_id(handle->conn);
     }
 
     // TODO Handle reconnects in consumeResult() and prepareResult()
-    bool MySqlResultSet::consumeResult() {
+    bool MySqlResult::consumeResult() {
         if (mysql_read_query_result(handle->conn) != 0) {
             finish();
             throw RuntimeError(mysql_error(handle->conn));
@@ -753,12 +753,12 @@ namespace dbi {
         return false;
     }
 
-    void MySqlResultSet::prepareResult() {
+    void MySqlResult::prepareResult() {
         result = mysql_store_result(handle->conn);
         fetchMeta(result);
     }
 
-    void MySqlResultSet::fetchMeta(MYSQL_RES* result) {
+    void MySqlResult::fetchMeta(MYSQL_RES* result) {
         int n;
         MYSQL_FIELD *fields;
 
@@ -800,12 +800,12 @@ namespace dbi {
         }
     }
 
-    void MySqlResultSet::rewind() {
+    void MySqlResult::rewind() {
         _rowno = 0;
         mysql_data_seek(result, 0);
     }
 
-    vector<int>& MySqlResultSet::types() {
+    vector<int>& MySqlResult::types() {
         return _rstypes;
     }
 
@@ -910,13 +910,13 @@ namespace dbi {
         return _statement->execute(bind);
     }
 
-    AbstractResultSet* MySqlHandle::results() {
-        AbstractResultSet *st = 0;
+    AbstractResult* MySqlHandle::results() {
+        AbstractResult *st = 0;
 
         if (_statement)
             st = _statement;
         else if (_result)
-            st = new MySqlResultSet(this, _result);
+            st = new MySqlResult(this, _result);
 
         _statement = 0;
         _result    = 0;
@@ -927,11 +927,11 @@ namespace dbi {
         return conn->net.fd;
     }
 
-    MySqlResultSet* MySqlHandle::aexecute(string sql, vector<Param> &bind) {
+    MySqlResult* MySqlHandle::aexecute(string sql, vector<Param> &bind) {
         MYSQL_PREPROCESS_QUERY(sql);
         MYSQL_INTERPOLATE_BIND(conn, sql, bind);
         mysql_send_query(conn, sql.c_str(), sql.length());
-        return new MySqlResultSet(this);
+        return new MySqlResult(this);
     }
 
     void MySqlHandle::initAsync() {

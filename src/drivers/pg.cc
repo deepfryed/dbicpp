@@ -144,7 +144,7 @@ namespace dbi {
         void reconnect(bool barf = false);
         int checkResult(PGresult*, string, bool barf = false);
         uint64_t write(string table, FieldSet &fields, IO*);
-        AbstractResultSet* results();
+        AbstractResult* results();
         void setTimeZoneOffset(int, int);
         void setTimeZone(char *);
         string escape(string);
@@ -619,7 +619,7 @@ namespace dbi {
         return ctuples > 0 ? ctuples : rows;
     }
 
-    AbstractResultSet* PgHandle::results() {
+    AbstractResult* PgHandle::results() {
         if (_result) {
             PgStatement *st = new PgStatement(_sql, this, _result);
             _result = 0;

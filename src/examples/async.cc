@@ -14,7 +14,7 @@
 using namespace std;
 using namespace dbi;
 
-void callback(AbstractResultSet *res) {
+void callback(AbstractResult *res) {
     ResultRowHash r;
     while (res->read(r))
         cout << r << endl;

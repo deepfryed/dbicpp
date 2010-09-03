@@ -188,7 +188,7 @@ namespace dbi {
             Function: results
             See <AbstractHandle::results()>
         */
-        AbstractResultSet* results();
+        AbstractResult* results();
 
         /*
             Function: setTimeZoneOffset(int, int)

@@ -68,25 +68,25 @@ namespace dbi {
 
         /*
             Function: rows
-            See <AbstractResultSet::rows()>
+            See <AbstractResult::rows()>
         */
         uint32_t rows();
 
         /*
             Function: columns
-            See <AbstractResultSet::columns()>
+            See <AbstractResult::columns()>
         */
         uint32_t columns();
 
         /*
             Function: fields
-            See <AbstractResultSet::fields()>
+            See <AbstractResult::fields()>
         */
         vector<string> fields();
 
         /*
             Function: types
-            See <AbstractResultSet::types()>
+            See <AbstractResult::types()>
         */
         vector<int>& types();
 
@@ -224,19 +224,19 @@ namespace dbi {
 
         /*
             Function: read(ResultRow&)
-            See <AbstractResultSet::read(ResultRow&)>
+            See <AbstractResult::read(ResultRow&)>
         */
         bool read(ResultRow&);
 
         /*
             Function: read(ResultRowHash&)
-            See <AbstractResultSet::read(ResultRowHash&)>
+            See <AbstractResult::read(ResultRowHash&)>
         */
         bool read(ResultRowHash&);
 
         /*
             Function: read(uint32_t, uint32_t, uint64_t*)
-            See <AbstractResultSet::read(uint32_t, uint32_t, uint64_t*)>
+            See <AbstractResult::read(uint32_t, uint32_t, uint64_t*)>
         */
         unsigned char* read(uint32_t r, uint32_t c, uint64_t*);
 
@@ -248,25 +248,25 @@ namespace dbi {
 
         /*
             Function: tell
-            See <AbstractResultSet::tell()>
+            See <AbstractResult::tell()>
         */
         uint32_t tell();
 
         /*
             Function: seek
-            See <AbstractResultSet::seek()>
+            See <AbstractResult::seek()>
         */
         void seek(uint32_t);
 
         /*
             Function: rewind
-            See <AbstractResultSet::rewind()>
+            See <AbstractResult::rewind()>
         */
         void rewind();
 
         /*
             Function: finish
-            See <AbstractResultSet::finish()>
+            See <AbstractResult::finish()>
         */
         bool finish();
 
@@ -278,7 +278,7 @@ namespace dbi {
 
         /*
             Function: lastInsertID
-            See <AbstractResultSet::lastInsertID()>
+            See <AbstractResult::lastInsertID()>
         */
         uint64_t lastInsertID();
     };
