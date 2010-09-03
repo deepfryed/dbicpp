@@ -32,7 +32,7 @@ namespace dbi {
     void CHECK_STATEMENT_RESULT(SQLHANDLE handle, SQLHANDLE stmt, int rc) {
         if (rc != SQL_SUCCESS) {
             SQLEndTran(SQL_HANDLE_DBC, handle, SQL_ROLLBACK);
-            db2error(SQL_HANDLE_DBC, stmt);
+            db2error(SQL_HANDLE_STMT, stmt);
         }
     }
 
@@ -252,9 +252,15 @@ namespace dbi {
     bool DB2Statement::consumeResult() {
         ResultRow r;
         SQLINTEGER length;
+
+        int rc = SQLFetch(stmt);
+        if (rc == SQL_ERROR || rc == SQL_NO_DATA_FOUND)
+            return true;
+
         unsigned char *buffer = new unsigned char[8192];
         uint64_t buffer_length = 8192;
-        while (SQLFetch(stmt) != SQL_NO_DATA_FOUND) {
+
+        while (rc != SQL_ERROR && rc != SQL_NO_DATA_FOUND) {
             r.clear();
             for (int i = 1; i <= _columns; i++ ) {
                 SQLGetData(stmt, i, SQL_C_CHAR, buffer, buffer_length, &length);
@@ -267,7 +273,9 @@ namespace dbi {
             }
             results.push_back(r);
             _rows++;
+            rc = SQLFetch(stmt);
         }
+
         delete [] buffer;
         return true;
     }
@@ -277,8 +285,12 @@ namespace dbi {
         results.clear();
     }
 
-    // TODO
+    // NOTE
+    // You can only call this after doing an insert with a select as below,
+    // select id from final table (insert into ...)
     uint64_t DB2Statement::lastInsertID() {
+        if (_rows > 0)
+            return atol(results[0][0].value.c_str());
         return 0;
     }
 
