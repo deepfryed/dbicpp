@@ -349,6 +349,7 @@ namespace dbi {
             (SQLCHAR*)dsn.c_str(),    SQL_NTS,
             0, 0, 0, SQL_DRIVER_NOPROMPT
         );
+        checkResult(rc);
     }
 
     DB2Handle::DB2Handle(string user, string pass, string dbname) {
@@ -364,11 +365,13 @@ namespace dbi {
             (SQLCHAR*)pass.c_str(),   SQL_NTS
         );
         checkResult(rc);
+        SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (void*)"on", 2);
     }
 
     DB2Handle::DB2Handle(string user, string pass, string dbname, string host, string port) {
         setup();
         TCPIPConnect(user, pass, dbname, host, port);
+        SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (void*)"on", 2);
     }
 
     DB2Statement* DB2Handle::prepare(string sql) {
