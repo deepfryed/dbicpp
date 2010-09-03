@@ -4,7 +4,7 @@
 namespace dbi {
 
     class AbstractHandle;
-    class AbstractResultSet;
+    class AbstractResult;
     class Request;
 
     /*
@@ -19,10 +19,10 @@ namespace dbi {
         A callback function passed to ConnectionPool::execute()
 
         (begin code)
-        typedef void (*Callback)(AbstractResultSet *r);
+        typedef void (*Callback)(AbstractResult *r);
         (end)
     */
-    typedef void (*Callback)(AbstractResultSet *r);
+    typedef void (*Callback)(AbstractResult *r);
 
     class ConnectionPool {
         public:
@@ -90,15 +90,15 @@ namespace dbi {
 
     class Request {
         public:
-        Request(ConnectionPool *, AbstractHandle *, AbstractResultSet *, void (*)(AbstractResultSet *));
+        Request(ConnectionPool *, AbstractHandle *, AbstractResult *, void (*)(AbstractResult *));
         ~Request();
         int socket();
         bool process();
         protected:
         ConnectionPool *target;
         AbstractHandle *handle;
-        AbstractResultSet *result;
-        void (*callback)(AbstractResultSet *r);
+        AbstractResult *result;
+        void (*callback)(AbstractResult *r);
 
         friend class ConnectionPool;
     };

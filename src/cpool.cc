@@ -30,7 +30,7 @@ namespace dbi {
         }
     }
 
-    Request* ConnectionPool::execute(string sql, ResultRow &bind, void (*cb)(AbstractResultSet *r), void *context) {
+    Request* ConnectionPool::execute(string sql, ResultRow &bind, void (*cb)(AbstractResult *r), void *context) {
         for (int n = 0; n < pool.size(); n++) {
             if (!pool[n].busy) {
                 pool[n].busy = true;
@@ -39,7 +39,7 @@ namespace dbi {
                     logMessage(_trace_fd, formatParams(sql, bind));
 
                 AbstractHandle *h = pool[n].handle;
-                AbstractResultSet *rs = h->aexecute(sql, bind);
+                AbstractResult *rs = h->aexecute(sql, bind);
                 rs->context = context;
 
                 Request *r  = new Request(this, h, rs, cb);
@@ -50,7 +50,7 @@ namespace dbi {
         return 0;
     }
 
-    Request* ConnectionPool::execute(string sql, void (*cb)(AbstractResultSet *r), void *context) {
+    Request* ConnectionPool::execute(string sql, void (*cb)(AbstractResult *r), void *context) {
         ResultRow bind;
         return execute(sql, bind, cb, context);
     }
@@ -64,8 +64,8 @@ namespace dbi {
     }
 
     bool ConnectionPool::process(Request *r) {
-        AbstractResultSet *rs = r->result;
-        void (*callback)(AbstractResultSet *) = r->callback;
+        AbstractResult *rs = r->result;
+        void (*callback)(AbstractResult *) = r->callback;
         if(!rs->consumeResult()) {
             rs->prepareResult();
             for (int n = 0; n < pool.size(); n++) {
@@ -80,7 +80,7 @@ namespace dbi {
         return false;
     }
 
-    Request::Request(ConnectionPool *p, AbstractHandle *h, AbstractResultSet *rs, void (*cb)(AbstractResultSet *)) {
+    Request::Request(ConnectionPool *p, AbstractHandle *h, AbstractResult *rs, void (*cb)(AbstractResult *)) {
         target   = p;
         handle   = h;
         result   = rs;

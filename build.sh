@@ -2,6 +2,7 @@
 
 export PG_VERSION=$(cat src/drivers/pg.cc | grep "VERSION \+" | sed 's/^.*VERSION *//' | sed 's/"//g')
 export MYSQL_VERSION=$(cat src/drivers/mysql.cc | grep "VERSION \+" | sed 's/^.*VERSION *//' | sed 's/"//g')
+export DB2_VERSION=$(cat src/drivers/db2.cc | grep "VERSION \+" | sed 's/^.*VERSION *//' | sed 's/"//g')
 
 cleanup() {
   make clean
@@ -88,7 +89,10 @@ _uninstall() {
 
 _install() {
   _uninstall
-  cmake -DCMAKE_PG_VERSION=$PG_VERSION -DCMAKE_MYSQL_VERSION=$MYSQL_VERSION -DCMAKE_INSTALL_PREFIX:PATH=/usr
+  cmake -DCMAKE_PG_VERSION=$PG_VERSION \
+        -DCMAKE_MYSQL_VERSION=$MYSQL_VERSION \
+        -DCMAKE_DB2_VERSION=$DB2_VERSION \
+        -DCMAKE_INSTALL_PREFIX:PATH=/usr
   make
   make install
 }
@@ -106,7 +110,10 @@ debian_source_build() {
 }
 
 local_build() {
-  cmake -DCMAKE_PG_VERSION=$PG_VERSION -DCMAKE_MYSQL_VERSION=$MYSQL_VERSION -DCMAKE_INSTALL_PREFIX:PATH=tmp/
+  cmake -DCMAKE_PG_VERSION=$PG_VERSION \
+        -DCMAKE_MYSQL_VERSION=$MYSQL_VERSION \
+        -DCMAKE_DB2_VERSION=$DB2_VERSION \
+        -DCMAKE_INSTALL_PREFIX:PATH=tmp/
   make
   make install
   rm -rf lib/*
