@@ -861,8 +861,10 @@ namespace dbi {
     void MySqlHandle::cleanup() {
         // This gets called only on dlclose, so the wrapper dbi::Handle
         // closes connections and frees memory.
-        if (_statement)
+        if (_statement) {
+            _statement->cleanup();
             delete _statement;
+        }
         if (_result)
             mysql_free_result(_result);
         if (conn)
@@ -876,7 +878,10 @@ namespace dbi {
         int rows;
         int failed, tries;
 
-        if (_statement) delete _statement;
+        if (_statement) {
+            _statement->cleanup();
+            delete _statement;
+        }
         if (_result) mysql_free_result(_result);
         _sql       = sql;
         _result    = 0;
@@ -903,7 +908,10 @@ namespace dbi {
     }
 
     uint32_t MySqlHandle::execute(string sql, vector<Param> &bind) {
-        if (_statement) delete _statement;
+        if (_statement) {
+            _statement->cleanup();
+            delete _statement;
+        }
         if (_result) mysql_free_result(_result);
         _result    = 0;
         _statement = new MySqlStatement(sql, this);
