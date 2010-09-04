@@ -389,6 +389,9 @@ namespace dbi {
                     case MYSQL_TYPE_DOUBLE:     // DOUBLE or REAL field
                         _rstypes.push_back(DBI_TYPE_FLOAT);
                         break;
+                    case MYSQL_TYPE_TIME:
+                        _rstypes.push_back(DBI_TYPE_TIME);
+                        break;
                     case MYSQL_TYPE_TIMESTAMP:  // TIMESTAMP field
                     case MYSQL_TYPE_DATETIME:   // DATETIME field
                         _rstypes.push_back(DBI_TYPE_TIMESTAMP);

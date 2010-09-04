@@ -264,6 +264,8 @@ namespace dbi {
                 case 1114:
                 case 1184: _rstypes.push_back(DBI_TYPE_TIMESTAMP); break;
                 case 1700: _rstypes.push_back(DBI_TYPE_NUMERIC); break;
+                case 1083:
+                case 1266: _rstypes.push_back(DBI_TYPE_TIME); break;
                   default: _rstypes.push_back(DBI_TYPE_TEXT); break;
             }
         }

@@ -180,12 +180,13 @@ namespace dbi {
                 case SQL_TYPE_TIMESTAMP:
                     _rstypes.push_back(DBI_TYPE_TIMESTAMP); break;
 
+                case SQL_TYPE_TIME:
+                    _rstypes.push_back(DBI_TYPE_TIME); break;
                 /*
                 case SQL_GRAPHIC:
                 case SQL_LONGVARBINARY:
                 case SQL_LONGVARCHAR:
                 case SQL_LONGVARGRAPHIC:
-                case SQL_TYPE_TIME:
                 case SQL_VARGRAPHIC:
                 case SQL_XML:
                 case SQL_CHAR:
