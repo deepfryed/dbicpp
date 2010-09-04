@@ -8,7 +8,7 @@ namespace dbi {
         Pure virtual class that defines the api that individual database drivers need to support.
         Use this as a reference only. It is recommended to use the Statement class for any real work.
     */
-    class AbstractStatement : public AbstractResultSet {
+    class AbstractStatement : public AbstractResult {
         public:
         /*
             Function: command

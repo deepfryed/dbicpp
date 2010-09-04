@@ -6,11 +6,12 @@ dbic++ is a database client library written in C++ which comes with support for 
 
     * PostgreSQL >= 8.0
     * MySQL      >= 5.0
+    * DB2        >= 9.5 (wip)
 
 Drivers for the following will be available soon.
 
     * SQLite >= 3
-    * Oracle >= 9.2
+    * Oracle >= 10.2.0.4
 
 
 Main Features:

@@ -150,16 +150,16 @@ namespace dbi {
 
         /*
             Function: results
-            Returns the ResultSet associated with a previous query.
+            Returns the Result associated with a previous query.
 
             Returns:
-            results - An object conforming to AbstractResultSet.
+            results - An object conforming to AbstractResult.
                       NULL If the previous query did not return any results.
 
             *Important*: You need to call cleanup() on the result set before deleting it and
                         then deleted it when done with it.
         */
-        virtual AbstractResultSet* results() = 0;
+        virtual AbstractResult* results() = 0;
 
         /*
             Function: setTimeZoneOffset(int, int)
@@ -198,7 +198,7 @@ namespace dbi {
         // ASYNC API
         protected:
         virtual int socket() = 0;
-        virtual AbstractResultSet* aexecute(string sql, vector<Param> &bind) = 0;
+        virtual AbstractResult* aexecute(string sql, vector<Param> &bind) = 0;
         virtual void initAsync() = 0;
         virtual bool isBusy() = 0;
         virtual bool cancel() = 0;

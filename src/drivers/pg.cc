@@ -144,7 +144,7 @@ namespace dbi {
         void reconnect(bool barf = false);
         int checkResult(PGresult*, string, bool barf = false);
         uint64_t write(string table, FieldSet &fields, IO*);
-        AbstractResultSet* results();
+        AbstractResult* results();
         void setTimeZoneOffset(int, int);
         void setTimeZone(char *);
         string escape(string);
@@ -262,8 +262,10 @@ namespace dbi {
                 case  701: _rstypes.push_back(DBI_TYPE_FLOAT); break;
                 case 1082: _rstypes.push_back(DBI_TYPE_DATE); break;
                 case 1114:
-                case 1184: _rstypes.push_back(DBI_TYPE_TIME); break;
+                case 1184: _rstypes.push_back(DBI_TYPE_TIMESTAMP); break;
                 case 1700: _rstypes.push_back(DBI_TYPE_NUMERIC); break;
+                case 1083:
+                case 1266: _rstypes.push_back(DBI_TYPE_TIME); break;
                   default: _rstypes.push_back(DBI_TYPE_TEXT); break;
             }
         }
@@ -619,7 +621,7 @@ namespace dbi {
         return ctuples > 0 ? ctuples : rows;
     }
 
-    AbstractResultSet* PgHandle::results() {
+    AbstractResult* PgHandle::results() {
         if (_result) {
             PgStatement *st = new PgStatement(_sql, this, _result);
             _result = 0;
@@ -686,8 +688,10 @@ namespace dbi {
     };
 
     bool PgHandle::begin(string name) {
-        if (tr_nesting == 0)
+        if (tr_nesting == 0) {
             begin();
+            tr_nesting = 0;
+        }
         execute("SAVEPOINT " + name);
         tr_nesting++;
         return true;
@@ -696,7 +700,7 @@ namespace dbi {
     bool PgHandle::commit(string name) {
         execute("RELEASE SAVEPOINT " + name);
         tr_nesting--;
-        if (tr_nesting == 1)
+        if (tr_nesting == 0)
             commit();
         return true;
     };
@@ -704,7 +708,7 @@ namespace dbi {
     bool PgHandle::rollback(string name) {
         execute("ROLLBACK TO SAVEPOINT " + name);
         tr_nesting--;
-        if (tr_nesting == 1)
+        if (tr_nesting == 0)
             rollback();
         return true;
     };

@@ -4,11 +4,11 @@ namespace dbi {
     using namespace pcrecpp;
 
     /*
-        Class: AbstractResultSet
+        Class: AbstractResult
         Pure virtual class that defines the api that individual database drivers need to support.
         Use this as a reference only. It is recommended to use the Statement class for any real work.
     */
-    class AbstractResultSet {
+    class AbstractResult {
         public:
         void *context;
 

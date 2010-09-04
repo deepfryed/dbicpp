@@ -19,7 +19,7 @@
 #include <uuid/uuid.h>
 #include <stdint.h>
 
-#define DBI_VERSION      0.3.1
+#define DBI_VERSION      0.3.2
 
 namespace dbi {
     struct null {};
@@ -33,21 +33,22 @@ namespace dbi {
 
 #define DEFAULT_DRIVER_PATH "/usr/lib/dbic++"
 
-#define DBI_TYPE_INT     1
-#define DBI_TYPE_TIME    2
-#define DBI_TYPE_TEXT    3
-#define DBI_TYPE_FLOAT   4
-#define DBI_TYPE_NUMERIC 5
-#define DBI_TYPE_BOOLEAN 6
-#define DBI_TYPE_BLOB    7
-#define DBI_TYPE_DATE    8
+#define DBI_TYPE_INT       1
+#define DBI_TYPE_TIME      2
+#define DBI_TYPE_TEXT      3
+#define DBI_TYPE_FLOAT     4
+#define DBI_TYPE_NUMERIC   5
+#define DBI_TYPE_BOOLEAN   6
+#define DBI_TYPE_BLOB      7
+#define DBI_TYPE_DATE      8
+#define DBI_TYPE_TIMESTAMP 9
 
 namespace dbi {
     extern bool _trace;
     extern int  _trace_fd;
 
     class AbstractStatement;
-    class AbstractResultSet;
+    class AbstractResult;
 }
 
 #include "dbic++/util.h"
@@ -55,7 +56,7 @@ namespace dbi {
 #include "dbic++/io_stream.h"
 #include "dbic++/io_filestream.h"
 #include "dbic++/abstract_handle.h"
-#include "dbic++/abstract_resultset.h"
+#include "dbic++/abstract_result.h"
 #include "dbic++/abstract_statement.h"
 #include "dbic++/handle.h"
 #include "dbic++/statement.h"
