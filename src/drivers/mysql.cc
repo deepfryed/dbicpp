@@ -1056,7 +1056,7 @@ namespace dbi {
     }
 
     string MySqlHandle::escape(string value) {
-        char *dest = (char *)malloc(value.length() + 1);
+        char *dest = (char *)malloc(value.length()*2 + 1);
         mysql_real_escape_string(conn, dest, value.data(), value.length());
         string escaped(dest);
         free(dest);

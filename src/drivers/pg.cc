@@ -810,7 +810,7 @@ namespace dbi {
 
     string PgHandle::escape(string value) {
         int error;
-        char *dest = (char *)malloc(value.length() + 1);
+        char *dest = (char *)malloc(value.length()*2 + 1);
         PQescapeStringConn(conn, dest, value.data(), value.length(), &error);
         string escaped(dest);
         free(dest);
