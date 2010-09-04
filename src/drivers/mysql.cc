@@ -323,24 +323,19 @@ namespace dbi {
         MYSQL_RES *res = mysql_stmt_result_metadata(_stmt);
 
         if (res) {
+            mysql_free_result(res);
             if (!_stmt->bind_result_done) {
                 _buffer_lengths.clear();
 
                 for (i = 0; i < _cols; i++)
                     _buffer_lengths.push_back(_result->params[i].buffer_length);
 
-                if (mysql_stmt_bind_result(_stmt, _result->params) != 0) {
-                    mysql_free_result(res);
+                if (mysql_stmt_bind_result(_stmt, _result->params) != 0)
                     THROW_MYSQL_STMT_ERROR(_stmt);
-                }
             }
 
-            if (mysql_stmt_store_result(_stmt) != 0 ) {
-                mysql_free_result(res);
+            if (mysql_stmt_store_result(_stmt) != 0 )
                 THROW_MYSQL_STMT_ERROR(_stmt);
-            }
-
-            mysql_free_result(res);
         }
 
         return res ? mysql_stmt_num_rows(_stmt) : mysql_stmt_affected_rows(_stmt);
@@ -370,27 +365,26 @@ namespace dbi {
             for (int n = 0; n < (int)_cols; n++) {
                 _rsfields.push_back(_stmt->fields[n].name);
                 switch(_stmt->fields[n].type) {
-                    // shamelessly stolen from http://github.com/brianmario/mysql2
-                    case MYSQL_TYPE_TINY:       // TINYINT field
+                    case MYSQL_TYPE_TINY:
                         _rstypes.push_back(_stmt->fields[n].length == 1 ? DBI_TYPE_BOOLEAN : DBI_TYPE_INT);
                         break;
-                    case MYSQL_TYPE_SHORT:      // SMALLINT field
-                    case MYSQL_TYPE_LONG:       // INTEGER field
-                    case MYSQL_TYPE_INT24:      // MEDIUMINT field
-                    case MYSQL_TYPE_LONGLONG:   // BIGINT field
-                    case MYSQL_TYPE_YEAR:       // YEAR field
+                    case MYSQL_TYPE_SHORT:
+                    case MYSQL_TYPE_LONG:
+                    case MYSQL_TYPE_INT24:
+                    case MYSQL_TYPE_LONGLONG:
+                    case MYSQL_TYPE_YEAR:
                         _rstypes.push_back(DBI_TYPE_INT);
                         break;
-                    case MYSQL_TYPE_DECIMAL:    // DECIMAL or NUMERIC field
-                    case MYSQL_TYPE_NEWDECIMAL: // Precision math DECIMAL or NUMERIC field (MySQL 5.0.3 and up)
+                    case MYSQL_TYPE_DECIMAL:
+                    case MYSQL_TYPE_NEWDECIMAL:
                         _rstypes.push_back(DBI_TYPE_NUMERIC);
                         break;
-                    case MYSQL_TYPE_FLOAT:      // FLOAT field
-                    case MYSQL_TYPE_DOUBLE:     // DOUBLE or REAL field
+                    case MYSQL_TYPE_FLOAT:
+                    case MYSQL_TYPE_DOUBLE:
                         _rstypes.push_back(DBI_TYPE_FLOAT);
                         break;
-                    case MYSQL_TYPE_TIMESTAMP:  // TIMESTAMP field
-                    case MYSQL_TYPE_DATETIME:   // DATETIME field
+                    case MYSQL_TYPE_TIMESTAMP:
+                    case MYSQL_TYPE_DATETIME:
                         _rstypes.push_back(DBI_TYPE_TIME);
                         break;
                     case MYSQL_TYPE_DATE:
@@ -580,7 +574,7 @@ namespace dbi {
         if (!_stmt->bind_result_done || r >= _rows) return 0;
 
         if (_rowno != r || _fvempty) {
-            _rowno = r;
+            _rowno   = r;
             _fvempty = false;
             rc = mysql_stmt_fetch(_stmt);
             if (rc != 0 && rc != MYSQL_DATA_TRUNCATED)
@@ -770,31 +764,33 @@ namespace dbi {
         for (n = 0; n < _cols; n++) {
             _rsfields.push_back(fields[n].name);
             switch(fields[n].type) {
-                // shamelessly stolen from http://github.com/brianmario/mysql2
-                case MYSQL_TYPE_TINY:       // TINYINT field
+                case MYSQL_TYPE_TINY:
                     _rstypes.push_back(fields[n].length == 1 ? DBI_TYPE_BOOLEAN : DBI_TYPE_INT);
                     break;
-                case MYSQL_TYPE_SHORT:      // SMALLINT field
-                case MYSQL_TYPE_LONG:       // INTEGER field
-                case MYSQL_TYPE_INT24:      // MEDIUMINT field
-                case MYSQL_TYPE_LONGLONG:   // BIGINT field
-                case MYSQL_TYPE_YEAR:       // YEAR field
+                case MYSQL_TYPE_SHORT:
+                case MYSQL_TYPE_LONG:
+                case MYSQL_TYPE_INT24:
+                case MYSQL_TYPE_LONGLONG:
+                case MYSQL_TYPE_YEAR:
                     _rstypes.push_back(DBI_TYPE_INT);
                     break;
-                case MYSQL_TYPE_DECIMAL:    // DECIMAL or NUMERIC field
-                case MYSQL_TYPE_NEWDECIMAL: // Precision math DECIMAL or NUMERIC field (MySQL 5.0.3 and up)
+                case MYSQL_TYPE_DECIMAL:
+                case MYSQL_TYPE_NEWDECIMAL:
                     _rstypes.push_back(DBI_TYPE_NUMERIC);
                     break;
-                case MYSQL_TYPE_FLOAT:      // FLOAT field
-                case MYSQL_TYPE_DOUBLE:     // DOUBLE or REAL field
+                case MYSQL_TYPE_FLOAT:
+                case MYSQL_TYPE_DOUBLE:
                     _rstypes.push_back(DBI_TYPE_FLOAT);
                     break;
-                case MYSQL_TYPE_TIMESTAMP:  // TIMESTAMP field
-                case MYSQL_TYPE_DATETIME:   // DATETIME field
+                case MYSQL_TYPE_TIMESTAMP:
+                case MYSQL_TYPE_DATETIME:
                     _rstypes.push_back(DBI_TYPE_TIME);
                     break;
+                case MYSQL_TYPE_DATE:
+                    _rstypes.push_back(DBI_TYPE_DATE);
+                    break;
                 default:
-                    _rstypes.push_back(DBI_TYPE_TEXT);
+                    _rstypes.push_back((fields[n].flags & BINARY_FLAG) ? DBI_TYPE_BLOB : DBI_TYPE_TEXT);
                     break;
             }
         }

@@ -58,8 +58,9 @@ namespace dbi {
                         throw InvalidDriverError(dlerror());
 
                     if (drivers[driver->name]) {
-                        logMessage(_trace_fd, "WARNING: Already loaded " + driver->name +
-                                   " driver. Ignoring: " + filename);
+                        if (_trace)
+                            logMessage(_trace_fd, "WARNING: Already loaded " + driver->name +
+                                       " driver. Ignoring: " + filename);
                         dlclose(handle);
                         delete driver;
                     }
@@ -67,10 +68,11 @@ namespace dbi {
                         drivers[driver->name] = driver;
                     }
                 }
-                else
+                else if (_trace) {
                     logMessage(_trace_fd, "WARNING: Ignoring" + filename + ":" + dlerror());
+                }
             }
-            else {
+            else if (_trace) {
                 logMessage(_trace_fd, "WARNING: Ignoring" + filename + ":" + dlerror());
             }
         }
