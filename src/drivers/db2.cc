@@ -390,7 +390,7 @@ namespace dbi {
 
     void DB2Handle::TCPIPConnect(string user, string pass, string dbname, string host, string port) {
         string dsn = "DRIVER={IBM DB2 ODBC DRIVER};DATABASE=" + dbname +
-                     ";HOSTNAME=127.0.0.1;PORT=50000;PROTOCOL=TCPIP;";
+                     ";HOSTNAME=" + host + ";PORT=" + port + ";PROTOCOL=TCPIP;";
 
         if (user != "")
             dsn += "UID=" + user + ";PWD=" + pass;
