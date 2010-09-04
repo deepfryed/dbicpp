@@ -454,10 +454,10 @@ namespace dbi {
 
     string DB2Handle::escape(string value) {
         SQLINTEGER length;
-        SQLCHAR *buffer = new SQLCHAR[value.length()*2+1];
+        SQLCHAR *buffer = (SQLCHAR*)malloc(value.length()*2+1);
         SQLNativeSql(handle, (SQLCHAR*)value.data(), value.length(), buffer, value.length()*2, &length);
         value = string((char*)buffer, length);
-        delete [] buffer;
+        free(buffer);
         return value;
     }
 
