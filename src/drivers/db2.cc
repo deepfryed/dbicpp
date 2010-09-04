@@ -261,7 +261,6 @@ namespace dbi {
         return _rstypes;
     }
 
-    // TODO BLOB
     // TODO NULL
     bool DB2Statement::consumeResult() {
         ResultRow r;
@@ -276,14 +275,15 @@ namespace dbi {
 
         while (rc != SQL_ERROR && rc != SQL_NO_DATA_FOUND) {
             r.clear();
-            for (int i = 1; i <= _columns; i++ ) {
-                SQLGetData(stmt, i, SQL_C_CHAR, buffer, buffer_length, &length);
+            for (int i = 0; i < _columns; i++ ) {
+                SQLGetData(stmt, i+1, SQL_C_CHAR, buffer, buffer_length, &length);
                 if (length > buffer_length) {
                     delete [] buffer;
                     buffer = new unsigned char[length + 1];
                     buffer_length = length + 1;
+                    SQLGetData(stmt, i+1, SQL_C_CHAR, buffer, buffer_length, &length);
                 }
-                r.push_back(PARAM(buffer, length));
+                r.push_back(_rstypes[i] == DBI_TYPE_BLOB ? PARAM_BINARY(buffer, length) : PARAM(buffer, length));
             }
             results.push_back(r);
             _rows++;
