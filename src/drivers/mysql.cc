@@ -403,7 +403,9 @@ namespace dbi {
 
     void MySqlStatement::cleanup() {
         finish();
-        if (_stmt)
+
+        // only close if there is an open connection. mysqlclient will segfault otherwise.
+        if (_stmt && _stmt->mysql->net.fd)
             mysql_stmt_close(_stmt);
         if(_result)
             delete _result;
@@ -869,8 +871,13 @@ namespace dbi {
         }
         if (_result)
             mysql_free_result(_result);
-        if (conn)
+
+        // NOTE zero out connection file description to let the statement know
+        // that the connection is closed.
+        if (conn) {
             mysql_close(conn);
+            conn->net.fd = 0;
+        }
         _statement = 0;
         _result    = 0;
         conn       = 0;
