@@ -65,6 +65,7 @@ namespace dbi {
         void rewind();
         vector<int>& types();
         void seek(uint32_t);
+        bool cancel();
 
         // Statement specific stuff
         DB2Statement(SQLHANDLE, string);
@@ -262,7 +263,9 @@ namespace dbi {
         return _rstypes;
     }
 
-    // TODO NULL
+    // TODO Handle NULLs
+    // TODO Handle data truncation
+    // TODO Handle LOB locators
     bool DB2Statement::consumeResult() {
         ResultRow r;
         SQLINTEGER length;
@@ -329,6 +332,11 @@ namespace dbi {
         SQLRowCount(stmt, &cmdrows);
         consumeResult();
         return cmdrows > 0 ? cmdrows : _rows;
+    }
+
+    bool DB2Statement::cancel() {
+        checkResult(SQLCancel(stmt));
+        return true;
     }
 
     // TODO BLOB
@@ -442,15 +450,24 @@ namespace dbi {
     }
 
     void DB2Handle::cleanup() {
-        if (stmt) { stmt->cleanup(); delete stmt; }
-        stmt = 0;
-        SQLDisconnect(handle);
-        SQLFreeHandle(SQL_HANDLE_DBC, handle);
-        SQLFreeHandle(SQL_HANDLE_ENV, env);
+        if (env) {
+            if (stmt) { stmt->cleanup(); delete stmt; }
+            SQLDisconnect(handle);
+            SQLFreeHandle(SQL_HANDLE_DBC, handle);
+            SQLFreeHandle(SQL_HANDLE_ENV, env);
+        }
+        env    = 0;
+        stmt   = 0;
+        handle = 0;
     }
 
     DB2Handle::~DB2Handle() {
         cleanup();
+    }
+
+    bool DB2Handle::close() {
+        cleanup();
+        return true;
     }
 
     string DB2Handle::escape(string value) {
@@ -515,24 +532,25 @@ namespace dbi {
         return true;
     }
 
+    bool DB2Handle::cancel() {
+        if (stmt)
+            return stmt->cancel();
+    }
+
+    // NOT IMPLEMENTED
     void* DB2Handle::call(string name, void* args, uint64_t len) {
         return 0;
     }
 
-    // TODO
-    void DB2Handle::reconnect() {
-    }
-
-    // NOT SUPPORTED
+    // NOT SUPPORTED - DB2 runs on system timezone.
     void DB2Handle::setTimeZoneOffset(int hour, int min) {
         throw RuntimeError("DB2 unsupported API setTimeZoneOffset");
     }
 
-    // NOT SUPPORTED
+    // NOT SUPPORTED - DB2 runs on system timezone.
     void DB2Handle::setTimeZone(char *name) {
         throw RuntimeError("DB2 unsupported API setTimeZone");
     }
-
 
     AbstractResult* DB2Handle::results() {
         AbstractResult *res = stmt;
@@ -541,6 +559,10 @@ namespace dbi {
     }
 
     // TODO
+    void DB2Handle::reconnect() {
+    }
+
+    // TODO - DB2 does not expose the underlying socket file descriptor :(
     int DB2Handle::socket() {
         return 0;
     }
@@ -556,16 +578,6 @@ namespace dbi {
 
     // TODO
     bool DB2Handle::isBusy() {
-        return false;
-    }
-
-    // TODO
-    bool DB2Handle::cancel() {
-        return false;
-    }
-
-    // TODO
-    bool DB2Handle::close() {
         return false;
     }
 };

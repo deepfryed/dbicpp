@@ -713,8 +713,9 @@ namespace dbi {
         return true;
     };
 
+    // NOT IMPLEMENTED
     void* PgHandle::call(string name, void* args, uint64_t l) {
-        return NULL;
+        return 0;
     }
 
     bool PgHandle::close() {
