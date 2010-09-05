@@ -261,6 +261,7 @@ namespace dbi {
         string _sql;
         MYSQL_RES *_result;
         MySqlStatement *_statement;
+        map<MySqlStatement*,bool> statements;
 
         protected:
         MYSQL *conn;
@@ -273,6 +274,8 @@ namespace dbi {
         MySqlHandle();
         MySqlHandle(string user, string pass, string dbname, string host, string port);
         ~MySqlHandle();
+        void attachStatement(MySqlStatement*);
+        void detachStatement(MySqlStatement*);
         void cleanup();
         uint32_t execute(string sql);
         uint32_t execute(string sql, vector<Param> &bind);
@@ -396,19 +399,23 @@ namespace dbi {
                 }
             }
         }
+
+        handle->attachStatement(this);
     }
 
     void MySqlStatement::cleanup() {
         finish();
 
-        // only close if there is an open connection. mysqlclient will segfault otherwise.
-        if (_stmt && _stmt->mysql->net.fd)
+        if (_stmt)
             mysql_stmt_close(_stmt);
+
         if(_result)
             delete _result;
 
         _stmt = 0;
         _result = 0;
+
+        handle->detachStatement(this);
     }
 
     string MySqlStatement::command() {
@@ -856,20 +863,33 @@ namespace dbi {
         cleanup();
     }
 
-    void MySqlHandle::cleanup() {
-        // This gets called only on dlclose, so the wrapper dbi::Handle
-        // closes connections and frees memory.
-        if (_statement)
-            delete _statement;
-        if (_result)
-            mysql_free_result(_result);
+    void MySqlHandle::attachStatement(MySqlStatement *stmt) {
+        statements[stmt] = true;
+    }
 
-        // NOTE zero out connection file description to let the statement know
-        // that the connection is closed.
+    void MySqlHandle::detachStatement(MySqlStatement *stmt) {
+        statements.erase(stmt);
+    }
+
+    void MySqlHandle::cleanup() {
         if (conn) {
+            // This gets called only on dlclose, so the wrapper dbi::Handle
+            // closes connections and frees memory.
+            if (_statement) {
+                _statement->cleanup();
+                delete _statement;
+            }
+            if (_result)
+                mysql_free_result(_result);
+
+            map<MySqlStatement*,bool>::iterator it = statements.begin();
+            while (it != statements.end()) {
+                it->first->cleanup();
+                it++;
+            }
             mysql_close(conn);
-            conn->net.fd = 0;
         }
+
         _statement = 0;
         _result    = 0;
         conn       = 0;
@@ -1000,8 +1020,7 @@ namespace dbi {
     }
 
     bool MySqlHandle::close() {
-        mysql_close(conn);
-        conn = 0;
+        cleanup();
         return true;
     }
 
