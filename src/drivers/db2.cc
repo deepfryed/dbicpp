@@ -1,5 +1,6 @@
 #include "dbic++.h"
 #include "sqlcli1.h"
+#include "db2ApiDf.h"
 
 #define DRIVER_NAME     "db2"
 #define DRIVER_VERSION  "1.3"
@@ -8,6 +9,8 @@
 namespace dbi {
 
     using namespace std;
+
+    SQLLEN DB2_NULL_INDICATOR = SQL_NULL_DATA;
 
     void db2error(short type, SQLHANDLE handle) {
         SQLCHAR     message[SQL_MAX_MESSAGE_LENGTH+1];
@@ -46,8 +49,10 @@ namespace dbi {
         SQLHANDLE stmt;
         SQLSMALLINT _columns;
         SQLHANDLE handle;
+
         void checkResult(int);
         void fetchMeta();
+        void processBindArguments(vector<Param> &bind);
 
         public:
         uint32_t columns();
@@ -56,6 +61,7 @@ namespace dbi {
         bool read(ResultRow &);
         bool read(ResultRowHash &);
         unsigned char* read(uint32_t r, uint32_t c, uint64_t *l = 0);
+        uint64_t write(string, FieldSet&, IO*);
         bool finish();
         uint32_t tell();
         void cleanup();
@@ -76,6 +82,7 @@ namespace dbi {
         uint32_t execute(string);
         uint32_t execute(string, vector<Param> &bind);
         string command();
+        string driver();
     };
 
     class DB2Handle : public AbstractHandle {
@@ -103,13 +110,13 @@ namespace dbi {
         bool rollback(string);
         void* call(string, void*, uint64_t);
         bool close();
-        void reconnect();
         uint64_t write(string, FieldSet&, IO*);
         void setTimeZoneOffset(int, int);
         void setTimeZone(char*);
         void cleanup();
         string escape(string);
         AbstractResult* results();
+        string driver();
 
         // ASYNC
         int socket();
@@ -143,10 +150,15 @@ namespace dbi {
         SQLAllocHandle(SQL_HANDLE_STMT, handle, &stmt);
     }
 
+    string DB2Statement::driver() {
+        return DRIVER_NAME;
+    }
+
     void DB2Statement::fetchMeta() {
         int i, j;
         SQLCHAR buffer[1024];
         SQLSMALLINT type, length;
+        SQLLEN size;
         SQLNumResultCols(stmt, &_columns);
 
         for (i = 0; i < _columns; i++) {
@@ -168,21 +180,27 @@ namespace dbi {
                 case SQL_DECIMAL:
                 case SQL_DOUBLE:
                 case SQL_NUMERIC:
-                case SQL_REAL:
                     _rstypes.push_back(DBI_TYPE_NUMERIC); break;
 
                 case SQL_DECFLOAT:
                 case SQL_FLOAT:
+                case SQL_REAL:
                     _rstypes.push_back(DBI_TYPE_FLOAT); break;
 
                 case SQL_TYPE_DATE:
                     _rstypes.push_back(DBI_TYPE_DATE); break;
 
+                case SQL_DATETIME:
                 case SQL_TYPE_TIMESTAMP:
                     _rstypes.push_back(DBI_TYPE_TIMESTAMP); break;
 
                 case SQL_TYPE_TIME:
                     _rstypes.push_back(DBI_TYPE_TIME); break;
+
+                case SQL_CHAR:
+                    SQLColAttribute(stmt, i+1, SQL_DESC_LENGTH, 0, 0, 0, &size);
+                    _rstypes.push_back(size > 1 ? DBI_TYPE_TEXT : DBI_TYPE_BOOLEAN);
+                    break;
                 /*
                 case SQL_GRAPHIC:
                 case SQL_LONGVARBINARY:
@@ -190,7 +208,6 @@ namespace dbi {
                 case SQL_LONGVARGRAPHIC:
                 case SQL_VARGRAPHIC:
                 case SQL_XML:
-                case SQL_CHAR:
                 case SQL_CLOB:
                 case SQL_CLOB_LOCATOR:
                 case SQL_DBCLOB:
@@ -201,6 +218,57 @@ namespace dbi {
                     _rstypes.push_back(DBI_TYPE_TEXT); break;
             }
         }
+    }
+
+    // TODO not complete.
+    uint64_t DB2Statement::write(string table, FieldSet &fields, IO *io) {
+        db2LoadIn *loadInput;
+        db2LoadStruct *loadInfo;
+        struct sqldcol *dataInfo;
+
+        string sql = "insert into " + table + "(" + fields.join(", ") + ") values (";
+        for (int i = 0; i < fields.size()-1; i++) sql += "?, ";
+        sql += "?)";
+
+        checkResult(SQLPrepare(stmt, (SQLCHAR*)sql.c_str(), SQL_NTS));
+
+        loadInput = new db2LoadIn;
+        loadInfo  = new db2LoadStruct;
+        dataInfo  = new sqldcol;
+
+        memset(loadInput, 0, sizeof(db2LoadIn));
+        memset(loadInfo,  0, sizeof(db2LoadStruct));
+        memset(dataInfo,  0, sizeof(sqldcol));
+
+        loadInfo->piSourceList = 0;
+        loadInfo->piLobPathList = 0;
+        loadInfo->piDataDescriptor = dataInfo;
+        loadInfo->piFileType = 0; // SQL_DEL
+        loadInfo->piFileTypeMod = 0; // tab
+        loadInfo->piTempFilesPath = 0;
+        loadInfo->piVendorSortWorkPaths = 0;
+        loadInfo->piCopyTargetList = 0;
+        loadInfo->piNullIndicators = 0;
+        loadInfo->piLoadInfoIn  = loadInput;
+        loadInfo->poLoadInfoOut = 0;
+        loadInfo->piLocalMsgFileName = 0;
+
+        loadInput->iRestartphase = ' ';
+        loadInput->iNonrecoverable = SQLU_NON_RECOVERABLE_LOAD;
+        loadInput->iStatsOpt = (char)SQLU_STATS_NONE;
+        loadInput->iSavecount = 0;
+        loadInput->iCpuParallelism = 0;
+        loadInput->iDiskParallelism = 0;
+        loadInput->iIndexingMode = 0;
+        loadInput->iDataBufferSize = 0;
+
+        dataInfo->dcolmeth = SQL_METH_D;
+
+        SQLSetStmtAttr(stmt, SQL_ATTR_USE_LOAD_API,  (SQLPOINTER) SQL_USE_LOAD_INSERT, 0);
+        SQLSetStmtAttr(stmt, SQL_ATTR_LOAD_INFO,     (SQLPOINTER) loadInfo,            0);
+
+
+        SQLSetStmtAttr(stmt, SQL_ATTR_USE_LOAD_API, (SQLPOINTER) SQL_USE_LOAD_OFF,    0);
     }
 
     uint32_t DB2Statement::rows() {
@@ -263,8 +331,6 @@ namespace dbi {
         return _rstypes;
     }
 
-    // TODO Handle NULLs
-    // TODO Handle data truncation
     // TODO Handle LOB locators
     bool DB2Statement::consumeResult() {
         ResultRow r;
@@ -287,7 +353,10 @@ namespace dbi {
                     buffer_length = length + 1;
                     SQLGetData(stmt, i+1, SQL_C_CHAR, buffer, buffer_length, &length);
                 }
-                r.push_back(_rstypes[i] == DBI_TYPE_BLOB ? PARAM_BINARY(buffer, length) : PARAM(buffer, length));
+                r.push_back(
+                    length == SQL_NULL_DATA ? PARAM(null()) :
+                    _rstypes[i] == DBI_TYPE_BLOB ? PARAM_BINARY(buffer, length) : PARAM(buffer, length)
+                );
             }
             results.push_back(r);
             _rows++;
@@ -339,26 +408,37 @@ namespace dbi {
         return true;
     }
 
-    // TODO BLOB
-    uint32_t DB2Statement::execute(vector<Param> &bind) {
-        int i, rc;
+    void DB2Statement::processBindArguments(vector<Param> &bind) {
+        void *dataptr;
+        int i, ctype, sqltype;
+        SQLLEN *indicator;
+
+        finish();
         for (i = 0; i < bind.size(); i++) {
-            rc = SQLBindParameter(
-                stmt, i+1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 15, 3, (void*)bind[i].value.data(), 8192, 0);
-            checkResult(rc);
+            ctype     = SQL_C_CHAR;
+            sqltype   = SQL_VARCHAR;
+            dataptr   = (void*)bind[i].value.data();
+            indicator = 0;
+
+            if (bind[i].isnull) {
+                ctype     = SQL_C_DEFAULT;
+                indicator = &DB2_NULL_INDICATOR;
+            }
+            else if (bind[i].binary) {
+                ctype   = SQL_C_BINARY;
+                sqltype = SQL_BLOB;
+            }
+            checkResult(SQLBindParameter(stmt, i+1, SQL_PARAM_INPUT, ctype, sqltype, 20, 8, dataptr, 8192, indicator));
         }
+    }
+
+    uint32_t DB2Statement::execute(vector<Param> &bind) {
+        processBindArguments(bind);
         return execute();
     }
 
-    // TODO BLOB
     uint32_t DB2Statement::execute(string sql, vector<Param> &bind) {
-        int i, rc;
-        finish();
-        for (i = 0; i < bind.size(); i++) {
-            rc = SQLBindParameter(
-                stmt, i+1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 15, 3, (void*)bind[i].value.data(), 8192, 0);
-            checkResult(rc);
-        }
+        processBindArguments(bind);
         return execute(sql);
     }
 
@@ -479,9 +559,10 @@ namespace dbi {
         return value;
     }
 
-    // TODO
     uint64_t DB2Handle::write(string table, FieldSet &fields, IO* io) {
-        return 0;
+        if (stmt) { stmt->cleanup(); delete stmt; }
+        stmt = new DB2Statement(handle);
+        return stmt->write(table, fields, io);
     }
 
     bool DB2Handle::begin() {
@@ -558,8 +639,8 @@ namespace dbi {
         return res;
     }
 
-    // TODO
-    void DB2Handle::reconnect() {
+    string DB2Handle::driver() {
+        return DRIVER_NAME;
     }
 
     // TODO - DB2 does not expose the underlying socket file descriptor :(

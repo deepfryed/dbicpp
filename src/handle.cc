@@ -102,4 +102,8 @@ namespace dbi {
     string Handle::escape(string value) {
         return h->escape(value);
     }
+
+    string Handle::driver() {
+        return h->driver();
+    }
 }

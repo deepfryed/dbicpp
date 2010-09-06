@@ -40,6 +40,15 @@ namespace dbi {
             rows - number of rows affected or returned.
         */
         virtual uint32_t execute(vector<Param> &bind) = 0;
+
+        /*
+            Function: driver
+            Returns the driver this statement is associated with.
+
+            Returns:
+            name - string value.
+        */
+        virtual string driver() = 0;
     };
 }
 

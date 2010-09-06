@@ -208,6 +208,12 @@ namespace dbi {
         */
         string escape(string);
 
+        /*
+            Function: driver
+            See <AbstractHandle::driver()>
+        */
+        string driver();
+
         void* call(string name, void*, uint64_t);
         friend class Statement;
     };

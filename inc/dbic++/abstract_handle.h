@@ -192,6 +192,15 @@ namespace dbi {
         */
         virtual string escape(string) = 0;
 
+        /*
+            Function: driver
+            Returns the driver for this handle.
+
+            Returns:
+            name - string value.
+        */
+        virtual string driver() = 0;
+
         friend class ConnectionPool;
         friend class Request;
 

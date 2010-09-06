@@ -110,6 +110,7 @@ namespace dbi {
         void rewind();
         vector<int>& types();
         void seek(uint32_t);
+        string driver();
     };
 
     class PgHandle : public AbstractHandle {
@@ -148,6 +149,7 @@ namespace dbi {
         void setTimeZoneOffset(int, int);
         void setTimeZone(char *);
         string escape(string);
+        string driver();
 
         friend class PgStatement;
     };
@@ -241,6 +243,10 @@ namespace dbi {
         _result = result;
         _rows   = PQntuples(result);
         fetchMeta(_result);
+    }
+
+    string PgStatement::driver() {
+        return DRIVER_NAME;
     }
 
     void PgStatement::fetchMeta(PGresult *result) {
@@ -823,6 +829,11 @@ namespace dbi {
             throw RuntimeError(PQerrorMessage(conn));
         return escaped;
     }
+
+    string PgHandle::driver() {
+        return DRIVER_NAME;
+    }
+
 }
 
 using namespace std;

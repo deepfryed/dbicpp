@@ -281,6 +281,12 @@ namespace dbi {
             See <AbstractResult::lastInsertID()>
         */
         uint64_t lastInsertID();
+
+        /*
+            Function: driver
+            See <AbstractStatement::driver()>
+        */
+        string driver();
     };
 }
 

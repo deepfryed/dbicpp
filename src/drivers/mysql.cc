@@ -215,6 +215,7 @@ namespace dbi {
         void rewind();
         vector<int>& types();
         void seek(uint32_t);
+        string driver();
     };
 
 
@@ -299,6 +300,7 @@ namespace dbi {
         void setTimeZoneOffset(int, int);
         void setTimeZone(char *name);
         string escape(string);
+        string driver();
 
         friend class MySqlStatement;
         friend class MySqlResult;
@@ -346,6 +348,10 @@ namespace dbi {
 
     MySqlStatement::~MySqlStatement() {
         cleanup();
+    }
+
+    string MySqlStatement::driver() {
+        return DRIVER_NAME;
     }
 
     MySqlStatement::MySqlStatement(string query,  MySqlHandle *h) {
@@ -867,6 +873,10 @@ namespace dbi {
 
     MySqlHandle::~MySqlHandle() {
         cleanup();
+    }
+
+    string MySqlHandle::driver() {
+        return DRIVER_NAME;
     }
 
     void MySqlHandle::attachStatement(MySqlStatement *stmt) {

@@ -192,4 +192,8 @@ namespace dbi {
     void Statement::seek(uint32_t r) {
         st->seek(r);
     }
+
+    string Statement::driver() {
+        return st->driver();
+    }
 }
