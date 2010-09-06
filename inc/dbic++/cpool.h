@@ -80,6 +80,8 @@ namespace dbi {
         Request* execute(string sql, Callback callback, void *context = 0);
 
         bool process(Request *);
+        string driver();
+
         protected:
         struct Connection {
             AbstractHandle* handle;

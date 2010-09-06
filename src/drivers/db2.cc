@@ -243,8 +243,8 @@ namespace dbi {
         loadInfo->piSourceList = 0;
         loadInfo->piLobPathList = 0;
         loadInfo->piDataDescriptor = dataInfo;
-        loadInfo->piFileType = 0; // SQL_DEL
-        loadInfo->piFileTypeMod = 0; // tab
+        loadInfo->piFileType = 0;
+        loadInfo->piFileTypeMod = 0;
         loadInfo->piTempFilesPath = 0;
         loadInfo->piVendorSortWorkPaths = 0;
         loadInfo->piCopyTargetList = 0;
@@ -266,7 +266,6 @@ namespace dbi {
 
         SQLSetStmtAttr(stmt, SQL_ATTR_USE_LOAD_API,  (SQLPOINTER) SQL_USE_LOAD_INSERT, 0);
         SQLSetStmtAttr(stmt, SQL_ATTR_LOAD_INFO,     (SQLPOINTER) loadInfo,            0);
-
 
         SQLSetStmtAttr(stmt, SQL_ATTR_USE_LOAD_API, (SQLPOINTER) SQL_USE_LOAD_OFF,    0);
     }

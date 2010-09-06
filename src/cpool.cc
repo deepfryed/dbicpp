@@ -63,6 +63,10 @@ namespace dbi {
         }
     }
 
+    string ConnectionPool::driver() {
+        return pool.size() > 0 ? pool[0].handle->driver() : "";
+    }
+
     bool ConnectionPool::process(Request *r) {
         AbstractResult *rs = r->result;
         void (*callback)(AbstractResult *) = r->callback;
