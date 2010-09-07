@@ -363,6 +363,8 @@ namespace dbi {
 
     bool DB2Statement::finish() {
         SQLCloseCursor(stmt);
+        SQLFreeStmt(stmt, SQL_UNBIND);
+        SQLFreeStmt(stmt, SQL_RESET_PARAMS);
         return true;
     }
 
@@ -454,8 +456,8 @@ namespace dbi {
         fetchMeta();
         SQLRowCount(stmt, &cmdrows);
         consumeResult();
-        SQLFreeStmt(stmt, SQL_UNBIND);
-        SQLFreeStmt(stmt, SQL_RESET_PARAMS);
+        SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+        SQLAllocHandle(SQL_HANDLE_STMT, handle, &stmt);
         return cmdrows > 0 ? cmdrows : _rows;
     }
 
