@@ -220,7 +220,9 @@ namespace dbi {
         }
     }
 
-    // TODO not complete.
+    // TODO Speed up this sucker.
+    //      1. Splitting text data into fields takes up ~15-20% of the total time.
+    //      2. Probably use SQLExtendedBind to bind multiple values at once and call SQLExecute ?
     uint64_t DB2Statement::write(string table, FieldSet &fields, IO *io) {
         unsigned int loaded, rejected;
         db2LoadIn *loadInput;
