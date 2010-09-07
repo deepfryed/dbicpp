@@ -412,6 +412,7 @@ namespace dbi {
             rc = SQLFetch(stmt);
         }
 
+        finish();
         delete [] buffer;
         return true;
     }
@@ -432,7 +433,6 @@ namespace dbi {
 
     uint32_t DB2Statement::execute() {
         SQLINTEGER cmdrows = 0;
-        finish();
         prepareResult();
         checkResult(SQLExecute(stmt));
         SQLRowCount(stmt, &cmdrows);
@@ -442,7 +442,6 @@ namespace dbi {
 
     uint32_t DB2Statement::execute(string sql) {
         SQLINTEGER cmdrows = 0;
-        finish();
         this->sql = sql;
         prepareResult();
         checkResult(SQLExecDirect(stmt, (SQLCHAR*)sql.c_str(), sql.length()));
@@ -482,13 +481,11 @@ namespace dbi {
     }
 
     uint32_t DB2Statement::execute(vector<Param> &bind) {
-        finish();
         processBindArguments(bind);
         return execute();
     }
 
     uint32_t DB2Statement::execute(string sql, vector<Param> &bind) {
-        finish();
         processBindArguments(bind);
         return execute(sql);
     }
