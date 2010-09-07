@@ -115,8 +115,10 @@ namespace dbi {
 
     class PgHandle : public AbstractHandle {
         private:
-        PGresult *_result;
         string _sql;
+        PGresult *_result;
+        PgStatement *_pgstatement;
+
         protected:
         PGconn *conn;
         int tr_nesting;
@@ -507,12 +509,13 @@ namespace dbi {
         return _rstypes;
     }
 
-    PgHandle::PgHandle() { tr_nesting = 0; }
+    PgHandle::PgHandle() { tr_nesting = 0; _pgstatement = 0; }
     PgHandle::PgHandle(string user, string pass, string dbname, string h, string p) {
-        _result    = 0;
-        tr_nesting = 0;
-        string conninfo;
+        _result      = 0;
+        _pgstatement = 0;
+        tr_nesting   = 0;
 
+        string conninfo;
         string host = h;
         string port = p;
 
@@ -551,14 +554,20 @@ namespace dbi {
     }
 
     void PgHandle::cleanup() {
-        // This gets called only on dlclose, so the wrapper dbi::Handle
-        // closes connections and frees memory.
         if (_result)
             PQclear(_result);
+
+        if (_pgstatement) {
+            _pgstatement->cleanup();
+            delete _pgstatement;
+        }
+
         if (conn)
             PQfinish(conn);
-        conn    = 0;
-        _result = 0;
+
+        conn         = 0;
+        _result      = 0;
+        _pgstatement = 0;
     }
 
     uint32_t PgHandle::execute(string sql) {
@@ -629,9 +638,10 @@ namespace dbi {
 
     AbstractResult* PgHandle::results() {
         if (_result) {
-            PgStatement *st = new PgStatement(_sql, this, _result);
-            _result = 0;
-            return st;
+            if (_pgstatement) { _pgstatement->cleanup(); delete _pgstatement; }
+            _pgstatement = new PgStatement(_sql, this, _result);
+            _result      = 0;
+            return _pgstatement;
         }
         return 0;
     }

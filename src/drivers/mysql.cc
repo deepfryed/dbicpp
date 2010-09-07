@@ -262,6 +262,8 @@ namespace dbi {
         string _sql;
         MYSQL_RES *_result;
         MySqlStatement *_statement;
+        MySqlResult *_resultset;
+
         map<MySqlStatement*,bool> statements;
 
         protected:
@@ -837,10 +839,12 @@ namespace dbi {
     MySqlHandle::MySqlHandle(string user, string pass, string dbname, string host, string port) {
         char no      = 0;
         char yes     = 1;
-        uint32_t timeout = 120;
         tr_nesting   = 0;
         _result      = 0;
         _statement   = 0;
+        _resultset   = 0;
+
+        uint32_t timeout = 120;
         uint32_t _port   = atoi(port.c_str());
 
         conn  = mysql_init(0);
@@ -889,11 +893,13 @@ namespace dbi {
 
     void MySqlHandle::cleanup() {
         if (conn) {
-            // This gets called only on dlclose, so the wrapper dbi::Handle
-            // closes connections and frees memory.
             if (_statement) {
                 _statement->cleanup();
                 delete _statement;
+            }
+            if (_resultset) {
+                _resultset->cleanup();
+                delete _resultset;
             }
             if (_result)
                 mysql_free_result(_result);
@@ -906,6 +912,7 @@ namespace dbi {
             mysql_close(conn);
         }
 
+        _resultset = 0;
         _statement = 0;
         _result    = 0;
         conn       = 0;
@@ -920,11 +927,13 @@ namespace dbi {
             delete _statement;
         }
         if (_result) mysql_free_result(_result);
+
         _sql       = sql;
         _result    = 0;
         failed     = 0;
         tries      = 0;
         _statement = 0;
+
         MYSQL_PREPROCESS_QUERY(sql);
         do {
             tries++;
@@ -956,16 +965,17 @@ namespace dbi {
     }
 
     AbstractResult* MySqlHandle::results() {
-        AbstractResult *st = 0;
-
         if (_statement)
-            st = _statement;
-        else if (_result)
-            st = new MySqlResult(this, _result);
-
-        _statement = 0;
-        _result    = 0;
-        return st;
+            return _statement;
+        else if (_result) {
+            if (_resultset) {
+                _resultset->cleanup();
+                delete _resultset;
+            }
+            _resultset = new MySqlResult(this, _result);
+            _result    = 0;
+            return _resultset;
+        }
     }
 
     int MySqlHandle::socket() {

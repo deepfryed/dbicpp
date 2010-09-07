@@ -73,7 +73,7 @@ TARGET_LINK_LIBRARIES(demo/demo dbic++ dl ${UUID_LIBRARIES} ${PCRE_LIBRARIES})
 ADD_EXECUTABLE(demo/async src/examples/async.cc)
 TARGET_LINK_LIBRARIES(demo/async dbic++ dl ${UUID_LIBRARIES} ${PCRE_LIBRARIES} ${EVENT_LIBRARIES})
 
-ADD_DEFINITIONS(-Wunused-function -Wunused-value -Wunused-label -rdynamic -fPIC -O3)
+ADD_DEFINITIONS(-Wunused-function -Wunused-value -Wunused-label -rdynamic -fopenmp -fPIC -O3)
 ADD_DEFINITIONS(${UUID_DEFINITIONS} ${EVENT_DEFINITIONS} ${PCRE_DEFINITIONS})
 
 # Use -DCMAKE_INSTALL_PREFIX:PATH=<path> to override /usr/local

@@ -20,7 +20,7 @@ namespace dbi {
 
         string messages;
 
-        while(SQLGetDiagRec(type, handle, i++, sqlstate, &sqlcode, message, SQL_MAX_MESSAGE_LENGTH + 1, &length) == 0)
+        while(SQLGetDiagRec(type, handle, i++, sqlstate, &sqlcode, message, SQL_MAX_MESSAGE_LENGTH, &length) == 0)
             messages += string((char*)message) + "\n";
         throw RuntimeError(messages);
     }
@@ -81,6 +81,7 @@ namespace dbi {
         uint32_t execute(vector<Param> &bind);
         uint32_t execute(string);
         uint32_t execute(string, vector<Param> &bind);
+        void aexecute(string, vector<Param> &bind);
         string command();
         string driver();
     };
@@ -95,7 +96,6 @@ namespace dbi {
         void checkResult(int);
 
         public:
-        DB2Handle();
         DB2Handle(string, string, string);
         DB2Handle(string, string, string, string, string);
         ~DB2Handle();
@@ -391,7 +391,7 @@ namespace dbi {
         if (rc == SQL_ERROR || rc == SQL_NO_DATA_FOUND)
             return true;
 
-        unsigned char *buffer = new unsigned char[8192];
+        unsigned char *buffer  = new unsigned char[8192];
         uint64_t buffer_length = 8192;
 
         while (rc != SQL_ERROR && rc != SQL_NO_DATA_FOUND) {
@@ -422,6 +422,7 @@ namespace dbi {
     void DB2Statement::prepareResult() {
         _rows = _rowno = 0;
         results.clear();
+        fetchMeta();
     }
 
     // NOTE
@@ -435,21 +436,26 @@ namespace dbi {
 
     uint32_t DB2Statement::execute() {
         SQLINTEGER cmdrows = 0;
-        prepareResult();
+        _rows = _rowno = 0;
+        results.clear();
         checkResult(SQLExecute(stmt));
         SQLRowCount(stmt, &cmdrows);
         consumeResult();
         return cmdrows > 0 ? cmdrows : _rows;
     }
 
+    // one shot query.
     uint32_t DB2Statement::execute(string sql) {
         SQLINTEGER cmdrows = 0;
         this->sql = sql;
-        prepareResult();
+        _rows = _rowno = 0;
+        results.clear();
         checkResult(SQLExecDirect(stmt, (SQLCHAR*)sql.c_str(), sql.length()));
         fetchMeta();
         SQLRowCount(stmt, &cmdrows);
         consumeResult();
+        SQLFreeStmt(stmt, SQL_UNBIND);
+        SQLFreeStmt(stmt, SQL_RESET_PARAMS);
         return cmdrows > 0 ? cmdrows : _rows;
     }
 
@@ -492,6 +498,15 @@ namespace dbi {
         return execute(sql);
     }
 
+    void DB2Statement::aexecute(string sql, vector<Param> &bind) {
+        int rc;
+        processBindArguments(bind);
+        SQLSetStmtAttr(stmt, SQL_ATTR_ASYNC_ENABLE, (void*)SQL_ASYNC_ENABLE_ON, SQL_IS_INTEGER);
+        rc = SQLExecDirect(stmt, (SQLCHAR*)sql.c_str(), sql.length());
+        if (rc != SQL_STILL_EXECUTING)
+            checkResult(rc);
+    }
+
     void DB2Statement::cleanup() {
         if (stmt)
             SQLFreeHandle(SQL_HANDLE_STMT, stmt);
@@ -511,15 +526,13 @@ namespace dbi {
     // DB2Handle
     // -----------------------------------------------------------------------------
 
-    DB2Handle::DB2Handle() { }
-
     void DB2Handle::checkResult(int rc) {
         CHECK_HANDLE_RESULT(handle, rc);
     }
 
     // TODO error checks.
     void DB2Handle::setup() {
-        stmt = 0;
+        stmt       = 0;
         tr_nesting = 0;
         SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env);
         SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
@@ -568,14 +581,12 @@ namespace dbi {
     }
 
     uint32_t DB2Handle::execute(string sql) {
-        if (stmt) { stmt->cleanup(); delete stmt; }
-        stmt = new DB2Statement(handle);
+        if (!stmt) stmt = new DB2Statement(handle);
         return stmt->execute(sql);
     }
 
     uint32_t DB2Handle::execute(string sql, vector<Param> &bind) {
-        if (stmt) { stmt->cleanup(); delete stmt; }
-        stmt = new DB2Statement(handle);
+        if (!stmt) stmt = new DB2Statement(handle);
         return stmt->execute(sql, bind);
     }
 
@@ -610,8 +621,7 @@ namespace dbi {
     }
 
     uint64_t DB2Handle::write(string table, FieldSet &fields, IO* io) {
-        if (stmt) { stmt->cleanup(); delete stmt; }
-        stmt = new DB2Statement(handle);
+        if (!stmt) stmt = new DB2Statement(handle);
         return stmt->write(table, fields, io);
     }
 
@@ -641,16 +651,14 @@ namespace dbi {
             begin();
             tr_nesting = 0;
         }
-        if (stmt) delete stmt;
-        stmt = new DB2Statement(handle);
+        if (!stmt) stmt = new DB2Statement(handle);
         stmt->execute("SAVEPOINT " + name + " ON ROLLBACK RETAIN CURSORS");
         tr_nesting++;
         return true;
     }
 
     bool DB2Handle::rollback(string name) {
-        if (stmt) delete stmt;
-        stmt = new DB2Statement(handle);
+        if (!stmt) stmt = new DB2Statement(handle);
         stmt->execute("ROLLBACK TO SAVEPOINT " + name);
         tr_nesting--;
         if (tr_nesting == 0) rollback();
@@ -658,8 +666,7 @@ namespace dbi {
     }
 
     bool DB2Handle::commit(string name) {
-        if (stmt) delete stmt;
-        stmt = new DB2Statement(handle);
+        if (!stmt) stmt = new DB2Statement(handle);
         stmt->execute("RELEASE SAVEPOINT " + name);
         tr_nesting--;
         if (tr_nesting == 0) commit();
@@ -687,9 +694,7 @@ namespace dbi {
     }
 
     AbstractResult* DB2Handle::results() {
-        AbstractResult *res = stmt;
-        stmt = 0;
-        return res;
+        return stmt;
     }
 
     string DB2Handle::driver() {
@@ -701,9 +706,11 @@ namespace dbi {
         return 0;
     }
 
-    // TODO
+    // TODO not complete
     AbstractResult* DB2Handle::aexecute(string sql, vector<Param> &bind) {
-        return 0;
+        if (!stmt) stmt = new DB2Statement(handle);
+        stmt->aexecute(sql, bind);
+        return (AbstractResult*)stmt;
     }
 
     // TODO
