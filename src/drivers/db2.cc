@@ -52,7 +52,7 @@ namespace dbi {
 
         void checkResult(int);
         void fetchMeta();
-        void processBindArguments(vector<Param> &bind);
+        void processBindArguments(vector<Param> &bind, int size = 0);
 
         public:
         uint32_t columns();
@@ -222,6 +222,7 @@ namespace dbi {
 
     // TODO not complete.
     uint64_t DB2Statement::write(string table, FieldSet &fields, IO *io) {
+        unsigned int loaded, rejected;
         db2LoadIn *loadInput;
         db2LoadStruct *loadInfo;
         struct sqldcol *dataInfo;
@@ -230,6 +231,7 @@ namespace dbi {
         for (int i = 0; i < fields.size()-1; i++) sql += "?, ";
         sql += "?)";
 
+        SQLEndTran(SQL_HANDLE_DBC, handle, SQL_ROLLBACK);
         checkResult(SQLPrepare(stmt, (SQLCHAR*)sql.c_str(), SQL_NTS));
 
         loadInput = new db2LoadIn;
@@ -240,34 +242,82 @@ namespace dbi {
         memset(loadInfo,  0, sizeof(db2LoadStruct));
         memset(dataInfo,  0, sizeof(sqldcol));
 
-        loadInfo->piSourceList = 0;
-        loadInfo->piLobPathList = 0;
-        loadInfo->piDataDescriptor = dataInfo;
-        loadInfo->piFileType = 0;
-        loadInfo->piFileTypeMod = 0;
-        loadInfo->piTempFilesPath = 0;
-        loadInfo->piVendorSortWorkPaths = 0;
-        loadInfo->piCopyTargetList = 0;
-        loadInfo->piNullIndicators = 0;
-        loadInfo->piLoadInfoIn  = loadInput;
-        loadInfo->poLoadInfoOut = 0;
-        loadInfo->piLocalMsgFileName = 0;
+        loadInfo->piDataDescriptor  = dataInfo;
+        loadInfo->piLoadInfoIn      = loadInput;
 
-        loadInput->iRestartphase = ' ';
-        loadInput->iNonrecoverable = SQLU_NON_RECOVERABLE_LOAD;
-        loadInput->iStatsOpt = (char)SQLU_STATS_NONE;
-        loadInput->iSavecount = 0;
-        loadInput->iCpuParallelism = 0;
-        loadInput->iDiskParallelism = 0;
-        loadInput->iIndexingMode = 0;
-        loadInput->iDataBufferSize = 0;
+        loadInput->iRestartphase    = ' ';
+        loadInput->iNonrecoverable  = SQLU_NON_RECOVERABLE_LOAD;
+        loadInput->iStatsOpt        = (char)SQLU_STATS_NONE;
+        loadInput->iCpuParallelism  = 2;
 
-        dataInfo->dcolmeth = SQL_METH_D;
+        dataInfo->dcolmeth          = SQL_METH_D;
 
-        SQLSetStmtAttr(stmt, SQL_ATTR_USE_LOAD_API,  (SQLPOINTER) SQL_USE_LOAD_INSERT, 0);
-        SQLSetStmtAttr(stmt, SQL_ATTR_LOAD_INFO,     (SQLPOINTER) loadInfo,            0);
+        SQLSetStmtAttr(stmt, SQL_ATTR_USE_LOAD_API,         (SQLPOINTER) SQL_USE_LOAD_INSERT, 0);
+        SQLSetStmtAttr(stmt, SQL_ATTR_LOAD_INFO,            (SQLPOINTER) loadInfo,            0);
+        SQLSetStmtAttr(stmt, SQL_ATTR_LOAD_MODIFIED_BY,     (SQLPOINTER) "anyorder",          SQL_NTS);
 
-        SQLSetStmtAttr(stmt, SQL_ATTR_USE_LOAD_API, (SQLPOINTER) SQL_USE_LOAD_OFF,    0);
+        SQLSetStmtAttr(stmt, SQL_ATTR_LOAD_ROWS_LOADED_PTR,   &loaded,   SQL_IS_POINTER);
+        SQLSetStmtAttr(stmt, SQL_ATTR_LOAD_ROWS_REJECTED_PTR, &rejected, SQL_IS_POINTER);
+
+        uint64_t n, length;
+        vector<Param> arguments, bind;
+        char *start, *end, *terminal, *anchor;
+        string value, remaining = "", stream;
+        char *buffer = new char[2097152];
+        while ((n = io->read(buffer, 2097152)) > 0) {
+            stream    = remaining + string(buffer, n);
+            remaining = "";
+            length    = stream.length();
+            anchor    = (char*)stream.data();
+            start     = anchor;
+            while (anchor - start < length) {
+                terminal = (char *)memchr(anchor, '\n', length - (anchor - start));
+                terminal = terminal ? terminal : start + length;
+                if (
+                    (end = (char*)memchr(anchor, '\t', terminal - anchor + 1)) ||
+                    (end = (char*)memchr(anchor, '\n', terminal - anchor + 1))
+                ) {
+                    value = string(anchor, (end-anchor));
+                    arguments.push_back(value == "\\N" ? PARAM(null()) : PARAM(value));
+                    anchor = end + 1;
+                }
+                else {
+                    remaining = string(anchor, terminal - anchor);
+                    break;
+                }
+            }
+
+            try {
+                uint64_t idx, size = fields.size(), max = arguments.size();
+                for (n = 0; n < max; n += size) {
+                    for (idx = n; idx < n + size && idx < max; idx++)
+                        bind.push_back(arguments[idx]);
+                    if (bind.size() == size) {
+                        processBindArguments(bind, size);
+                        checkResult(SQLExecute(stmt));
+                        bind.clear();
+                    }
+                }
+                arguments = bind;
+                bind.clear();
+            }
+            catch (RuntimeError &e) {
+                SQLSetStmtAttr(stmt, SQL_ATTR_USE_LOAD_API, (SQLPOINTER) SQL_USE_LOAD_TERMINATE, 0);
+                delete [] buffer;
+                delete dataInfo;
+                delete loadInfo;
+                delete loadInput;
+                throw e;
+            }
+        }
+
+        SQLSetStmtAttr(stmt, SQL_ATTR_USE_LOAD_API, (SQLPOINTER) SQL_USE_LOAD_OFF, 0);
+
+        delete [] buffer;
+        delete dataInfo;
+        delete loadInfo;
+        delete loadInput;
+        return loaded;
     }
 
     uint32_t DB2Statement::rows() {
@@ -407,13 +457,13 @@ namespace dbi {
         return true;
     }
 
-    void DB2Statement::processBindArguments(vector<Param> &bind) {
+    void DB2Statement::processBindArguments(vector<Param> &bind, int size) {
         void *dataptr;
         int i, ctype, sqltype;
         SQLLEN *indicator;
 
-        finish();
-        for (i = 0; i < bind.size(); i++) {
+        size = size > 0 ? size : bind.size();
+        for (i = 0; i < size; i++) {
             ctype     = SQL_C_CHAR;
             sqltype   = SQL_VARCHAR;
             dataptr   = (void*)bind[i].value.data();
@@ -432,11 +482,13 @@ namespace dbi {
     }
 
     uint32_t DB2Statement::execute(vector<Param> &bind) {
+        finish();
         processBindArguments(bind);
         return execute();
     }
 
     uint32_t DB2Statement::execute(string sql, vector<Param> &bind) {
+        finish();
         processBindArguments(bind);
         return execute(sql);
     }
