@@ -552,13 +552,13 @@ namespace dbi {
             (SQLCHAR*)pass.c_str(),   SQL_NTS
         );
         checkResult(rc);
-        SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (void*)"on", 2);
+        SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, SQL_NTS);
     }
 
     DB2Handle::DB2Handle(string user, string pass, string dbname, string host, string port) {
         setup();
         TCPIPConnect(user, pass, dbname, host, port);
-        SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (void*)"on", 2);
+        SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, SQL_NTS);
     }
 
     DB2Statement* DB2Handle::prepare(string sql) {
@@ -615,21 +615,21 @@ namespace dbi {
 
     bool DB2Handle::begin() {
         SQLEndTran(SQL_HANDLE_DBC, handle, SQL_ROLLBACK);
-        SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (void*)"off", 3);
+        checkResult(SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_OFF, SQL_NTS));
         tr_nesting = 1;
         return true;
     }
 
     bool DB2Handle::rollback() {
         SQLEndTran(SQL_HANDLE_DBC, handle, SQL_ROLLBACK);
-        SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (void*)"on", 2);
+        SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, SQL_NTS);
         tr_nesting = 0;
         return true;
     }
 
     bool DB2Handle::commit() {
         SQLEndTran(SQL_HANDLE_DBC, handle, SQL_COMMIT);
-        SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (void*)"on", 2);
+        SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, SQL_NTS);
         tr_nesting = 0;
         return true;
     }
@@ -639,23 +639,26 @@ namespace dbi {
             begin();
             tr_nesting = 0;
         }
-        string sql = ("SAVEPOINT " + name);
-        checkResult(SQLExecDirect(handle, (SQLCHAR*)sql.data(), sql.length()));
+        if (stmt) delete stmt;
+        stmt = new DB2Statement(handle);
+        stmt->execute("SAVEPOINT " + name + " ON ROLLBACK RETAIN CURSORS");
         tr_nesting++;
         return true;
     }
 
     bool DB2Handle::rollback(string name) {
-        string sql = ("ROLLBACK TO SAVEPOINT " + name);
-        checkResult(SQLExecDirect(handle, (SQLCHAR*)sql.data(), sql.length()));
+        if (stmt) delete stmt;
+        stmt = new DB2Statement(handle);
+        stmt->execute("ROLLBACK TO SAVEPOINT " + name);
         tr_nesting--;
         if (tr_nesting == 0) rollback();
         return true;
     }
 
     bool DB2Handle::commit(string name) {
-        string sql = ("RELEASE SAVEPOINT " + name);
-        checkResult(SQLExecDirect(handle, (SQLCHAR*)sql.data(), sql.length()));
+        if (stmt) delete stmt;
+        stmt = new DB2Statement(handle);
+        stmt->execute("RELEASE SAVEPOINT " + name);
         tr_nesting--;
         if (tr_nesting == 0) commit();
         return true;
