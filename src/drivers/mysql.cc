@@ -854,7 +854,8 @@ namespace dbi {
         mysql_options(conn, MYSQL_OPT_RECONNECT,    &MYSQL_BOOL_TRUE);
         mysql_options(conn, MYSQL_OPT_LOCAL_INFILE, 0);
 
-        if(!mysql_real_connect(conn, host.c_str(), user.c_str(), pass.c_str(), dbname.c_str(), _port, 0, 0))
+        if (!mysql_real_connect(conn, host.c_str(), user.c_str(), pass.c_str(), dbname.c_str(),
+            _port, 0, CLIENT_FOUND_ROWS))
             connectionError();
 
         mysql_set_character_set(conn, "utf8");
