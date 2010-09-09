@@ -27,14 +27,14 @@ namespace dbi {
     }
 
     void CHECK_HANDLE_RESULT(SQLHANDLE handle, int rc) {
-        if (rc != SQL_SUCCESS) {
+        if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
             SQLEndTran(SQL_HANDLE_DBC, handle, SQL_ROLLBACK);
             db2error(SQL_HANDLE_DBC, handle);
         }
     }
 
     void CHECK_STATEMENT_RESULT(SQLHANDLE handle, SQLHANDLE stmt, int rc) {
-        if (rc != SQL_SUCCESS) {
+        if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
             SQLEndTran(SQL_HANDLE_DBC, handle, SQL_ROLLBACK);
             db2error(SQL_HANDLE_STMT, stmt);
         }
