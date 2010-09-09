@@ -20,7 +20,7 @@ namespace dbi {
     void Reactor::watch(Request *r) {
         ReactorEvent *re = new ReactorEvent;
         re->request = r;
-        event_set(&re->ev, r->socket(), EV_READ | EV_PERSIST, Reactor::callback, (void*)re);
+        event_set(&re->ev, r->socket(), EV_READ | EV_WRITE | EV_PERSIST, Reactor::callback, (void*)re);
         event_add(&re->ev, 0);
     }
 

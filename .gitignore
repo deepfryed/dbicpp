@@ -45,5 +45,5 @@ Topics.txt
 Data/
 doc/*
 !doc/Web.css
-test
-test.cc
+test?
+test?.cc

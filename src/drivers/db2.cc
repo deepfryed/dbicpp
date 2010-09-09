@@ -140,17 +140,21 @@ namespace dbi {
     }
 
     DB2Statement::DB2Statement(SQLHANDLE handle, string sql) {
-        _rowno = _rows = 0;
-        this->handle = handle;
-        this->sql    = sql;
+        this->sql     = sql;
+        this->_rows   = 0;
+        this->_rowno  = 0;
+        this->handle  = handle;
+        this->isasync = false;
         SQLAllocHandle(SQL_HANDLE_STMT, handle, &stmt);
         checkResult(SQLPrepare(stmt, (SQLCHAR*)sql.c_str(), SQL_NTS));
         fetchMeta();
     }
 
     DB2Statement::DB2Statement(SQLHANDLE handle) {
-        _rowno = _rows = 0;
-        this->handle = handle;
+        this->_rows   = 0;
+        this->_rowno  = 0;
+        this->handle  = handle;
+        this->isasync = false;
         SQLAllocHandle(SQL_HANDLE_STMT, handle, &stmt);
     }
 
@@ -388,14 +392,25 @@ namespace dbi {
         return _rstypes;
     }
 
+    void DB2Statement::prepareResult() {
+        // NOP
+    }
+
     // TODO Handle LOB locators
     bool DB2Statement::consumeResult() {
         ResultRow r;
         SQLINTEGER length;
 
+        if (isasync) {
+            if (isBusy()) return true;
+            _rows  = 0;
+            _rowno = 0;
+            fetchMeta();
+        }
+
         int rc = SQLFetch(stmt);
         if (rc == SQL_ERROR || rc == SQL_NO_DATA_FOUND)
-            return true;
+            return false;
 
         unsigned char *buffer  = new unsigned char[8192];
         uint64_t buffer_length = 8192;
@@ -422,13 +437,7 @@ namespace dbi {
 
         finish();
         delete [] buffer;
-        return true;
-    }
-
-    void DB2Statement::prepareResult() {
-        _rows = _rowno = 0;
-        results.clear();
-        fetchMeta();
+        return false;
     }
 
     // NOTE
@@ -557,11 +566,13 @@ namespace dbi {
     }
 
     void DB2Handle::TCPIPConnect(string user, string pass, string dbname, string host, string port) {
-        string dsn = "DRIVER={IBM DB2 ODBC DRIVER};DATABASE=" + dbname +
+        string dsn = "DRIVER={IBM DB2 ODBC DRIVER};DSN=" + dbname + ";DATABASE=" + dbname +
                      ";HOSTNAME=" + host + ";PORT=" + port + ";PROTOCOL=TCPIP;";
 
         if (user != "")
-            dsn += "UID=" + user + ";PWD=" + pass;
+            dsn += "UID=" + user + ";";
+        if (pass != "")
+            dsn += "PWD=" + pass + ";";
 
         int rc = SQLDriverConnect(
             handle, 0,
@@ -592,6 +603,8 @@ namespace dbi {
         TCPIPConnect(user, pass, dbname, host, port);
         SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, SQL_NTS);
 
+        socketfd = -1;
+
         // Figure out socket descriptor - this is hit and miss.
         SocketInfo info(host, atoi(port.c_str()), getpid());
         vector<ProcNet*> results = info.search();
@@ -603,10 +616,10 @@ namespace dbi {
                 break;
             }
         }
-        else {
+
+        if (socketfd < 3)
             logMessage(_trace_fd,
-                "WARNING: Unable to determine socket fd, async apis will not work correctly");
-        }
+                "WARNING: Unable to determine socket fd, async apis will not work correctly.");
     }
 
     DB2Statement* DB2Handle::prepare(string sql) {
@@ -739,9 +752,9 @@ namespace dbi {
     }
 
     AbstractResult* DB2Handle::aexecute(string sql, vector<Param> &bind) {
-        if (!stmt) stmt = new DB2Statement(handle);
-        stmt->aexecute(sql, bind);
-        return (AbstractResult*)stmt;
+        DB2Statement* async_stmt = new DB2Statement(handle);
+        async_stmt->aexecute(sql, bind);
+        return (AbstractResult*)async_stmt;
     }
 
     void DB2Handle::initAsync() {
