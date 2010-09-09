@@ -403,8 +403,10 @@ namespace dbi {
 
         if (isasync) {
             if (isBusy()) return true;
-            _rows  = 0;
-            _rowno = 0;
+            _rows   = 0;
+            _rowno  = 0;
+            isasync = false;
+            SQLSetStmtAttr(stmt, SQL_ATTR_ASYNC_ENABLE, (void*)SQL_ASYNC_ENABLE_OFF, SQL_IS_INTEGER);
             fetchMeta();
         }
 
