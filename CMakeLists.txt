@@ -55,7 +55,7 @@ ENDIF()
 
 IF (DB2_FOUND)
   INCLUDE_DIRECTORIES(${DB2_INCLUDE_DIRS})
-  ADD_LIBRARY(dbddb2 SHARED src/drivers/db2.cc src/container.cc src/error.cc)
+  ADD_LIBRARY(dbddb2 SHARED src/drivers/db2.cc src/socketinfo.cc src/container.cc src/error.cc)
   IF (APPLE)
     TARGET_LINK_LIBRARIES(dbddb2 dbic++ ${DB2_LIBRARIES} ${UUID_LIBRARIES} ${PCRE_LIBRARIES})
   ELSE()

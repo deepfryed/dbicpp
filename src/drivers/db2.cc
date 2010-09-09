@@ -11,6 +11,7 @@ namespace dbi {
     using namespace std;
 
     SQLLEN DB2_NULL_INDICATOR = SQL_NULL_DATA;
+    map<int, bool> OPENSOCKETS;
 
     void db2error(short type, SQLHANDLE handle) {
         SQLCHAR     message[SQL_MAX_MESSAGE_LENGTH+1];
@@ -41,6 +42,7 @@ namespace dbi {
 
     class DB2Statement : public AbstractStatement {
         protected:
+        bool isasync;
         string sql;
         uint32_t _rowno, _rows;
         vector<ResultRow> results;
@@ -82,6 +84,7 @@ namespace dbi {
         uint32_t execute(string);
         uint32_t execute(string, vector<Param> &bind);
         void aexecute(string, vector<Param> &bind);
+        bool isBusy();
         string command();
         string driver();
     };
@@ -94,6 +97,7 @@ namespace dbi {
         void TCPIPConnect(string, string, string, string, string);
         int tr_nesting;
         void checkResult(int);
+        int socketfd;
 
         public:
         DB2Handle(string, string, string);
@@ -502,11 +506,22 @@ namespace dbi {
 
     void DB2Statement::aexecute(string sql, vector<Param> &bind) {
         int rc;
+        this->sql     = sql;
+        this->isasync = true;
         processBindArguments(bind);
         SQLSetStmtAttr(stmt, SQL_ATTR_ASYNC_ENABLE, (void*)SQL_ASYNC_ENABLE_ON, SQL_IS_INTEGER);
         rc = SQLExecDirect(stmt, (SQLCHAR*)sql.c_str(), sql.length());
-        if (rc != SQL_STILL_EXECUTING)
-            checkResult(rc);
+        if (rc != SQL_STILL_EXECUTING) checkResult(rc);
+    }
+
+    bool DB2Statement::isBusy() {
+        if (isasync) {
+            int rc = SQLExecDirect(stmt, (SQLCHAR*)sql.c_str(), sql.length());
+            if (rc != SQL_STILL_EXECUTING) checkResult(rc);
+            return rc == SQL_STILL_EXECUTING;
+        }
+
+        throw RuntimeError("Invalid call. Did you execute an async query first ?");
     }
 
     void DB2Statement::cleanup() {
@@ -576,6 +591,22 @@ namespace dbi {
         setup();
         TCPIPConnect(user, pass, dbname, host, port);
         SQLSetConnectAttr(handle, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, SQL_NTS);
+
+        // Figure out socket descriptor - this is hit and miss.
+        SocketInfo info(host, atoi(port.c_str()), getpid());
+        vector<ProcNet*> results = info.search();
+        if (results.size()) {
+            for (int i = 0; i < results.size(); i++) {
+                if (OPENSOCKETS[results[i]->fd]) continue;
+                socketfd = results[i]->fd;
+                OPENSOCKETS[socketfd] = true;
+                break;
+            }
+        }
+        else {
+            logMessage(_trace_fd,
+                "WARNING: Unable to determine socket fd, async apis will not work correctly");
+        }
     }
 
     DB2Statement* DB2Handle::prepare(string sql) {
@@ -703,25 +734,22 @@ namespace dbi {
         return DRIVER_NAME;
     }
 
-    // TODO - DB2 does not expose the underlying socket file descriptor :(
     int DB2Handle::socket() {
-        return 0;
+        return socketfd;
     }
 
-    // TODO not complete
     AbstractResult* DB2Handle::aexecute(string sql, vector<Param> &bind) {
         if (!stmt) stmt = new DB2Statement(handle);
         stmt->aexecute(sql, bind);
         return (AbstractResult*)stmt;
     }
 
-    // TODO
     void DB2Handle::initAsync() {
+        // NOP
     }
 
-    // TODO
     bool DB2Handle::isBusy() {
-        return false;
+        if (stmt) return stmt->isBusy();
     }
 };
 

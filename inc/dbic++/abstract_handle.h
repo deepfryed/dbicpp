@@ -204,9 +204,10 @@ namespace dbi {
         friend class ConnectionPool;
         friend class Request;
 
+        virtual int socket() = 0;
+
         // ASYNC API
         protected:
-        virtual int socket() = 0;
         virtual AbstractResult* aexecute(string sql, vector<Param> &bind) = 0;
         virtual void initAsync() = 0;
         virtual bool isBusy() = 0;

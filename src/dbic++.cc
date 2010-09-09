@@ -31,7 +31,6 @@ namespace dbi {
         Driver* (*info)(void);
         pcrecpp::RE re("\\.so\\.\\d+|\\.dylib");
 
-        _trace          = false;
         _trace_fd       = 1;
         drivers["null"] = NULL;
 

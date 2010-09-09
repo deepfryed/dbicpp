@@ -60,5 +60,6 @@ namespace dbi {
 #include "dbic++/abstract_statement.h"
 #include "dbic++/handle.h"
 #include "dbic++/statement.h"
+#include "dbic++/socketinfo.h"
 
 #endif
