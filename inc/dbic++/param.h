@@ -26,6 +26,7 @@ namespace dbi {
         bool isnull;
         string value;
         bool binary;
+        uint64_t length;
         operator bool() { return value.length() > 0; }
     };
 

@@ -398,8 +398,9 @@ namespace dbi {
 
     // TODO Handle LOB locators
     bool DB2Statement::consumeResult() {
+        int rc, type;
         ResultRow r;
-        SQLINTEGER length;
+        SQLLEN length;
 
         if (isasync) {
             if (isBusy()) return true;
@@ -410,26 +411,28 @@ namespace dbi {
             fetchMeta();
         }
 
-        int rc = SQLFetch(stmt);
+        rc = SQLFetch(stmt);
         if (rc == SQL_ERROR || rc == SQL_NO_DATA_FOUND)
             return false;
 
-        unsigned char *buffer  = new unsigned char[8192];
-        uint64_t buffer_length = 8192;
+        unsigned char *buffer  = (unsigned char*)malloc(8192);
+        uint64_t offset, buffer_length = 8192;
 
         while (rc != SQL_ERROR && rc != SQL_NO_DATA_FOUND) {
             r.clear();
             for (int i = 0; i < _columns; i++ ) {
-                SQLGetData(stmt, i+1, SQL_C_CHAR, buffer, buffer_length, &length);
+                type = _rstypes[i] == DBI_TYPE_BLOB ? SQL_C_BINARY : SQL_C_CHAR;
+                SQLGetData(stmt, i+1, type, buffer, buffer_length, &length);
                 if (length > buffer_length) {
-                    delete [] buffer;
-                    buffer = new unsigned char[length + 1];
+                    offset        = buffer_length;
                     buffer_length = length + 1;
-                    SQLGetData(stmt, i+1, SQL_C_CHAR, buffer, buffer_length, &length);
+                    buffer        = (unsigned char*)realloc(buffer, buffer_length);
+                    SQLGetData(stmt, i+1, type, buffer+offset, buffer_length-offset, &length);
+                    length        = buffer_length - 1;
                 }
                 r.push_back(
                     length == SQL_NULL_DATA ? PARAM(null()) :
-                    _rstypes[i] == DBI_TYPE_BLOB ? PARAM_BINARY(buffer, length) : PARAM(buffer, length)
+                    type == SQL_C_BINARY ? PARAM_BINARY(buffer, length) : PARAM(buffer, length)
                 );
             }
             results.push_back(r);
@@ -438,7 +441,7 @@ namespace dbi {
         }
 
         finish();
-        delete [] buffer;
+        free(buffer);
         return false;
     }
 
@@ -491,7 +494,7 @@ namespace dbi {
             ctype     = SQL_C_CHAR;
             sqltype   = SQL_VARCHAR;
             dataptr   = (void*)bind[i].value.data();
-            indicator = 0;
+            indicator = (SQLLEN*)&bind[i].length;
 
             if (bind[i].isnull) {
                 ctype     = SQL_C_DEFAULT;
@@ -501,7 +504,7 @@ namespace dbi {
                 ctype   = SQL_C_BINARY;
                 sqltype = SQL_BLOB;
             }
-            checkResult(SQLBindParameter(stmt, i+1, SQL_PARAM_INPUT, ctype, sqltype, 20, 8, dataptr, 8192, indicator));
+            checkResult(SQLBindParameter(stmt, i+1, SQL_PARAM_INPUT, ctype, sqltype, 20, 8, dataptr, 0, indicator));
         }
     }
 
