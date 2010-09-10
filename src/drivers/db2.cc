@@ -610,6 +610,7 @@ namespace dbi {
 
         socketfd = -1;
 
+        // TODO use inotify to monitor /proc/<pid>/fd
         // Figure out socket descriptor - this is hit and miss.
         SocketInfo info(host, atoi(port.c_str()), getpid());
         vector<ProcNet*> results = info.search();
@@ -622,7 +623,7 @@ namespace dbi {
             }
         }
 
-        if (socketfd < 3)
+        if (socketfd < 3 && _trace)
             logMessage(_trace_fd,
                 "WARNING: Unable to determine socket fd, async apis will not work correctly.");
     }
