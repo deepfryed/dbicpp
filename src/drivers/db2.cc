@@ -561,13 +561,15 @@ namespace dbi {
         CHECK_HANDLE_RESULT(handle, rc);
     }
 
-    // TODO error checks.
     void DB2Handle::setup() {
         stmt       = 0;
         tr_nesting = 0;
-        SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env);
+        if (SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env) != SQL_SUCCESS)
+            throw ConnectionError("Unable to allocate db2 environment handle");
+
         SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
-        SQLAllocHandle(SQL_HANDLE_DBC, env, &handle);
+        if (SQLAllocHandle(SQL_HANDLE_DBC, env, &handle) != SQL_SUCCESS)
+            throw ConnectionError("Unable to allocate db2 database handle");
     }
 
     void DB2Handle::TCPIPConnect(string user, string pass, string dbname, string host, string port) {
