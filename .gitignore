@@ -32,6 +32,7 @@ debian/*.debhelper
 debian/dbic++-dev/
 debian/dbic++-mysql/
 debian/dbic++-pg/
+debian/dbic++-db2/
 debian/files
 debian/stamp-autotools-files
 debian/stamp-makefile-build
