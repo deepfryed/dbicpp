@@ -92,7 +92,7 @@ namespace dbi {
     class DB2Handle : public AbstractHandle {
         protected:
         SQLHANDLE env, handle;
-        DB2Statement *stmt;
+        DB2Statement *stmt, *async_stmt;
         void setup();
         void TCPIPConnect(string, string, string, string, string);
         int tr_nesting;
@@ -563,6 +563,7 @@ namespace dbi {
 
     void DB2Handle::setup() {
         stmt       = 0;
+        async_stmt = 0;
         tr_nesting = 0;
         if (SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env) != SQL_SUCCESS)
             throw ConnectionError("Unable to allocate db2 environment handle");
@@ -728,8 +729,7 @@ namespace dbi {
     }
 
     bool DB2Handle::cancel() {
-        if (stmt)
-            return stmt->cancel();
+        return stmt ? stmt->cancel() : false;
     }
 
     // NOT IMPLEMENTED
@@ -760,7 +760,7 @@ namespace dbi {
     }
 
     AbstractResult* DB2Handle::aexecute(string sql, vector<Param> &bind) {
-        DB2Statement* async_stmt = new DB2Statement(handle);
+        async_stmt = new DB2Statement(handle);
         async_stmt->aexecute(sql, bind);
         return (AbstractResult*)async_stmt;
     }
@@ -769,8 +769,9 @@ namespace dbi {
         // NOP
     }
 
+    // TODO not the right way to do it.
     bool DB2Handle::isBusy() {
-        if (stmt) return stmt->isBusy();
+        return async_stmt ? async_stmt->isBusy() : false;
     }
 };
 

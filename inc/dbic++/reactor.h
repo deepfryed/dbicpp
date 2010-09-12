@@ -5,7 +5,7 @@
 #include <event.h>
 
 namespace dbi {
-    static bool _reactorInitialized;
+    extern bool _reactorInitialized;
 
     /*
         Class: Reactor

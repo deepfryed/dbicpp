@@ -29,8 +29,6 @@ namespace dbi {
 
     // MYSQL does not support type specific binding
     void MYSQL_PREPROCESS_QUERY(string &query) {
-        int i, n = 0;
-        char repl[128];
         string var;
 
         RE re("(?<!')(%(?:[dsfu]|l[dfu]))(?!')");
@@ -837,15 +835,12 @@ namespace dbi {
     }
 
     MySqlHandle::MySqlHandle(string user, string pass, string dbname, string host, string port) {
-        char no      = 0;
-        char yes     = 1;
         tr_nesting   = 0;
         _result      = 0;
         _statement   = 0;
         _resultset   = 0;
 
-        uint32_t timeout = 120;
-        uint32_t _port   = atoi(port.c_str());
+        uint32_t _port = atoi(port.c_str());
 
         conn  = mysql_init(0);
         _db   = dbname;
@@ -977,6 +972,7 @@ namespace dbi {
             _result    = 0;
             return _resultset;
         }
+        return 0;
     }
 
     int MySqlHandle::socket() {
@@ -1093,7 +1089,6 @@ namespace dbi {
     }
 
     uint64_t MySqlHandle::write(string table, FieldSet &fields, IO* io) {
-        int fd;
         char buffer[4096];
         string filename = generateCompactUUID();
 

@@ -1,6 +1,7 @@
 #include "dbic++/reactor.h"
 
 namespace dbi {
+    bool _reactorInitialized;
 
     typedef struct ReactorEvent {
         Request *request;
@@ -35,5 +36,6 @@ namespace dbi {
 
     void Reactor::stop() {
         event_loopbreak();
+        _reactorInitialized = false;
     }
 }

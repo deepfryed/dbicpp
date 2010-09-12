@@ -173,7 +173,7 @@ namespace dbi {
 
     PGresult* PgStatement::prepare() {
         int tries, done;
-        PGresult *response, *result;
+        PGresult *response, *result = 0;
         string query = _sql;
         PQ_PREPROCESS_QUERY(query);
 
@@ -675,10 +675,8 @@ namespace dbi {
         rc = PQcancel(cancel, error, 512);
         PQfreeCancel(cancel);
 
-        if (rc != 1)
-            boom(error);
-        else
-            return true;
+        if (rc != 1) boom(error);
+        return true;
     }
 
     PgStatement* PgHandle::prepare(string sql) {
