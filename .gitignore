@@ -35,6 +35,7 @@ debian/dbic++-pg/
 debian/dbic++-db2/
 debian/files
 debian/stamp-autotools-files
+memory/check
 debian/stamp-makefile-build
 debian/tmp/
 test/
