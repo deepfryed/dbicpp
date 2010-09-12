@@ -1,4 +1,4 @@
-dbic++ (0.3.2) lucid; urgency=medium
+dbic++ (0.4.0) lucid; urgency=medium
 
   * db2 driver.
   * nested transaction bug fixes.
