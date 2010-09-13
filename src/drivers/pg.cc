@@ -98,6 +98,8 @@ namespace dbi {
         uint32_t columns();
         uint32_t execute();
         uint32_t execute(vector<Param>&);
+        uint32_t aexecute();
+        uint32_t aexecute(vector<Param>&);
         bool consumeResult();
         void prepareResult();
         uint64_t lastInsertID();
@@ -307,26 +309,15 @@ namespace dbi {
 
         finish();
 
-        if (_async) {
-            done = tries = 0;
-            while (!done && tries < 2) {
-                tries++;
-                done = PQsendQueryPrepared(handle->conn, _uuid.c_str(), 0, 0, 0, 0, 0);
-                if (!done) handle->reconnect(true);
-            }
-            if (!done) boom(PQerrorMessage(handle->conn));
+        done = tries = 0;
+        while (!done && tries < 2) {
+            tries++;
+            _result = PQexecPrepared(handle->conn, _uuid.c_str(), 0, 0, 0, 0, 0);
+            done = handle->checkResult(_result, _sql);
+            if (!done) prepare();
         }
-        else {
-            done = tries = 0;
-            while (!done && tries < 2) {
-                tries++;
-                _result = PQexecPrepared(handle->conn, _uuid.c_str(), 0, 0, 0, 0, 0);
-                done = handle->checkResult(_result, _sql);
-                if (!done) prepare();
-            }
-            _rows   = (uint32_t)PQntuples(_result);
-            ctuples = (uint32_t)atoi(PQcmdTuples(_result));
-        }
+        _rows   = (uint32_t)PQntuples(_result);
+        ctuples = (uint32_t)atoi(PQcmdTuples(_result));
 
         return ctuples > 0 ? ctuples : _rows;
     }
@@ -336,48 +327,74 @@ namespace dbi {
         int *param_l, *param_f, done, tries;
         const char **param_v;
 
+        if (bind.size() == 0)
+            return execute();
+
         finish();
         PQ_PROCESS_BIND(&param_v, &param_l, &param_f, bind);
 
-        if (_async) {
-            done = tries = 0;
+        done = tries = 0;
+        try {
             while (!done && tries < 2) {
                 tries++;
-                done = PQsendQueryPrepared(handle->conn, _uuid.c_str(), bind.size(),
-                                       (const char* const *)param_v, param_l, param_f, 0);
+                _result = PQexecPrepared(handle->conn, _uuid.c_str(), bind.size(),
+                                   (const char* const *)param_v, (const int*)param_l, (const int*)param_f, 0);
+                done = handle->checkResult(_result, _sql);
+                if (!done) prepare();
             }
+        } catch (Error &e) {
             delete []param_v;
             delete []param_l;
             delete []param_f;
-
-            if (!done) boom(PQerrorMessage(handle->conn));
+            throw e;
         }
-        else {
-            done = tries = 0;
-            try {
-                while (!done && tries < 2) {
-                    tries++;
-                    _result = PQexecPrepared(handle->conn, _uuid.c_str(), bind.size(),
-                                       (const char* const *)param_v, (const int*)param_l, (const int*)param_f, 0);
-                    done = handle->checkResult(_result, _sql);
-                    if (!done) prepare();
-                }
-            } catch (Error &e) {
-                delete []param_v;
-                delete []param_l;
-                delete []param_f;
-                throw e;
-            }
 
-            delete []param_v;
-            delete []param_l;
-            delete []param_f;
+        delete []param_v;
+        delete []param_l;
+        delete []param_f;
 
-            _rows   = (uint32_t)PQntuples(_result);
-            ctuples = (uint32_t)atoi(PQcmdTuples(_result));
-        }
+        _rows   = (uint32_t)PQntuples(_result);
+        ctuples = (uint32_t)atoi(PQcmdTuples(_result));
 
         return ctuples > 0 ? ctuples : _rows;
+    }
+
+    uint32_t PgStatement::aexecute() {
+        int done, tries;
+
+        finish();
+        done = tries = 0;
+        while (!done && tries < 2) {
+            tries++;
+            done = PQsendQueryPrepared(handle->conn, _uuid.c_str(), 0, 0, 0, 0, 0);
+        }
+
+        if (!done) boom(PQerrorMessage(handle->conn));
+        return 0;
+    }
+
+    uint32_t PgStatement::aexecute(vector<Param> &bind) {
+        int *param_l, *param_f, done, tries;
+        const char **param_v;
+
+        if (bind.size() == 0)
+            return aexecute();
+
+        finish();
+        PQ_PROCESS_BIND(&param_v, &param_l, &param_f, bind);
+
+        done = tries = 0;
+        while (!done && tries < 2) {
+            tries++;
+            done = PQsendQueryPrepared(handle->conn, _uuid.c_str(), bind.size(),
+                                   (const char* const *)param_v, param_l, param_f, 0);
+        }
+        delete []param_v;
+        delete []param_l;
+        delete []param_f;
+
+        if (!done) boom(PQerrorMessage(handle->conn));
+        return 0;
     }
 
     bool PgStatement::consumeResult() {
@@ -652,7 +669,7 @@ namespace dbi {
 
     PgStatement* PgHandle::aexecute(string sql, vector<Param> &bind) {
         PgStatement *st = new PgStatement(sql, this, true);
-        st->execute(bind);
+        st->aexecute(bind);
         return st;
     }
 
