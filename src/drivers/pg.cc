@@ -825,7 +825,11 @@ namespace dbi {
     uint64_t PgHandle::write(string table, FieldSet &fields, IO* io) {
         char sql[4096];
         uint64_t nrows;
-        snprintf(sql, 4095, "copy %s (%s) from stdin", table.c_str(), fields.join(", ").c_str());
+        if (fields.size() > 0)
+            snprintf(sql, 4095, "copy %s (%s) from stdin", table.c_str(), fields.join(", ").c_str());
+        else
+            snprintf(sql, 4095, "copy %s from stdin", table.c_str());
+
         if (_trace)
             logMessage(_trace_fd, sql);
         execute(sql);

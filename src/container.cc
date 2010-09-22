@@ -14,17 +14,6 @@ namespace dbi {
         va_end(ap);
     }
 
-    FieldSet::FieldSet(int n, ...) {
-        char *ptr;
-        va_list ap;
-        va_start(ap, n);
-        for (int i = 0; i < n; i++) {
-            ptr = va_arg(ap, char *);
-            this->push_back(PARAM(ptr));
-        }
-        va_end(ap);
-    }
-
     string ResultRow::join(string delim) {
         unsigned i;
         stringstream out;
@@ -79,5 +68,22 @@ namespace dbi {
         }
 
         return out;
+    }
+
+
+    FieldSet::FieldSet(int n, ...) {
+        char *ptr;
+        va_list ap;
+        va_start(ap, n);
+        for (int i = 0; i < n; i++) {
+            ptr = va_arg(ap, char *);
+            this->push_back(PARAM(ptr));
+        }
+        va_end(ap);
+    }
+
+    FieldSet::FieldSet(vector<string> names) {
+        for (int i = 0; i < names.size(); i++)
+            this->push_back(PARAM(names[i]));
     }
 }

@@ -58,6 +58,8 @@ namespace dbi {
 
         */
         FieldSet(int n, ...);
+
+        FieldSet(vector<string>);
     };
 
 }

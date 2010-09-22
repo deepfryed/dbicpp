@@ -236,8 +236,16 @@ namespace dbi {
         db2LoadIn *loadInput;
         db2LoadStruct *loadInfo;
         struct sqldcol *dataInfo;
+        string sql;
 
-        string sql = "insert into " + table + "(" + fields.join(", ") + ") values (";
+        if (fields.size() == 0) {
+            sql = "select * from " + table + " fetch first 1 rows only";
+            DB2Statement *findcols = new DB2Statement(handle, sql);
+            fields = findcols->fields();
+            delete findcols;
+        }
+
+        sql = "insert into " + table + "(" + fields.join(", ") + ") values (";
         for (int i = 0; i < fields.size()-1; i++) sql += "?, ";
         sql += "?)";
 

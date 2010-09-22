@@ -1094,8 +1094,13 @@ namespace dbi {
 
         CopyInList[filename] = io;
 
-        snprintf(buffer, 4095, "load data local infile '%s' replace into table %s (%s)",
-            filename.c_str(), table.c_str(), fields.join(", ").c_str());
+        if (fields.size() > 0)
+            snprintf(buffer, 4095, "load data local infile '%s' replace into table %s (%s)",
+                filename.c_str(), table.c_str(), fields.join(", ").c_str());
+        else
+            snprintf(buffer, 4095, "load data local infile '%s' replace into table %s",
+                filename.c_str(), table.c_str());
+
         if (_trace)
             logMessage(_trace_fd, buffer);
 
