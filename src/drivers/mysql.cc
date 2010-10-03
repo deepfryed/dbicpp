@@ -10,7 +10,7 @@
 
 #define DRIVER_NAME     "mysql"
 #define DRIVER_VERSION  "1.3"
-#define __MYSQL_BIND_BUFFER_LEN 1024*128
+#define __MYSQL_BIND_BUFFER_LEN 2048
 
 #define THROW_MYSQL_STMT_ERROR(s) {\
     snprintf(errormsg, 8192, "In SQL: %s\n\n %s", _sql.c_str(), mysql_stmt_error(s));\
@@ -330,6 +330,8 @@ namespace dbi {
         if (res) {
             mysql_free_result(res);
             if (!_stmt->bind_result_done) {
+                _result = new MySqlBind(_cols);
+                _buffer_lengths.reserve(_cols);
                 _buffer_lengths.clear();
 
                 for (i = 0; i < _cols; i++)
@@ -365,11 +367,7 @@ namespace dbi {
         if (mysql_stmt_prepare(_stmt, query.c_str(), query.length()) != 0)
             THROW_MYSQL_STMT_ERROR(_stmt);
 
-        _cols   = (uint32_t)mysql_stmt_field_count(_stmt);
-
-        _result = new MySqlBind(_cols);
-
-        _buffer_lengths.reserve(_cols);
+        _cols = (uint32_t)mysql_stmt_field_count(_stmt);
         if (_stmt->fields) {
             for (int n = 0; n < (int)_cols; n++) {
                 _rsfields.push_back(_stmt->fields[n].name);

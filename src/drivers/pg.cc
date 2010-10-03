@@ -823,8 +823,9 @@ namespace dbi {
     }
 
     uint64_t PgHandle::write(string table, FieldSet &fields, IO* io) {
-        char sql[4096];
-        uint64_t nrows;
+        char sql[4096], *buffer;
+        uint64_t nrows, len, buffer_len = 1024*1024;
+
         if (fields.size() > 0)
             snprintf(sql, 4095, "copy %s (%s) from stdin", table.c_str(), fields.join(", ").c_str());
         else
@@ -832,15 +833,21 @@ namespace dbi {
 
         if (_trace)
             logMessage(_trace_fd, sql);
+
         execute(sql);
-        string rows = io->read();
-        while (rows.length() > 0) {
-            if (PQputCopyData(conn, rows.data(), rows.length()) != 1)
+
+        buffer = new char[buffer_len];
+        while ((len = io->read(buffer, buffer_len)) > 0) {
+            if (PQputCopyData(conn, buffer, len) != 1) {
+                delete [] buffer;
                 throw RuntimeError(PQerrorMessage(conn));
-            rows = io->read();
+            }
         }
+
+        delete [] buffer;
         if (PQputCopyEnd(conn, 0) != 1)
                 throw RuntimeError(PQerrorMessage(conn));
+
         PGresult *res = PQgetResult(conn);
         checkResult(res, sql, true);
         nrows = atol(PQcmdTuples(res));
