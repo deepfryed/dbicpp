@@ -970,7 +970,10 @@ namespace dbi {
             _result    = 0;
             return _resultset;
         }
-        return 0;
+        else {
+            _resultset = new MySqlResult(this);
+            return _resultset;
+        }
     }
 
     int MySqlHandle::socket() {
