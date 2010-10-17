@@ -10,6 +10,8 @@
 
 #define DRIVER_NAME     "mysql"
 #define DRIVER_VERSION  "1.3"
+#define MAX_RECONNECT   2
+
 #define __MYSQL_BIND_BUFFER_LEN 2048
 
 #define THROW_MYSQL_STMT_ERROR(s) {\
@@ -450,7 +452,7 @@ namespace dbi {
                 handle->reconnect();
                 failed = mysql_stmt_execute(_stmt);
             }
-        } while (failed && tries < 2);
+        } while (failed && tries < MAX_RECONNECT);
 
         if (failed) THROW_MYSQL_STMT_ERROR(_stmt);
 
@@ -478,7 +480,7 @@ namespace dbi {
                 handle->reconnect();
                 failed = mysql_stmt_execute(_stmt);
             }
-        } while (failed && tries < 2);
+        } while (failed && tries < MAX_RECONNECT);
 
         if (failed) THROW_MYSQL_STMT_ERROR(_stmt);
 
@@ -936,7 +938,7 @@ namespace dbi {
                 reconnect();
                 failed = mysql_real_query(conn, sql.c_str(), sql.length());
             }
-        } while (failed && tries < 2);
+        } while (failed && tries < MAX_RECONNECT);
 
         if (failed) boom(mysql_error(conn));
         rows = mysql_affected_rows(conn);

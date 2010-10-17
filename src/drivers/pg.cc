@@ -9,6 +9,7 @@
 
 #define DRIVER_NAME     "postgresql"
 #define DRIVER_VERSION  "1.3"
+#define MAX_RECONNECT   2
 
 #define PG2PARAM(res, r, c) PARAM((unsigned char*)PQgetvalue(res, r, c), PQgetlength(res, r, c))
 
@@ -181,24 +182,30 @@ namespace dbi {
 
         if (_async) {
             done = tries = 0;
-            while (!done && tries < 2) {
+            while (!done && tries < MAX_RECONNECT) {
                 tries++;
                 done = PQsendPrepare(handle->conn, _uuid.c_str(), query.c_str(), 0, 0);
-                if (!done) { handle->reconnect(true); continue; }
+                if (!done) {
+                    handle->reconnect(true);
+                    continue;
+                }
 
                 while (PQisBusy(handle->conn)) PQconsumeInput(handle->conn);
                 result = PQgetResult(handle->conn);
                 while ((response = PQgetResult(handle->conn))) PQclear(response);
 
                 done = handle->checkResult(result, _sql);
-                PQclear(result);
-                if (!done) continue;
+                if (done)
+                    PQclear(result);
+                else
+                    continue;
 
                 done = PQsendDescribePrepared(handle->conn, _uuid.c_str());
                 if (!done) continue;
 
                 while (PQisBusy(handle->conn)) PQconsumeInput(handle->conn);
                 result = PQgetResult(handle->conn);
+
                 while ((response = PQgetResult(handle->conn))) PQclear(response);
                 done = handle->checkResult(result, _sql);
             }
@@ -207,17 +214,19 @@ namespace dbi {
         }
         else {
             done = tries = 0;
-            while (!done && tries < 2) {
+            while (!done && tries < MAX_RECONNECT) {
                 tries++;
                 result = PQprepare(handle->conn, _uuid.c_str(), query.c_str(), 0, 0);
                 if (!result) boom("Unable to allocate statement");
-                done = handle->checkResult(result, _sql);
-                PQclear(result);
 
-                if (!done) continue;
+                done = handle->checkResult(result, _sql);
+                if (done)
+                    PQclear(result);
+                else
+                    continue;
 
                 result = PQdescribePrepared(handle->conn, _uuid.c_str());
-                done = handle->checkResult(result, _sql);
+                done   = handle->checkResult(result, _sql);
             }
 
             if (!done) boom(PQerrorMessage(handle->conn));
@@ -310,7 +319,7 @@ namespace dbi {
         finish();
 
         done = tries = 0;
-        while (!done && tries < 2) {
+        while (!done && tries < MAX_RECONNECT) {
             tries++;
             _result = PQexecPrepared(handle->conn, _uuid.c_str(), 0, 0, 0, 0, 0);
             done = handle->checkResult(_result, _sql);
@@ -335,7 +344,7 @@ namespace dbi {
 
         done = tries = 0;
         try {
-            while (!done && tries < 2) {
+            while (!done && tries < MAX_RECONNECT) {
                 tries++;
                 _result = PQexecPrepared(handle->conn, _uuid.c_str(), bind.size(),
                                    (const char* const *)param_v, (const int*)param_l, (const int*)param_f, 0);
@@ -364,7 +373,7 @@ namespace dbi {
 
         finish();
         done = tries = 0;
-        while (!done && tries < 2) {
+        while (!done && tries < MAX_RECONNECT) {
             tries++;
             done = PQsendQueryPrepared(handle->conn, _uuid.c_str(), 0, 0, 0, 0, 0);
         }
@@ -384,7 +393,7 @@ namespace dbi {
         PQ_PROCESS_BIND(&param_v, &param_l, &param_f, bind);
 
         done = tries = 0;
-        while (!done && tries < 2) {
+        while (!done && tries < MAX_RECONNECT) {
             tries++;
             done = PQsendQueryPrepared(handle->conn, _uuid.c_str(), bind.size(),
                                    (const char* const *)param_v, param_l, param_f, 0);
@@ -596,10 +605,10 @@ namespace dbi {
 
         done = tries = 0;
         PQ_PREPROCESS_QUERY(query);
-        while (!done && tries < 2) {
+        while (!done && tries < MAX_RECONNECT) {
             tries++;
             result = PQexec(conn, query.c_str());
-            done = checkResult(result, sql);
+            done   = checkResult(result, sql);
         }
 
         if (!done) boom(PQerrorMessage(conn));
@@ -625,7 +634,7 @@ namespace dbi {
         done = tries = 0;
         PQ_PREPROCESS_QUERY(query);
         try {
-            while (!done && tries < 2) {
+            while (!done && tries < MAX_RECONNECT) {
                 tries++;
                 PQ_PROCESS_BIND(&param_v, &param_l, &param_f, bind);
                 result = PQexecParams(conn, query.c_str(), bind.size(),
