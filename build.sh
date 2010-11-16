@@ -2,7 +2,6 @@
 
 export PG_VERSION=$(cat src/drivers/pg.cc | grep "VERSION \+" | sed 's/^.*VERSION *//' | sed 's/"//g')
 export MYSQL_VERSION=$(cat src/drivers/mysql.cc | grep "VERSION \+" | sed 's/^.*VERSION *//' | sed 's/"//g')
-export DB2_VERSION=$(cat src/drivers/db2.cc | grep "VERSION \+" | sed 's/^.*VERSION *//' | sed 's/"//g')
 
 cleanup() {
   make clean
