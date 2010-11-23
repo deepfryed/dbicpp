@@ -216,6 +216,10 @@ Core2DUO 2.53GHz, 4GB, 5200rpm drive with stock database configs.
 
 * Cursor support, generic interface to database specific api.
 
+=== Support
+
+{Support dbic++ on fundry}[http://www.fundry.com/project/5-dbicpp]
+
 == LICENSE
 
 See LICENSE.
