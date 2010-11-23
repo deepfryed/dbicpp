@@ -218,7 +218,7 @@ Core2DUO 2.53GHz, 4GB, 5200rpm drive with stock database configs.
 
 === Support
 
-{Support dbic++ on fundry}[http://www.fundry.com/project/5-dbicpp]
+{Support dbic++ on fundry}[https://www.fundry.com/project/5-dbic]
 
 == LICENSE
 
