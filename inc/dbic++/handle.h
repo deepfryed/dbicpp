@@ -100,6 +100,9 @@ namespace dbi {
         */
         uint32_t execute(string sql, vector<Param> &bind);
 
+        Result query(string sql);
+        Result query(string sql, vector<Param> &bind);
+
         /*
             Function: prepare(string)
             Prepares a SQL and returns a statement handle.
@@ -183,12 +186,6 @@ namespace dbi {
             See <AbstractHandle::write(string, FieldSet&, IO*)>
         */
         uint64_t write(string table, FieldSet &fields, IO*);
-
-        /*
-            Function: results
-            See <AbstractHandle::results()>
-        */
-        AbstractResult* results();
 
         /*
             Function: setTimeZoneOffset(int, int)

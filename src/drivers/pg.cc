@@ -68,6 +68,9 @@ namespace dbi {
     // ----------------------------------------------------------------------
 
     class PgHandle;
+    class PgResult : public AbstractResult {
+    };
+
     class PgStatement : public AbstractStatement {
         private:
         string _sql;

@@ -8,7 +8,7 @@ namespace dbi {
         Pure virtual class that defines the api that individual database drivers need to support.
         Use this as a reference only. It is recommended to use the Statement class for any real work.
     */
-    class AbstractStatement : public AbstractResult {
+    class AbstractStatement {
         public:
         /*
             Function: command
@@ -27,6 +27,9 @@ namespace dbi {
             rows - number of rows affected or returned.
         */
         virtual uint32_t execute() = 0;
+
+        virtual AbstractResult* query(string sql) = 0;
+        virtual AbstractResult* query(string sql, vector<Param> &bind) = 0;
 
         /*
             Function: execute(vector<Param>&)

@@ -40,18 +40,6 @@ namespace dbi {
         }
     }
 
-    uint32_t Statement::rows() {
-        return st->rows();
-    }
-
-    bool Statement::read(ResultRow& r) {
-        return st->read(r);
-    }
-
-    bool Statement::read(ResultRowHash &r) {
-        return st->read(r);
-    }
-
     bool Statement::finish() {
         params.clear();
         return st->finish();
@@ -60,7 +48,6 @@ namespace dbi {
     void Statement::cleanup() {
         if (st) st->cleanup();
     }
-
 
     // syntactic sugar.
     Statement Handle::operator<<(string sql) {
@@ -133,30 +120,6 @@ namespace dbi {
         params.push_back(PARAM(val));
     }
 
-    vector<string> Statement::fields() {
-        return st->fields();
-    }
-
-    uint32_t Statement::columns() {
-        return st->columns();
-    }
-
-    unsigned char* Statement::read(uint32_t r, uint32_t c, uint64_t *l = 0) {
-        return st->read(r, c, l);
-    }
-
-    unsigned char* Statement::operator()(uint32_t r, uint32_t c) {
-        return st->read(r, c, 0);
-    }
-
-    uint32_t Statement::tell() {
-        return st->tell();
-    }
-
-    vector<int>& Statement::types() {
-        return st->types();
-    }
-
     uint32_t Statement::execute() {
         uint32_t rc;
         if (_trace)
@@ -179,21 +142,5 @@ namespace dbi {
         rc = st->execute(params);
         params.clear();
         return rc;
-    }
-
-    uint64_t Statement::lastInsertID() {
-        return st->lastInsertID();
-    }
-
-    void Statement::rewind() {
-        st->rewind();
-    }
-
-    void Statement::seek(uint32_t r) {
-        st->seek(r);
-    }
-
-    string Statement::driver() {
-        return st->driver();
     }
 }
