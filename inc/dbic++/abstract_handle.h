@@ -198,7 +198,9 @@ namespace dbi {
 
         // ASYNC API
         protected:
-        virtual AbstractResult* aexecute(string sql, vector<Param> &bind) = 0;
+        virtual AbstractResult* aquery(string sql) = 0;
+        virtual AbstractResult* aquery(string sql, vector<Param> &bind) = 0;
+
         virtual void initAsync() = 0;
         virtual bool isBusy() = 0;
         virtual bool cancel() = 0;
