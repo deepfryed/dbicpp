@@ -102,8 +102,30 @@ namespace dbi {
         */
         uint32_t execute(string sql, vector<Param> &bind);
 
-        Result query(string sql);
-        Result query(string sql, vector<Param> &bind);
+        /*
+            Function: query
+            Executes the sql.
+
+            Parameters:
+            sql - string
+
+            Returns:
+            Result* - Pointer to the Result set object.
+        */
+        Result* query(string sql);
+
+        /*
+            Function: query
+            Executes the sql with bind parameters.
+
+            Parameters:
+            sql - string
+            bind - vector<Param> bind parameters
+
+            Returns:
+            Result* - Pointer to the Result set object.
+        */
+        Result* query(string sql, vector<Param> &bind);
 
         /*
             Function: prepare(string)

@@ -38,6 +38,16 @@ namespace dbi {
         return h->execute(sql, bind);
     }
 
+    Result* Handle::query(string sql) {
+        if (_trace) logMessage(_trace_fd, sql);
+        return h->query(sql);
+    }
+
+    Result* Handle::query(string sql, vector<Param> &bind) {
+        if (_trace) logMessage(_trace_fd, sql);
+        return h->query(sql, bind);
+    }
+
     Statement Handle::prepare(string sql) {
         return Statement(h->prepare(sql));
     }
