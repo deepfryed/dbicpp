@@ -61,7 +61,8 @@ namespace dbi {
     void PgResult::prepareResult() {
         PGresult *response;
         _result = PQgetResult(_handle->conn);
-        _rows   = (uint32_t)PQntuples(_result);
+        fetchMeta();
+
         while ((response = PQgetResult(_handle->conn))) PQclear(response);
         PQ_CHECK_RESULT(_result, _sql);
     }

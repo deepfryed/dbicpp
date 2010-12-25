@@ -30,7 +30,7 @@ namespace dbi {
         }
     }
 
-    Request* ConnectionPool::execute(string sql, ResultRow &bind, void (*cb)(AbstractResult *r), void *context) {
+    Request* ConnectionPool::execute(string sql, vector<Param> &bind, void (*cb)(AbstractResult *r), void *context) {
         for (int n = 0; n < pool.size(); n++) {
             if (!pool[n].busy) {
                 pool[n].busy = true;
@@ -51,7 +51,7 @@ namespace dbi {
     }
 
     Request* ConnectionPool::execute(string sql, void (*cb)(AbstractResult *r), void *context) {
-        ResultRow bind;
+        vector<Param> bind;
         return execute(sql, bind, cb, context);
     }
 
