@@ -9,12 +9,7 @@ namespace dbi {
     }
 
     Result::~Result() {
-        finish();
-        if (rs) {
-            rs->cleanup();
-            delete rs;
-            rs = 0;
-        }
+        cleanup();
     }
 
     uint32_t Result::rows() {
@@ -32,15 +27,15 @@ namespace dbi {
         return rs->read(r);
     }
 
-    bool Result::finish() {
-        return rs->finish();
-    }
-
     void Result::cleanup() {
-        if (rs) rs->cleanup();
+        if (rs) {
+            rs->cleanup();
+            delete rs;
+            rs = 0;
+        }
     }
 
-    vector<string> Result::fields() {
+    vector<string>& Result::fields() {
         if (!rs) throw RuntimeError("Invalid Result instance");
         return rs->fields();
     }

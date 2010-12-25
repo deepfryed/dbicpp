@@ -1,3 +1,5 @@
+#include "common.h"
+
 namespace dbi {
 
     PgHandle::PgHandle() {
@@ -106,9 +108,9 @@ namespace dbi {
     PgResult* PgHandle::aquery(string sql) {
         string query = sql;
         PQ_PREPROCESS_QUERY(query);
-        int done = PQsendQuery(_conn, query.c_str());
-        if (!done) boom(PQerrorMessage(_conn));
-        return new PgResult(0, this);
+        int done = PQsendQuery(conn, query.c_str());
+        if (!done) boom(PQerrorMessage(conn));
+        return new PgResult(0, sql, this);
     }
 
     PgResult* PgHandle::aquery(string sql, vector<Param> &bind) {
@@ -123,8 +125,8 @@ namespace dbi {
         delete []param_v;
         delete []param_l;
         delete []param_f;
-        if (!done) boom(PQerrorMessage(_conn));
-        return new PgResult(0, this);
+        if (!done) boom(PQerrorMessage(conn));
+        return new PgResult(0, sql, this);
     }
 
     void PgHandle::initAsync() {
@@ -151,7 +153,7 @@ namespace dbi {
     }
 
     PgStatement* PgHandle::prepare(string sql) {
-        return new PgStatement(sql, _conn);
+        return new PgStatement(sql, conn);
     }
 
     bool PgHandle::begin() {

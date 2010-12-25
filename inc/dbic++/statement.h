@@ -3,6 +3,8 @@ namespace dbi {
     using namespace std;
     using namespace pcrecpp;
 
+    class Result;
+
     /*
         Class: Statement
         Facade for AbstractStatement, you should be using this for most of the normal work. The class
@@ -182,6 +184,8 @@ namespace dbi {
         */
         uint32_t operator,(dbi::execute const &);
 
+        Result operator,(dbi::query const &);
+
         /*
             Function: execute
             Executes the prepared statement along with the bind parameters
@@ -206,6 +210,8 @@ namespace dbi {
             Releases local buffers and deallocates any temporary memory.
         */
         void cleanup();
+
+        void finish();
     };
 }
 

@@ -1,4 +1,4 @@
-#include "src/drivers/pg/common.h"
+#include "common.h"
 
 namespace dbi {
 
@@ -70,5 +70,26 @@ namespace dbi {
                 throw RuntimeError(errormsg);
                 break;
         }
+    }
+}
+
+using namespace std;
+using namespace dbi;
+
+extern "C" {
+    PgHandle* dbdConnect(string user, string pass, string dbname, string host, string port) {
+        if (host == "")
+            host = "127.0.0.1";
+        if (port == "0" || port == "")
+            port = "5432";
+
+        return new PgHandle(user, pass, dbname, host, port);
+    }
+
+    Driver* dbdInfo(void) {
+        Driver *driver  = new Driver;
+        driver->name    = DRIVER_NAME;
+        driver->version = DRIVER_VERSION;
+        return driver;
     }
 }

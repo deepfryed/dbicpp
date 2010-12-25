@@ -37,7 +37,7 @@ namespace dbi {
             Returns:
             fields - vector<string>
         */
-        virtual vector<string> fields() = 0;
+        virtual vector<string>& fields() = 0;
 
         /*
             Function: read(ResultRow&)
@@ -79,16 +79,6 @@ namespace dbi {
                         reused in subsequent calls.
         */
         virtual unsigned char* read(uint32_t r, uint32_t c, uint64_t* len) = 0;
-
-        /*
-            Function: finish
-            Cleanup local buffers storing result data. This is optional. As subsequent
-            calls to execute will do it automatically in addition to the destructor.
-
-            Returns:
-            true or false - denotes success.
-        */
-        virtual bool finish() = 0;
 
         /*
             Function: tell

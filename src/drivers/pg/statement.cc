@@ -1,10 +1,12 @@
+#include "common.h"
+
 namespace dbi {
     void PgStatement::init() {
         _uuid = generateCompactUUID();
     }
 
     void PgStatement::prepare() {
-        PGresult *response, *result = 0;
+        PGresult *result = 0;
         string query = _sql;
         PQ_PREPROCESS_QUERY(query);
 
@@ -32,20 +34,23 @@ namespace dbi {
         }
     }
 
+    void PgStatement::finish() {
+        // NOP
+    }
+
     string PgStatement::command() {
         return _sql;
     }
 
-    PGresult* _pgexec() {
+    PGresult* PgStatement::_pgexec() {
         PGresult *result;
         result = PQexecPrepared(_conn, _uuid.c_str(), 0, 0, 0, 0, 0);
         PQ_CHECK_RESULT(result, _sql);
         return result;
     }
 
-
-    PGresult* _pgexec(vector<Param> &bind) {
-        int *param_l, *param_f, done, tries;
+    PGresult* PgStatement::_pgexec(vector<Param> &bind) {
+        int *param_l, *param_f;
         const char **param_v;
         PGresult *result;
 
@@ -93,12 +98,12 @@ namespace dbi {
         return ctuples > 0 ? ctuples : rows;
     }
 
-    PgResult* query() {
-        return new PgResult(_pgexec(), 0);
+    PgResult* PgStatement::query() {
+        return new PgResult(_pgexec(), _sql, 0);
     }
 
-    PgResult* query(vector<Param> &bind) {
-        return new PgResult(_pgexec(bind), 0);
+    PgResult* PgStatement::query(vector<Param> &bind) {
+        return new PgResult(_pgexec(bind), _sql, 0);
     }
 
     void PgStatement::boom(const char* m) {

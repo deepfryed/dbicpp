@@ -1,3 +1,6 @@
+#ifndef _DBICXX_PG_COMMON_H
+#define _DBICXX_PG_COMMON_H
+
 #include "dbic++.h"
 #include <libpq-fe.h>
 #include <libpq/libpq-fs.h>
@@ -20,3 +23,9 @@ namespace dbi {
     void PQ_PROCESS_BIND(const char ***param_v, int **param_l, int **param_f, vector<Param> &bind);
     void PQ_CHECK_RESULT(PGresult *result, string sql);
 }
+
+#include "result.h"
+#include "statement.h"
+#include "handle.h"
+
+#endif

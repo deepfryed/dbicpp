@@ -1,10 +1,11 @@
-#include "src/drivers/pg/common.h"
+#ifndef _DBICXX_PG_STATEMENT_H
+#define _DBICXX_PG_STATEMENT_H
 
 namespace dbi {
     class PgStatement : public AbstractStatement {
         private:
         string _sql, _uuid;
-        bool   _async;
+        PGconn *_conn;
 
         PGresult* _pgexec();
         PGresult* _pgexec(vector<Param>&);
@@ -12,7 +13,7 @@ namespace dbi {
         protected:
         PgHandle *handle;
         void      init();
-        PGresult* prepare();
+        void      prepare();
         void      boom(const char *);
 
         public:
@@ -20,6 +21,7 @@ namespace dbi {
         ~PgStatement();
         PgStatement(string query, PGconn *conn);
         void cleanup();
+        void finish();
         string command();
 
         uint32_t  execute();
@@ -28,3 +30,5 @@ namespace dbi {
         PgResult* query(vector<Param>&);
     };
 }
+
+#endif

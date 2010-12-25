@@ -39,7 +39,7 @@ namespace dbi {
                     logMessage(_trace_fd, formatParams(sql, bind));
 
                 AbstractHandle *h = pool[n].handle;
-                AbstractResult *rs = h->aexecute(sql, bind);
+                AbstractResult *rs = h->aquery(sql, bind);
                 rs->context = context;
 
                 Request *r  = new Request(this, h, rs, cb);

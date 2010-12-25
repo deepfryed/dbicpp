@@ -1,4 +1,5 @@
-#include "src/drivers/pg/common.h"
+#ifndef _DBICXX_PG_HANDLE_H
+#define _DBICXX_PG_HANDLE_H
 
 namespace dbi {
 
@@ -7,11 +8,12 @@ namespace dbi {
         string _sql;
 
         protected:
-        PGconn *conn;
         int tr_nesting;
         void boom(const char *);
 
         public:
+        PGconn *conn;
+
         PgHandle();
         PgHandle(string user, string pass, string dbname, string h, string p);
         ~PgHandle();
@@ -28,7 +30,7 @@ namespace dbi {
         bool isBusy();
         bool cancel();
 
-        uint32_t  aexecute(string sql, vector<Param> &bind);
+        PgResult* aquery(string sql);
         PgResult* aquery(string sql, vector<Param> &bind);
 
         bool begin();
@@ -48,3 +50,5 @@ namespace dbi {
         string driver();
     };
 }
+
+#endif

@@ -79,16 +79,8 @@ namespace dbi {
         return trx;
     }
 
-    void* Handle::call(string name, void* arg, uint64_t l) {
-        return h->call(name, arg, l);
-    }
-
     uint64_t Handle::write(string table, FieldSet &fields, IO* io) {
         return h->write(table, fields, io);
-    }
-
-    AbstractResult* Handle::results() {
-        return h->results();
     }
 
     void Handle::setTimeZoneOffset(int tzhour, int tzmin) {

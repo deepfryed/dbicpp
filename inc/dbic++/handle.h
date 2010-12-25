@@ -3,7 +3,9 @@ namespace dbi {
     using namespace std;
     using namespace pcrecpp;
 
+    class Result;
     class Statement;
+
     /*
         Class: Handle
         Facade for AbstractHandle. This is the class that you should normally use.
@@ -211,7 +213,6 @@ namespace dbi {
         */
         string driver();
 
-        void* call(string name, void*, uint64_t);
         friend class Statement;
     };
 }

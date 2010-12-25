@@ -42,7 +42,7 @@ namespace dbi {
             Function: fields
             See <AbstractResult::fields()>
         */
-        vector<string> fields();
+        vector<string>& fields();
 
         /*
             Function: types
@@ -91,12 +91,6 @@ namespace dbi {
             See <AbstractResult::rewind()>
         */
         void rewind();
-
-        /*
-            Function: finish
-            See <AbstractResult::finish()>
-        */
-        bool finish();
 
         /*
             Function: cleanup

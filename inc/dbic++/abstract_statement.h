@@ -28,8 +28,8 @@ namespace dbi {
         */
         virtual uint32_t execute() = 0;
 
-        virtual AbstractResult* query(string sql) = 0;
-        virtual AbstractResult* query(string sql, vector<Param> &bind) = 0;
+        virtual AbstractResult* query() = 0;
+        virtual AbstractResult* query(vector<Param> &bind) = 0;
 
         /*
             Function: execute(vector<Param>&)
@@ -44,14 +44,8 @@ namespace dbi {
         */
         virtual uint32_t execute(vector<Param> &bind) = 0;
 
-        /*
-            Function: driver
-            Returns the driver this statement is associated with.
-
-            Returns:
-            name - string value.
-        */
-        virtual string driver() = 0;
+        virtual void finish()  = 0;
+        virtual void cleanup() = 0;
     };
 }
 

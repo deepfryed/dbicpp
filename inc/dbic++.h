@@ -24,6 +24,7 @@
 namespace dbi {
     struct null {};
     struct execute {};
+    struct query   {};
 }
 
 #include "dbic++/error.h"

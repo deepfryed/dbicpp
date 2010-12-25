@@ -1,35 +1,40 @@
-#include "src/drivers/pg/common.h"
+#ifndef _DBICXX_PG_RESULT_H
+#define _DBICXX_PG_RESULT_H
 
 namespace dbi {
+    class PgHandle;
+
     class PgResult : public AbstractResult {
 
         private:
-        PgHandle       *_handle
+        PgHandle       *_handle;
         PGconn         *_conn;
         PGresult       *_result;
         vector<string> _rsfields;
         vector<int>    _rstypes;
         uint32_t       _rowno, _rows, _cols;
-        bool           _async;
         unsigned char  *_bytea;
+        string         _sql;
 
-        void fetchMeta(PGresult*);
+        void init();
+        void fetchMeta();
         unsigned char* unescapeBytea(int, int, uint64_t*);
 
         public:
         PgResult(PGresult*);
-        PgResult(PGresult*, PgHandle*);
-        ~PgStatement();
+        PgResult(PGresult*, string sql, PgHandle*);
+        ~PgResult();
 
         void cleanup();
         bool consumeResult();
         void prepareResult();
+        void boom(const char *);
 
-        uint32_t       rows();
-        uint32_t       columns();
-        uint64_t       lastInsertID();
-        vector<string> fields();
-        vector<int>&   types();
+        uint32_t        rows();
+        uint32_t        columns();
+        uint64_t        lastInsertID();
+        vector<string>& fields();
+        vector<int>&    types();
 
         bool           read(ResultRow &r);
         bool           read(ResultRowHash &r);
@@ -41,3 +46,5 @@ namespace dbi {
         void     seek(uint32_t);
     };
 }
+
+#endif

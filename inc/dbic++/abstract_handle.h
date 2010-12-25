@@ -113,8 +113,6 @@ namespace dbi {
         */
         virtual bool rollback(string name) = 0;
 
-        virtual void* call(string name, void*, uint64_t) = 0;
-
         /*
             Function: close
             Close connection.

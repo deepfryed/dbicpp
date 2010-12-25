@@ -13,7 +13,7 @@ using namespace std;
 using namespace dbi;
 
 int main(int argc, char *argv[]) {
-    ResultRowHash res;
+    ResultRowHash row;
     string driver(argc > 1 ? argv[1] : "postgresql");
 
     // Handle h (driver, user, password, database, host, port);
@@ -45,11 +45,12 @@ int main(int argc, char *argv[]) {
     Statement sel (h, "select id, name, email from users where id >= ? and id < ?");
 
     // bind and execute the statement.
-    sel % 1L, 10L, execute();
-    while (sel.read(res))
-        cout << res["id"]    << "\t"
-             << res["name"]  << "\t"
-             << res["email"] << endl;
+    sel % 1L, 10L;
+    Result res = sel.query();
+    while (res.read(row))
+        cout << row["id"]    << "\t"
+             << row["name"]  << "\t"
+             << row["email"] << endl;
 
     // nested transaction
     cout << endl;
@@ -72,11 +73,12 @@ int main(int argc, char *argv[]) {
     // reset select statement and fetch all results.
     cout << endl;
     cout << "-- select all rows --" << endl;
-    sel  << "select * from users", execute();
-    while (sel.read(res))
-        cout << res["id"]    << "\t"
-             << res["name"]  << "\t"
-             << res["email"] << endl;
+    sel  << "select * from users";
+    res = sel.query();
+    while (res.read(row))
+        cout << row["id"]    << "\t"
+             << row["name"]  << "\t"
+             << row["email"] << endl;
 
     cout << endl;
     cout << "-- bulk copy in --" << endl;
@@ -92,9 +94,9 @@ int main(int argc, char *argv[]) {
 
     cout << endl;
     cout << "-- select all rows --" << endl;
-    sel.execute();
-    while (sel.read(res))
-        cout << res["id"]    << "\t"
-             << res["name"]  << "\t"
-             << res["email"] << endl;
+    res = sel.query();
+    while (res.read(row))
+        cout << row["id"]    << "\t"
+             << row["name"]  << "\t"
+             << row["email"] << endl;
 }

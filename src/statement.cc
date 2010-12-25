@@ -32,21 +32,20 @@ namespace dbi {
     }
 
     Statement::~Statement() {
-        finish();
-        if (st) {
-            st->cleanup();
-            delete st;
-            st = 0;
-        }
+        cleanup();
     }
 
-    bool Statement::finish() {
+    void Statement::finish() {
         params.clear();
         return st->finish();
     }
 
     void Statement::cleanup() {
-        if (st) st->cleanup();
+        if (st) {
+            st->cleanup();
+            delete st;
+            st = 0;
+        }
     }
 
     // syntactic sugar.
@@ -135,6 +134,23 @@ namespace dbi {
         return st->execute(bind);
     }
 
+    Result Statement::query() {
+        if (_trace)
+            logMessage(_trace_fd, formatParams(st->command(), params));
+
+        AbstractResult *rs = st->query(params);
+        params.clear();
+        return Result(rs);
+    }
+
+    Result Statement::query(vector<Param> &bind) {
+        if (_trace)
+            logMessage(_trace_fd, formatParams(st->command(), bind));
+
+        AbstractResult *rs = st->query(bind);
+        return Result(rs);
+    }
+
     uint32_t Statement::operator,(dbi::execute const &e) {
         uint32_t rc;
         if (_trace)
@@ -142,5 +158,13 @@ namespace dbi {
         rc = st->execute(params);
         params.clear();
         return rc;
+    }
+
+    Result Statement::operator,(dbi::query const &e) {
+        if (_trace)
+            logMessage(_trace_fd, formatParams(st->command(), params));
+        AbstractResult *rs = st->query(params);
+        params.clear();
+        return Result(rs);
     }
 }
