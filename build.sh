@@ -30,7 +30,7 @@ realclean() {
   cleanup
   rm -rf lib/*
   rm -rf bench/bin/*
-  rm -rf bench/src/*.o src/*.o src/drivers/*.o
+  rm -rf bench/src/*.o src/*.o src/drivers/*.o src/drivers/pg/*.o
 }
 
 builddocs() {

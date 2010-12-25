@@ -96,7 +96,7 @@ namespace dbi {
     Statement& Statement::operator<<(string sql) {
         params.clear();
 
-        if (st) delete st;
+        if (st) { st->cleanup(); delete st; }
         if (!h) throw RuntimeError("Unable to call prepare() without database handle.");
 
         st = h->prepare(sql);
@@ -134,21 +134,21 @@ namespace dbi {
         return st->execute(bind);
     }
 
-    Result Statement::query() {
+    Result* Statement::query() {
         if (_trace)
             logMessage(_trace_fd, formatParams(st->command(), params));
 
         AbstractResult *rs = st->query(params);
         params.clear();
-        return Result(rs);
+        return new Result(rs);
     }
 
-    Result Statement::query(vector<Param> &bind) {
+    Result* Statement::query(vector<Param> &bind) {
         if (_trace)
             logMessage(_trace_fd, formatParams(st->command(), bind));
 
         AbstractResult *rs = st->query(bind);
-        return Result(rs);
+        return new Result(rs);
     }
 
     uint32_t Statement::operator,(dbi::execute const &e) {
@@ -160,11 +160,11 @@ namespace dbi {
         return rc;
     }
 
-    Result Statement::operator,(dbi::query const &e) {
+    Result* Statement::operator,(dbi::query const &e) {
         if (_trace)
             logMessage(_trace_fd, formatParams(st->command(), params));
         AbstractResult *rs = st->query(params);
         params.clear();
-        return Result(rs);
+        return new Result(rs);
     }
 }

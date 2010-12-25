@@ -2,7 +2,7 @@
 
 namespace dbi {
 
-    Result::Result() {}
+    Result::Result() { rs = 0; }
 
     Result::Result(AbstractResult *ars) {
         rs = ars; // :P

@@ -6,6 +6,8 @@ namespace dbi {
     class PgHandle : public AbstractHandle {
         private:
         string _sql;
+        PGresult* _pgexec(string sql);
+        PGresult* _pgexec(string sql, vector<Param> &bind);
 
         protected:
         int tr_nesting;

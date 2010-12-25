@@ -184,7 +184,7 @@ namespace dbi {
         */
         uint32_t operator,(dbi::execute const &);
 
-        Result operator,(dbi::query const &);
+        Result* operator,(dbi::query const &);
 
         /*
             Function: execute
@@ -202,8 +202,8 @@ namespace dbi {
         */
         uint32_t execute(vector<Param> &bind);
 
-        Result query();
-        Result query(vector<Param> &bind);
+        Result* query();
+        Result* query(vector<Param> &bind);
 
         /*
             Function: cleanup

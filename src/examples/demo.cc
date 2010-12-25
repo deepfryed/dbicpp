@@ -46,11 +46,13 @@ int main(int argc, char *argv[]) {
 
     // bind and execute the statement.
     sel % 1L, 10L;
-    Result res = sel.query();
-    while (res.read(row))
+    Result *res = sel.query();
+    while (res->read(row))
         cout << row["id"]    << "\t"
              << row["name"]  << "\t"
              << row["email"] << endl;
+
+    delete res;
 
     // nested transaction
     cout << endl;
@@ -74,13 +76,15 @@ int main(int argc, char *argv[]) {
     cout << endl;
     cout << "-- select all rows --" << endl;
     sel  << "select * from users";
-    res = sel.query();
-    while (res.read(row))
+    res  = sel.query();
+    while (res->read(row))
         cout << row["id"]    << "\t"
              << row["name"]  << "\t"
              << row["email"] << endl;
 
     cout << endl;
+    delete res;
+
     cout << "-- bulk copy in --" << endl;
 
     IOStream buffer;
@@ -95,8 +99,10 @@ int main(int argc, char *argv[]) {
     cout << endl;
     cout << "-- select all rows --" << endl;
     res = sel.query();
-    while (res.read(row))
+    while (res->read(row))
         cout << row["id"]    << "\t"
              << row["name"]  << "\t"
              << row["email"] << endl;
+
+    delete res;
 }

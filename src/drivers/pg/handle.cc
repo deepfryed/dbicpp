@@ -52,28 +52,21 @@ namespace dbi {
         conn = 0;
     }
 
-    uint32_t PgHandle::execute(string sql) {
-        uint32_t rows, ctuples = 0;
+    PGresult* PgHandle::_pgexec(string sql) {
         PGresult *result;
         string query = sql;
         _sql = sql;
 
         PQ_PREPROCESS_QUERY(query);
         result = PQexec(conn, query.c_str());
-
         PQ_CHECK_RESULT(result, sql);
 
-        rows    = (uint32_t)PQntuples(result);
-        ctuples = (uint32_t)atoi(PQcmdTuples(result));
-
-        PQclear(result);
-        return ctuples > 0 ? ctuples : rows;
+        return result;
     }
 
-    uint32_t PgHandle::execute(string sql, vector<Param> &bind) {
+    PGresult* PgHandle::_pgexec(string sql, vector<Param> &bind) {
         int *param_l, *param_f;
         const char **param_v;
-        uint32_t rows, ctuples = 0;
         PGresult *result;
         string query = sql;
         _sql = sql;
@@ -94,11 +87,35 @@ namespace dbi {
         delete []param_l;
         delete []param_f;
 
+        return result;
+    }
+
+    uint32_t PgHandle::execute(string sql) {
+        uint32_t rows, ctuples = 0;
+        PGresult *result = _pgexec(sql);
         rows    = (uint32_t)PQntuples(result);
         ctuples = (uint32_t)atoi(PQcmdTuples(result));
 
         PQclear(result);
         return ctuples > 0 ? ctuples : rows;
+    }
+
+    uint32_t PgHandle::execute(string sql, vector<Param> &bind) {
+        uint32_t rows, ctuples = 0;
+        PGresult *result = _pgexec(sql, bind);
+        rows    = (uint32_t)PQntuples(result);
+        ctuples = (uint32_t)atoi(PQcmdTuples(result));
+
+        PQclear(result);
+        return ctuples > 0 ? ctuples : rows;
+    }
+
+    PgResult* PgHandle::query(string sql) {
+        return new PgResult(_pgexec(sql), sql, 0);
+    }
+
+    PgResult* PgHandle::query(string sql, vector<Param> &bind) {
+        return new PgResult(_pgexec(sql, bind), sql, 0);
     }
 
     int PgHandle::socket() {
