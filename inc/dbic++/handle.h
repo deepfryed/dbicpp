@@ -28,11 +28,11 @@ namespace dbi {
             // Set trace on and log queries to stderr
             trace(true, fileno(stderr));
 
-            Statement stmt (h, "select id, name from users where name like ? limit 5");
+            Query query (h, "select id, name from users where name like ? limit 5");
 
-            stmt % "james%", execute();
+            query % "james%", execute();
 
-            while (stmt.read(res)) {
+            while (query.read(res)) {
                 cout << "id: "   << res["id"]
                      << "name: " << res["name"]
                      << endl;
@@ -103,29 +103,14 @@ namespace dbi {
         uint32_t execute(string sql, vector<Param> &bind);
 
         /*
-            Function: query
-            Executes the sql.
-
-            Parameters:
-            sql - string
+            Function: result
+            Returns a pointer to a result object. This needs to be
+            deallocated explicitly.
 
             Returns:
             Result* - Pointer to the Result set object.
         */
-        Result* query(string sql);
-
-        /*
-            Function: query
-            Executes the sql with bind parameters.
-
-            Parameters:
-            sql - string
-            bind - vector<Param> bind parameters
-
-            Returns:
-            Result* - Pointer to the Result set object.
-        */
-        Result* query(string sql, vector<Param> &bind);
+        Result* result();
 
         /*
             Function: prepare(string)
@@ -135,9 +120,9 @@ namespace dbi {
             sql - SQL statement.
 
             Returns:
-            Statement object.
+            A pointer to Statement.
         */
-        Statement prepare(string sql);
+        Statement* prepare(string sql);
 
         /*
             Operator: <<(string)
@@ -147,9 +132,9 @@ namespace dbi {
             sql - SQL statement.
 
             Returns:
-            A pointer to AbstractStatement.
+            A pointer to Statement.
         */
-        Statement operator<<(string sql);
+        Statement* operator<<(string sql);
 
         /*
             Function: begin

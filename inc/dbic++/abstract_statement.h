@@ -28,9 +28,6 @@ namespace dbi {
         */
         virtual uint32_t execute() = 0;
 
-        virtual AbstractResult* query() = 0;
-        virtual AbstractResult* query(vector<Param> &bind) = 0;
-
         /*
             Function: execute(vector<Param>&)
             executes a SQL with bind values.
@@ -44,10 +41,17 @@ namespace dbi {
         */
         virtual uint32_t execute(vector<Param> &bind) = 0;
 
+        /*
+            Function: result
+            Returns a pointer to a result object. This needs to be
+            deallocated explicitly.
+
+            Returns:
+            AbstractResult* - Pointer to the Result set object.
+        */
+        virtual AbstractResult* result() = 0;
+
         virtual void finish()  = 0;
         virtual void cleanup() = 0;
     };
 }
-
-
-

@@ -42,17 +42,14 @@ int main(int argc, char *argv[]) {
     cout << endl;
     cout << "-- simple select --" << endl;
 
-    Statement sel (h, "select id, name, email from users where id >= ? and id < ?");
+    Query sel (h, "select id, name, email from users where id >= ? and id < ?");
 
     // bind and execute the statement.
-    sel % 1L, 10L;
-    Result *res = sel.query();
-    while (res->read(row))
+    sel % 1L, 10L, execute();
+    while (sel.read(row))
         cout << row["id"]    << "\t"
              << row["name"]  << "\t"
              << row["email"] << endl;
-
-    delete res;
 
     // nested transaction
     cout << endl;
@@ -75,15 +72,13 @@ int main(int argc, char *argv[]) {
     // reset select statement and fetch all results.
     cout << endl;
     cout << "-- select all rows --" << endl;
-    sel  << "select * from users";
-    res  = sel.query();
-    while (res->read(row))
+    sel  << "select * from users", execute();
+    while (sel.read(row))
         cout << row["id"]    << "\t"
              << row["name"]  << "\t"
              << row["email"] << endl;
 
     cout << endl;
-    delete res;
 
     cout << "-- bulk copy in --" << endl;
 
@@ -98,11 +93,10 @@ int main(int argc, char *argv[]) {
 
     cout << endl;
     cout << "-- select all rows --" << endl;
-    res = sel.query();
-    while (res->read(row))
+    sel.execute();
+    while (sel.read(row))
         cout << row["id"]    << "\t"
              << row["name"]  << "\t"
              << row["email"] << endl;
 
-    delete res;
 }

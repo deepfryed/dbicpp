@@ -47,8 +47,15 @@ namespace dbi {
         */
         virtual uint32_t execute(string sql, vector<Param> &bind) = 0;
 
-        virtual AbstractResult* query(string sql) = 0;
-        virtual AbstractResult* query(string sql, vector<Param> &bind) = 0;
+        /*
+            Function: result
+            Returns a pointer to a result object. This needs to be
+            deallocated explicitly.
+
+            Returns:
+            AbstractResult* - Pointer to the Result set object.
+        */
+        virtual AbstractResult* result() = 0;
 
         /*
             Function: begin
@@ -196,8 +203,8 @@ namespace dbi {
 
         // ASYNC API
         protected:
-        virtual AbstractResult* aquery(string sql) = 0;
-        virtual AbstractResult* aquery(string sql, vector<Param> &bind) = 0;
+        virtual AbstractResult* aexecute(string sql) = 0;
+        virtual AbstractResult* aexecute(string sql, vector<Param> &bind) = 0;
 
         virtual void initAsync() = 0;
         virtual bool isBusy() = 0;

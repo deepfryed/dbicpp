@@ -24,7 +24,6 @@
 namespace dbi {
     struct null {};
     struct execute {};
-    struct query   {};
 }
 
 #include "dbic++/error.h"
@@ -62,6 +61,7 @@ namespace dbi {
 #include "dbic++/handle.h"
 #include "dbic++/statement.h"
 #include "dbic++/result.h"
+#include "dbic++/query.h"
 #include "dbic++/socketinfo.h"
 
 #endif

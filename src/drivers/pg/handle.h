@@ -9,6 +9,8 @@ namespace dbi {
         PGresult* _pgexec(string sql);
         PGresult* _pgexec(string sql, vector<Param> &bind);
 
+        PGresult *_result;
+
         protected:
         int tr_nesting;
         void boom(const char *);
@@ -24,16 +26,16 @@ namespace dbi {
         PgStatement* prepare(string sql);
         uint32_t     execute(string sql);
         uint32_t     execute(string sql, vector<Param> &bind);
-        PgResult*    query(string sql);
-        PgResult*    query(string sql, vector<Param> &bind);
+
+        PgResult*    result();
 
         int  socket();
         void initAsync();
         bool isBusy();
         bool cancel();
 
-        PgResult* aquery(string sql);
-        PgResult* aquery(string sql, vector<Param> &bind);
+        PgResult* aexecute(string sql);
+        PgResult* aexecute(string sql, vector<Param> &bind);
 
         bool begin();
         bool commit();

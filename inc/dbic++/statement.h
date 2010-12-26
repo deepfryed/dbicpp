@@ -14,10 +14,11 @@ namespace dbi {
     */
     class Statement {
         private:
-        AbstractStatement *st;
         AbstractHandle *h;
         ResultRow params;
+
         public:
+        AbstractStatement *st;
         Statement();
         /*
             Constructor: Statement(AbstractStatement*)
@@ -201,26 +202,14 @@ namespace dbi {
         uint32_t execute(vector<Param> &bind);
 
         /*
-            Function: query
-            Executes the prepared statement along with the bind parameters
-            bound using bind functions or operators.
+            Function: result
+            Returns a pointer to a result object. This needs to be
+            deallocated explicitly.
 
             Returns:
             Result* - Pointer to the Result set object.
         */
-        Result* query();
-
-        /*
-            Function: query
-            Executes the prepared statement with provided bind parameters.
-
-            Parameters:
-            bind - vector<Param>, bind parameters.
-
-            Returns:
-            Result* - Pointer to the Result set object.
-        */
-        Result* query(vector<Param> &bind);
+        Result* result();
 
         /*
             Function: cleanup

@@ -14,24 +14,24 @@ namespace dbi {
         if (_trace) logMessage(_trace_fd, message);
     }
 
-    void PQ_PREPROCESS_QUERY(string &query) {
+    void PQ_PREPROCESS_QUERY(string &normalized_sql) {
         int i, n = 0;
         char repl[128];
         string var;
         RE re("(?<!')(%(?:[dsfu]|l[dfu])|\\?)(?!')");
 
-        while (re.PartialMatch(query, &var)) {
+        while (re.PartialMatch(normalized_sql, &var)) {
             for (i = 0; i < (int)(sizeof(typemap)/sizeof(char *)); i += 2) {
                 if (var == typemap[i]) {
                     sprintf(repl, "$%d::%s", ++n, typemap[i+1]);
-                    re.Replace(repl, &query);
+                    re.Replace(repl, &normalized_sql);
                     i = -1;
                     break;
                 }
             }
             if (i != -1) {
                 sprintf(repl, "$%d", ++n);
-                re.Replace(repl, &query);
+                re.Replace(repl, &normalized_sql);
             }
         }
     }

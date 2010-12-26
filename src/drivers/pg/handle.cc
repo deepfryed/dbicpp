@@ -4,10 +4,12 @@ namespace dbi {
 
     PgHandle::PgHandle() {
         tr_nesting = 0;
+        _result    = 0;
     }
 
     PgHandle::PgHandle(string user, string pass, string dbname, string h, string p) {
-        tr_nesting   = 0;
+        tr_nesting = 0;
+        _result    = 0;
 
         string conninfo;
         string host = h;
@@ -48,33 +50,46 @@ namespace dbi {
     }
 
     void PgHandle::cleanup() {
-        if (conn) PQfinish(conn);
-        conn = 0;
+        if (_result) PQclear(_result);
+        if (conn)    PQfinish(conn);
+
+        _result = 0;
+        conn    = 0;
+    }
+
+    PgResult* PgHandle::result() {
+        PgResult *instance = 0;
+        if (_result) {
+            instance = new PgResult(_result, _sql, 0);
+            _result  = 0;
+        }
+        return instance; // needs to be deallocated by user.
     }
 
     PGresult* PgHandle::_pgexec(string sql) {
         PGresult *result;
-        string query = sql;
+        string normalized_sql = sql;
         _sql = sql;
 
-        PQ_PREPROCESS_QUERY(query);
-        result = PQexec(conn, query.c_str());
+        PQ_PREPROCESS_QUERY(normalized_sql);
+        result = PQexec(conn, normalized_sql.c_str());
         PQ_CHECK_RESULT(result, sql);
 
-        return result;
+        if (_result) PQclear(_result);
+        return _result = result;
     }
 
     PGresult* PgHandle::_pgexec(string sql, vector<Param> &bind) {
         int *param_l, *param_f;
         const char **param_v;
         PGresult *result;
-        string query = sql;
+        string normalized_sql = sql;
         _sql = sql;
 
-        PQ_PREPROCESS_QUERY(query);
+        PQ_PREPROCESS_QUERY(normalized_sql);
         PQ_PROCESS_BIND(&param_v, &param_l, &param_f, bind);
         try {
-            result = PQexecParams(conn, query.c_str(), bind.size(), 0, (const char* const *)param_v, param_l, param_f, 0);
+            result = PQexecParams(conn, normalized_sql.c_str(), bind.size(), 0, (const char* const *)param_v, param_l, param_f, 0);
             PQ_CHECK_RESULT(result, sql);
         } catch (Error &e) {
             delete []param_v;
@@ -87,7 +102,8 @@ namespace dbi {
         delete []param_l;
         delete []param_f;
 
-        return result;
+        if (_result) PQclear(_result);
+        return _result = result;
     }
 
     uint32_t PgHandle::execute(string sql) {
@@ -96,7 +112,6 @@ namespace dbi {
         rows    = (uint32_t)PQntuples(result);
         ctuples = (uint32_t)atoi(PQcmdTuples(result));
 
-        PQclear(result);
         return ctuples > 0 ? ctuples : rows;
     }
 
@@ -106,37 +121,28 @@ namespace dbi {
         rows    = (uint32_t)PQntuples(result);
         ctuples = (uint32_t)atoi(PQcmdTuples(result));
 
-        PQclear(result);
         return ctuples > 0 ? ctuples : rows;
-    }
-
-    PgResult* PgHandle::query(string sql) {
-        return new PgResult(_pgexec(sql), sql, 0);
-    }
-
-    PgResult* PgHandle::query(string sql, vector<Param> &bind) {
-        return new PgResult(_pgexec(sql, bind), sql, 0);
     }
 
     int PgHandle::socket() {
         return PQsocket(conn);
     }
 
-    PgResult* PgHandle::aquery(string sql) {
-        string query = sql;
-        PQ_PREPROCESS_QUERY(query);
-        int done = PQsendQuery(conn, query.c_str());
+    PgResult* PgHandle::aexecute(string sql) {
+        string normalized_sql = sql;
+        PQ_PREPROCESS_QUERY(normalized_sql);
+        int done = PQsendQuery(conn, normalized_sql.c_str());
         if (!done) boom(PQerrorMessage(conn));
         return new PgResult(0, sql, this);
     }
 
-    PgResult* PgHandle::aquery(string sql, vector<Param> &bind) {
+    PgResult* PgHandle::aexecute(string sql, vector<Param> &bind) {
         int *param_l, *param_f;
         const char **param_v;
-        string query = sql;
-        PQ_PREPROCESS_QUERY(query);
+        string normalized_sql = sql;
+        PQ_PREPROCESS_QUERY(normalized_sql);
         PQ_PROCESS_BIND(&param_v, &param_l, &param_f, bind);
-        int done = PQsendQueryParams(conn, query.c_str(), bind.size(),
+        int done = PQsendQueryParams(conn, normalized_sql.c_str(), bind.size(),
                                      0, (const char* const *)param_v, param_l, param_f, 0);
 
         delete []param_v;
@@ -283,7 +289,10 @@ namespace dbi {
         PGresult *res = PQgetResult(conn);
         PQ_CHECK_RESULT(res, sql);
         nrows = atol(PQcmdTuples(res));
-        PQclear(res);
+
+        if (_result) PQclear(_result);
+        _result = res;
+
         return nrows;
     }
 

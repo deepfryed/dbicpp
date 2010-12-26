@@ -7,6 +7,8 @@ namespace dbi {
         string _sql, _uuid;
         PGconn *_conn;
 
+        PGresult *_result;
+
         PGresult* _pgexec();
         PGresult* _pgexec(vector<Param>&);
 
@@ -26,8 +28,8 @@ namespace dbi {
 
         uint32_t  execute();
         uint32_t  execute(vector<Param>&);
-        PgResult* query();
-        PgResult* query(vector<Param>&);
+
+        PgResult* result();
     };
 }
 

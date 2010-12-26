@@ -48,11 +48,6 @@ namespace dbi {
         }
     }
 
-    // syntactic sugar.
-    Statement Handle::operator<<(string sql) {
-        return Statement(h->prepare(sql));
-    }
-
     Statement& Statement::operator,(string v) {
         bind(PARAM(v));
         return *this;
@@ -134,23 +129,6 @@ namespace dbi {
         return st->execute(bind);
     }
 
-    Result* Statement::query() {
-        if (_trace)
-            logMessage(_trace_fd, formatParams(st->command(), params));
-
-        AbstractResult *rs = st->query(params);
-        params.clear();
-        return new Result(rs);
-    }
-
-    Result* Statement::query(vector<Param> &bind) {
-        if (_trace)
-            logMessage(_trace_fd, formatParams(st->command(), bind));
-
-        AbstractResult *rs = st->query(bind);
-        return new Result(rs);
-    }
-
     uint32_t Statement::operator,(dbi::execute const &e) {
         uint32_t rc;
         if (_trace)
@@ -160,11 +138,7 @@ namespace dbi {
         return rc;
     }
 
-    Result* Statement::operator,(dbi::query const &e) {
-        if (_trace)
-            logMessage(_trace_fd, formatParams(st->command(), params));
-        AbstractResult *rs = st->query(params);
-        params.clear();
-        return new Result(rs);
+    Result* Statement::result() {
+        return new Result(st->result());
     }
 }

@@ -2,15 +2,16 @@
 
 namespace dbi {
     void PgStatement::init() {
-        _uuid = generateCompactUUID();
+        _uuid   = generateCompactUUID();
+        _result = 0;
     }
 
     void PgStatement::prepare() {
         PGresult *result = 0;
-        string query = _sql;
-        PQ_PREPROCESS_QUERY(query);
+        string normalized_sql = _sql;
+        PQ_PREPROCESS_QUERY(normalized_sql);
 
-        result = PQprepare(_conn, _uuid.c_str(), query.c_str(), 0, 0);
+        result = PQprepare(_conn, _uuid.c_str(), normalized_sql.c_str(), 0, 0);
         if (!result) boom("Unable to allocate statement");
 
         PQ_CHECK_RESULT(result, _sql);
@@ -18,8 +19,8 @@ namespace dbi {
     }
 
     PgStatement::~PgStatement() { cleanup(); }
-    PgStatement::PgStatement(string query,  PGconn *conn) {
-        _sql  = query;
+    PgStatement::PgStatement(string normalized_sql,  PGconn *conn) {
+        _sql  = normalized_sql;
         _conn = conn;
 
         init();
@@ -28,6 +29,7 @@ namespace dbi {
 
     void PgStatement::cleanup() {
         char command[1024];
+        if (_result) { PQclear(_result); _result = 0; }
         if (_uuid.length() == 32 && PQstatus(_conn) != CONNECTION_BAD) {
             snprintf(command, 1024, "deallocate \"%s\"", _uuid.c_str());
             PQexec(_conn, command);
@@ -35,7 +37,7 @@ namespace dbi {
     }
 
     void PgStatement::finish() {
-        // NOP
+        if (_result) { PQclear(_result); _result = 0; }
     }
 
     string PgStatement::command() {
@@ -46,7 +48,8 @@ namespace dbi {
         PGresult *result;
         result = PQexecPrepared(_conn, _uuid.c_str(), 0, 0, 0, 0, 0);
         PQ_CHECK_RESULT(result, _sql);
-        return result;
+        if (_result) PQclear(_result);
+        return _result = result;
     }
 
     PGresult* PgStatement::_pgexec(vector<Param> &bind) {
@@ -73,7 +76,8 @@ namespace dbi {
         delete []param_l;
         delete []param_f;
 
-        return result;
+        if (_result) PQclear(_result);
+        return _result = result;
     }
 
     uint32_t PgStatement::execute() {
@@ -83,7 +87,6 @@ namespace dbi {
         rows    = (uint32_t)PQntuples(result);
         ctuples = (uint32_t)atoi(PQcmdTuples(result));
 
-        PQclear(result);
         return ctuples > 0 ? ctuples : rows;
     }
 
@@ -94,16 +97,16 @@ namespace dbi {
         rows    = (uint32_t)PQntuples(result);
         ctuples = (uint32_t)atoi(PQcmdTuples(result));
 
-        PQclear(result);
         return ctuples > 0 ? ctuples : rows;
     }
 
-    PgResult* PgStatement::query() {
-        return new PgResult(_pgexec(), _sql, 0);
-    }
-
-    PgResult* PgStatement::query(vector<Param> &bind) {
-        return new PgResult(_pgexec(bind), _sql, 0);
+    PgResult* PgStatement::result() {
+        PgResult *instance = 0;
+        if (_result) {
+            instance = new PgResult(_result, _sql, 0);
+            _result  = 0;
+        }
+        return instance; // needs to be deallocated by user.
     }
 
     void PgStatement::boom(const char* m) {

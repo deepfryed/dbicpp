@@ -10,7 +10,7 @@ namespace dbi {
         See <Handle> for an example.
     */
     class Result {
-        private:
+        protected:
         AbstractResult *rs;
 
         public:
