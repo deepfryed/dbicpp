@@ -2,24 +2,25 @@
 
 namespace dbi {
     Query::Query(Handle &handle, string sql) {
-        h  = &handle;
-        st = new Statement(handle, sql);
+        rs = 0;
+        h  = handle.h;
+        st = h->prepare(sql);
     }
 
     Query::~Query() {
-        cleanup();
-    }
-
-    void Query::finish() {
-        st->finish();
+       cleanup();
     }
 
     void Query::cleanup() {
+        finish();
         if (st) {
             st->cleanup();
             delete st;
             st = 0;
         }
+    }
+
+    void Query::finish() {
         if (rs) {
             rs->cleanup();
             delete rs;
@@ -28,64 +29,65 @@ namespace dbi {
     }
 
     Query& Query::operator,(string v) {
-        st->bind(PARAM(v));
+        bind(PARAM(v));
         return *this;
     }
 
     Query& Query::operator%(string v) {
-        st->bind(PARAM(v));
+        bind(PARAM(v));
         return *this;
     }
 
     Query& Query::operator,(long v) {
-        st->bind(v);
+        bind(v);
         return *this;
     }
 
     Query& Query::operator%(long v) {
-        st->bind(v);
+        bind(v);
         return *this;
     }
 
     Query& Query::operator,(double v) {
-        st->bind(v);
+        bind(v);
         return *this;
     }
 
     Query& Query::operator%(double v) {
-        st->bind(v);
+        bind(v);
         return *this;
     }
 
     Query& Query::operator,(dbi::null const &e) {
-        st->bind(PARAM(e));
+        bind(PARAM(e));
         return *this;
     }
 
     Query& Query::operator%(dbi::null const &e) {
-        st->bind(PARAM(e));
+        bind(PARAM(e));
         return *this;
     }
 
     uint32_t Query::execute() {
-        uint32_t rows = st->execute();
-        if (rs) { rs->cleanup(); delete rs; }
-        rs = st->st->result();
+        if (_trace)
+            logMessage(_trace_fd, formatParams(st->command(), params));
+        uint32_t rows = st->execute(params);
+        params.clear();
+        rs = st->result();
         return rows;
     }
 
     uint32_t Query::execute(vector<Param> &bind) {
+        if (_trace)
+            logMessage(_trace_fd, formatParams(st->command(), bind));
         uint32_t rows = st->execute(bind);
-        if (rs) { rs->cleanup(); delete rs; }
-        rs = st->st->result();
+        params.clear();
+        rs = st->result();
         return rows;
     }
 
     uint32_t Query::operator,(dbi::execute const &e) {
-        uint32_t rows = st->execute();
-        if (rs) { rs->cleanup(); delete rs; }
-        rs = st->st->result();
-        return rows;
+        return execute();
     }
 
     Query& Query::operator<<(string sql) {
@@ -94,7 +96,7 @@ namespace dbi {
             delete st;
         }
 
-        st = new Statement(h, sql);
+        st = h->prepare(sql);
         return *this;
     }
 }

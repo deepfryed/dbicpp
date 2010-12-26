@@ -130,12 +130,7 @@ namespace dbi {
     }
 
     uint32_t Statement::operator,(dbi::execute const &e) {
-        uint32_t rc;
-        if (_trace)
-            logMessage(_trace_fd, formatParams(st->command(), params));
-        rc = st->execute(params);
-        params.clear();
-        return rc;
+        return execute();
     }
 
     Result* Statement::result() {

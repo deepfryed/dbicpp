@@ -12,11 +12,7 @@ namespace dbi {
 
         See <Handle> for an example.
     */
-    class Query : public Result {
-        protected:
-        Statement *st;
-        Handle *h;
-
+    class Query : public Result, public Statement {
         public:
         /*
             Constructor: Query(Handle&, string)
@@ -31,6 +27,9 @@ namespace dbi {
         void finish();
         void cleanup();
 
+        uint32_t execute();
+        uint32_t execute(vector<Param> &bind);
+
         /*
             Operator: , (string)
             Alias for bind(Param)
@@ -39,7 +38,6 @@ namespace dbi {
             value - string
         */
         Query& operator,(string value);
-
         /*
             Operator: % (string)
             Alias for bind(Param)
@@ -109,27 +107,11 @@ namespace dbi {
 
             This is mostly syntactic sugar allowing you to do,
             (start code)
-                Query query(handle, "select * from users where id = ? and name like ?")
+                Query query (handle, "select * from users where id = ? and name like ?")
                 query % 1L, "jon%", execute();
             (end)
         */
         uint32_t operator,(dbi::execute const &);
-
-        /*
-            Function: execute
-            Executes the prepared statement along with the bind parameters
-            bound using bind functions or operators.
-
-            Returns:
-            rows - The number of rows affected or returned.
-        */
-        uint32_t execute();
-
-        /*
-            Function: execute(vector<Param>&)
-            See <AbstractStatement::execute(vector<Param>&)>
-        */
-        uint32_t execute(vector<Param> &bind);
 
         Query& operator<<(string sql);
     };

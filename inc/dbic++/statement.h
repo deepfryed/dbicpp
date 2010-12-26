@@ -13,12 +13,12 @@ namespace dbi {
         See <Handle> for an example.
     */
     class Statement {
-        private:
+        protected:
         AbstractHandle *h;
+        AbstractStatement *st;
         ResultRow params;
 
         public:
-        AbstractStatement *st;
         Statement();
         /*
             Constructor: Statement(AbstractStatement*)
@@ -179,7 +179,7 @@ namespace dbi {
 
             This is mostly syntactic sugar allowing you to do,
             (start code)
-                Statement stmt (handle, "select * from users where id = ? and name like ?")
+                Statement stmt (handle, "update users set verified = true where id = ? and name like ?")
                 stmt % 1L, "jon%", execute();
             (end)
         */

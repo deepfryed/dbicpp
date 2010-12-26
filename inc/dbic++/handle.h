@@ -221,6 +221,7 @@ namespace dbi {
         string driver();
 
         friend class Statement;
+        friend class Query;
     };
 }
 
