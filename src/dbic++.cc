@@ -67,11 +67,11 @@ namespace dbi {
                         drivers[driver->name] = driver;
                     }
                 }
-                else if (_trace) {
+                else {
                     logMessage(_trace_fd, "WARNING: Ignoring" + filename + ":" + dlerror());
                 }
             }
-            else if (_trace) {
+            else {
                 logMessage(_trace_fd, "WARNING: Ignoring" + filename + ":" + dlerror());
             }
         }
