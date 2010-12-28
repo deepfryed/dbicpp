@@ -9,7 +9,10 @@ namespace dbi {
         _bytea  = 0;
     }
 
-    PgResult::~PgResult() { cleanup(); }
+    PgResult::~PgResult() {
+        cleanup();
+    }
+
     PgResult::PgResult(PGresult *r, string sql, PgHandle *h) {
         init();
 
