@@ -54,8 +54,8 @@ int main(int argc, char *argv[]) {
 
     ConnectionPool pool(5, driver, getlogin(), "", "dbicpp");
     Reactor::initialize();
-    Reactor::watch(pool.execute(sleep_sql + "(0.5), 1 as query_seq, * from users", callback));
-    Reactor::watch(pool.execute(sleep_sql + "(0.3), 2 as query_seq, * from users", callback));
-    Reactor::watch(pool.execute(sleep_sql + "(0.1), 3 as query_seq, * from users", callback));
+    Reactor::watch(pool.execute(sleep_sql + "(0.5), 1 as query_seq, id, name from users", callback));
+    Reactor::watch(pool.execute(sleep_sql + "(0.3), 2 as query_seq, id, name from users", callback));
+    Reactor::watch(pool.execute(sleep_sql + "(0.1), 3 as query_seq, id, name from users", callback));
     Reactor::run();
 }

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export PG_VERSION=$(cat src/drivers/pg/common.h | grep "VERSION \+" | sed 's/^.*VERSION *//' | sed 's/"//g')
-export MYSQL_VERSION=$(cat src/drivers/mysql.cc | grep "VERSION \+" | sed 's/^.*VERSION *//' | sed 's/"//g')
+export MYSQL_VERSION=$(cat src/drivers/mysql/common.h | grep "VERSION \+" | sed 's/^.*VERSION *//' | sed 's/"//g')
 
 cleanup() {
   make clean

@@ -77,20 +77,6 @@ namespace dbi {
         return _rowno;
     }
 
-    void MySqlStatementResult::cleanup() {
-        if (resultset) {
-            for (int r = 0; r < _rows; r++) {
-                for (int c = 0; c < _cols; c++) {
-                    if (resultset[r].data[c]) free(resultset[r].data[c]);
-                }
-                free(resultset[r].data);
-                free(resultset[r].len);
-            }
-            free(resultset);
-        }
-        resultset = 0;
-    }
-
     uint64_t MySqlStatementResult::lastInsertID() {
         return last_insert_id;
     }
@@ -100,14 +86,34 @@ namespace dbi {
     }
 
     bool MySqlStatementResult::consumeResult() {
+        // NOP
         return false;
     }
 
     void MySqlStatementResult::prepareResult() {
+        // NOP
+    }
+
+    void MySqlStatementResult::cleanup() {
+        if (resultset) {
+            for (int r = 0; r < _rows; r++) {
+                if (resultset[r].data) {
+                    for (int c = 0; c < _cols; c++) {
+                        if (resultset[r].data[c]) free(resultset[r].data[c]);
+                    }
+                    free(resultset[r].data);
+                }
+                if (resultset[r].len) free(resultset[r].len);
+            }
+            free(resultset);
+        }
+        resultset = 0;
     }
 
     void MySqlStatementResult::storeResult(MYSQL_STMT *stmt, MYSQL_BIND *bind) {
         resultset = (struct rowdata *)malloc(sizeof(struct rowdata)*_rows);
+        bzero(resultset, sizeof(struct rowdata) * _rows);
+
         mysql_stmt_row_seek(stmt, stmt->result.data);
 
         int r, c, rc;
@@ -118,7 +124,8 @@ namespace dbi {
             bzero(resultset[r].data, sizeof(unsigned char*) * _cols);
 
             rc = mysql_stmt_fetch(stmt);
-            if (rc != 0 || rc != MYSQL_DATA_TRUNCATED) {
+
+            if (rc != 0 && rc != MYSQL_DATA_TRUNCATED) {
                 cleanup();
                 throw RuntimeError(mysql_stmt_error(stmt));
             }
