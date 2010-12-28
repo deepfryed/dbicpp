@@ -1,4 +1,5 @@
 #include "dbic++.h"
+#include <getopt.h>
 #include <unistd.h>
 
 /*----------------------------------------------------------------------------------
@@ -12,28 +13,50 @@
 using namespace std;
 using namespace dbi;
 
-char buffer[8192];
+int rows, iter;
+char buffer[8192], driver[512];
 
 void top() {
-    sprintf(buffer, "top -n1 -bp %d | grep %s", getpid(), getlogin());
+    sprintf(buffer, "ps -o 'vsize=' -o 'rss=' -o 'cmd=' -p%d", getpid());
     FILE *top = popen(buffer, "r");
     fgets(buffer, 8192, top);
     pclose(top);
     buffer[strlen(buffer)-1] = 0;
-    printf("%s", buffer);
+    printf("%s\n", buffer);
+}
+
+void parseOptions(int argc, char **argv) {
+    int option_index, c;
+    static struct option long_options[] = {
+        { "iter",   required_argument, 0, 'n' },
+        { "rows",   required_argument, 0, 'r' },
+        { "driver", required_argument, 0, 'd' }
+    };
+
+    rows = 500;
+    iter = 50;
+    strcpy(driver, "postgresql");
+
+    while ((c = getopt_long(argc, argv, "d:n:r:", long_options, &option_index)) >= 0) {
+        if (c == 0) c = long_options[option_index].val;
+
+        switch(c) {
+            case 'r': rows = atol(optarg);    break;
+            case 'n': iter = atol(optarg);    break;
+            case 'd': strcpy(driver, optarg); break;
+            default: exit(1);
+        }
+    }
 }
 
 int main(int argc, char *argv[]) {
     ResultRow r;
-    string driver(argc > 1 ? argv[1] : "postgresql");
+    parseOptions(argc, argv);
 
-    int rows = argc > 2 ? atoi(argv[2]) : 500;
-    int iter = argc > 3 ? atoi(argv[3]) : 10;
-
-    for (int times = 0; times < 50; times++) {
+    for (int times = 0; times < 10; times++) {
         Handle h (driver, getlogin(), "", "dbicpp");
 
-        printf("-- run %d --\n", times);
+        printf("-- run %d --\t", times);
         top();
 
         // create test table
@@ -58,6 +81,14 @@ int main(int argc, char *argv[]) {
 
         Statement upd (h, "update users set name = ?, email = ? where id = ?");
         for (int n = 0; n < iter; n++) {
+            /*
+            sprintf(buffer, "test %d", n+1);
+            upd % buffer;
+            upd % "test@example.com";
+            upd % (long)(n+1);
+            upd.execute();
+            */
+
             sel.execute();
             for (int r = 0; r < sel.rows(); r++) {
                 sprintf(buffer, "test %d", r);
@@ -68,9 +99,15 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        ins.finish();
-        sel.finish();
         upd.finish();
+        sel.finish();
+        ins.finish();
+
+        upd.cleanup();
+        sel.cleanup();
+        ins.cleanup();
         h.close();
     }
+
+    return 0;
 }

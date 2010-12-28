@@ -37,7 +37,7 @@ namespace dbi {
 
     void Statement::finish() {
         params.clear();
-        return st->finish();
+        if (st) st->finish();
     }
 
     void Statement::cleanup() {
@@ -91,8 +91,8 @@ namespace dbi {
     Statement& Statement::operator<<(string sql) {
         params.clear();
 
-        if (st) { st->cleanup(); delete st; }
         if (!h) throw RuntimeError("Unable to call prepare() without database handle.");
+        if (st) { st->cleanup(); delete st; }
 
         st = h->prepare(sql);
         return *this;
