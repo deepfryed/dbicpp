@@ -136,4 +136,8 @@ namespace dbi {
     Result* Statement::result() {
         return new Result(st->result());
     }
+
+    uint64_t Statement::lastInsertID() {
+        return st->lastInsertID();
+    }
 }

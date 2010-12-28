@@ -81,6 +81,12 @@ namespace dbi {
     }
 
     MySqlStatementResult* MySqlStatement::result() {
-        return _result ? new MySqlStatementResult(_stmt, _result->params) : new MySqlStatementResult(_stmt, 0);
+        return _result ?
+            new MySqlStatementResult(_stmt, _result->params, _sql) :
+            new MySqlStatementResult(_stmt, 0, _sql);
+    }
+
+    uint64_t MySqlStatement::lastInsertID() {
+        return _stmt ? mysql_stmt_insert_id(_stmt) : 0;
     }
 }

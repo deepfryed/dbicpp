@@ -27,7 +27,7 @@ namespace dbi {
         void fetchMeta(MYSQL_STMT*);
 
         public:
-        MySqlStatementResult(MYSQL_STMT*, MYSQL_BIND*);
+        MySqlStatementResult(MYSQL_STMT*, MYSQL_BIND*, string);
         ~MySqlStatementResult();
 
         void checkReady(string m);

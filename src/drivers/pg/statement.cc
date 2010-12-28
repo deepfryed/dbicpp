@@ -115,4 +115,14 @@ namespace dbi {
         else
             throw RuntimeError(m);
     }
+
+    uint64_t PgStatement::lastInsertID() {
+        if (_result) {
+            if (PQgetisnull(_result, 0, 0))
+                return 0;
+            else
+                return atol(PQgetvalue(_result, 0, 0));
+        }
+        return 0;
+    }
 }

@@ -51,6 +51,12 @@ namespace dbi {
         */
         virtual AbstractResult* result() = 0;
 
+        /*
+            Function: lastInsertID
+            See <AbstractResult::lastInsertID()>
+        */
+        virtual uint64_t lastInsertID() = 0;
+
         virtual void finish()  = 0;
         virtual void cleanup() = 0;
     };

@@ -1,12 +1,13 @@
 #include "common.h"
 
 namespace dbi {
-    MySqlStatementResult::MySqlStatementResult(MYSQL_STMT *stmt, MYSQL_BIND *bind) {
+    MySqlStatementResult::MySqlStatementResult(MYSQL_STMT *stmt, MYSQL_BIND *bind, string sql) {
         _rowno         = 0;
         _rows          = mysql_stmt_num_rows(stmt);
         _cols          = mysql_stmt_field_count(stmt);
         _affected_rows = mysql_stmt_affected_rows(stmt);
 
+        _sql           = sql;
         resultset      = 0;
         last_insert_id = mysql_stmt_insert_id(stmt);
 

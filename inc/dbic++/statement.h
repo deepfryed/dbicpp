@@ -217,5 +217,12 @@ namespace dbi {
         */
         void cleanup();
         void finish();
+
+        /*
+            Function: lastInsertID
+            See <AbstractResult::lastInsertID()>
+        */
+        uint64_t lastInsertID();
+
     };
 }

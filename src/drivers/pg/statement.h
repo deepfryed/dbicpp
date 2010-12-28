@@ -26,8 +26,9 @@ namespace dbi {
         void finish();
         string command();
 
-        uint32_t  execute();
-        uint32_t  execute(vector<Param>&);
+        uint32_t execute();
+        uint32_t execute(vector<Param>&);
+        uint64_t lastInsertID();
 
         PgResult* result();
     };

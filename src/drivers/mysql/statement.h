@@ -18,6 +18,7 @@ namespace dbi {
 
         void init();
         void boom(const char*);
+        uint32_t storeResult();
 
         public:
         ~MySqlStatement();
@@ -27,7 +28,7 @@ namespace dbi {
 
         uint32_t execute();
         uint32_t execute(vector<Param> &bind);
-        uint32_t storeResult();
+        uint64_t lastInsertID();
 
         void cleanup();
         void finish();
