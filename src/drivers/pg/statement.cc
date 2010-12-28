@@ -103,7 +103,7 @@ namespace dbi {
     PgResult* PgStatement::result() {
         PgResult *instance = 0;
         if (_result) {
-            instance = new PgResult(_result, _sql, 0);
+            instance = new PgResult(_result, _sql, _conn);
             _result  = 0;
         }
         return instance; // needs to be deallocated by user.

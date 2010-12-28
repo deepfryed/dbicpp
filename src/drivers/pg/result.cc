@@ -13,11 +13,11 @@ namespace dbi {
         cleanup();
     }
 
-    PgResult::PgResult(PGresult *r, string sql, PgHandle *h) {
+    PgResult::PgResult(PGresult *r, string sql, PGconn *c) {
         init();
 
         _result = r;
-        _handle = h;
+        _conn   = c;
         _sql    = sql;
 
         fetchMeta();
@@ -57,16 +57,16 @@ namespace dbi {
     }
 
     bool PgResult::consumeResult() {
-        PQconsumeInput(_handle->conn);
-        return (PQisBusy(_handle->conn) ? true : false);
+        PQconsumeInput(_conn);
+        return (PQisBusy(_conn) ? true : false);
     }
 
     void PgResult::prepareResult() {
         PGresult *response;
-        _result = PQgetResult(_handle->conn);
+        _result = PQgetResult(_conn);
         fetchMeta();
 
-        while ((response = PQgetResult(_handle->conn))) PQclear(response);
+        while ((response = PQgetResult(_conn))) PQclear(response);
         PQ_CHECK_RESULT(_result, _sql);
     }
 
@@ -168,7 +168,7 @@ namespace dbi {
     }
 
     void PgResult::boom(const char* m) {
-        if (PQstatus(_handle->conn) == CONNECTION_BAD)
+        if (PQstatus(_conn) == CONNECTION_BAD)
             throw ConnectionError(m);
         else
             throw RuntimeError(m);

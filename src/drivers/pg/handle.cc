@@ -60,7 +60,7 @@ namespace dbi {
     PgResult* PgHandle::result() {
         PgResult *instance = 0;
         if (_result) {
-            instance = new PgResult(_result, _sql, 0);
+            instance = new PgResult(_result, _sql, conn);
             _result  = 0;
         }
         return instance; // needs to be deallocated by user.
@@ -133,7 +133,7 @@ namespace dbi {
         PQ_PREPROCESS_QUERY(normalized_sql);
         int done = PQsendQuery(conn, normalized_sql.c_str());
         if (!done) boom(PQerrorMessage(conn));
-        return new PgResult(0, sql, this);
+        return new PgResult(0, sql, conn);
     }
 
     PgResult* PgHandle::aexecute(string sql, vector<Param> &bind) {
@@ -149,7 +149,7 @@ namespace dbi {
         delete []param_l;
         delete []param_f;
         if (!done) boom(PQerrorMessage(conn));
-        return new PgResult(0, sql, this);
+        return new PgResult(0, sql, conn);
     }
 
     void PgHandle::initAsync() {

@@ -83,7 +83,6 @@ namespace dbi {
         if (_trace)
             logMessage(_trace_fd, formatParams(st->command(), bind));
         uint32_t rows = st->execute(bind);
-        params.clear();
         rs = st->result();
         return rows;
     }

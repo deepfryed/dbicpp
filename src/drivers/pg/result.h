@@ -7,7 +7,6 @@ namespace dbi {
     class PgResult : public AbstractResult {
 
         private:
-        PgHandle       *_handle;
         PGconn         *_conn;
         PGresult       *_result;
         vector<string> _rsfields;
@@ -21,8 +20,7 @@ namespace dbi {
         unsigned char* unescapeBytea(int, int, uint64_t*);
 
         public:
-        PgResult(PGresult*);
-        PgResult(PGresult*, string sql, PgHandle*);
+        PgResult(PGresult*, string sql, PGconn*);
         ~PgResult();
 
         void cleanup();
