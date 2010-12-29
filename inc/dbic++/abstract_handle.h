@@ -202,6 +202,8 @@ namespace dbi {
         virtual int  socket()    = 0;
         virtual void reconnect() = 0;
 
+        virtual ~AbstractHandle() {}
+
         // ASYNC API
         protected:
         virtual AbstractResult* aexecute(string sql) = 0;

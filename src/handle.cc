@@ -24,7 +24,6 @@ namespace dbi {
 
     Handle::~Handle() {
         h->close();
-        h->cleanup();
         delete h;
     }
 

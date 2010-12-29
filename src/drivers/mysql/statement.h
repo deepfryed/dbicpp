@@ -8,7 +8,6 @@ namespace dbi {
     class MySqlStatement : public AbstractStatement {
         private:
         string _sql;
-        string _uuid;
 
         MYSQL_STMT *_stmt;
         MySqlBind  *_result;

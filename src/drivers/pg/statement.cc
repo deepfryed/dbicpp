@@ -18,7 +18,10 @@ namespace dbi {
         PQclear(result);
     }
 
-    PgStatement::~PgStatement() { cleanup(); }
+    PgStatement::~PgStatement() {
+        cleanup();
+    }
+
     PgStatement::PgStatement(string normalized_sql,  PGconn *conn) {
         _sql  = normalized_sql;
         _conn = conn;

@@ -4,7 +4,6 @@ namespace dbi {
     void MySqlStatement::init() {
         _stmt   = 0;
         _result = 0;
-        _uuid   = generateCompactUUID();
     }
 
     MySqlStatement::~MySqlStatement() {
@@ -46,8 +45,8 @@ namespace dbi {
     }
 
     uint32_t MySqlStatement::storeResult() {
+        uint32_t rows  = mysql_stmt_num_rows(_stmt);
         MYSQL_RES *res = mysql_stmt_result_metadata(_stmt);
-
         if (res) {
             mysql_free_result(res);
             if (!_stmt->bind_result_done) {
@@ -57,7 +56,7 @@ namespace dbi {
             if (mysql_stmt_store_result(_stmt) != 0 ) THROW_MYSQL_STMT_ERROR(_stmt);
         }
 
-        return res ? mysql_stmt_num_rows(_stmt) : mysql_stmt_affected_rows(_stmt);
+        return rows ? rows : mysql_stmt_affected_rows(_stmt);
     }
 
     void MySqlStatement::finish() {
@@ -65,6 +64,7 @@ namespace dbi {
     }
 
     void MySqlStatement::cleanup() {
+        finish();
         if (_stmt)   mysql_stmt_close(_stmt);
         if (_result) delete _result;
 

@@ -42,7 +42,6 @@ namespace dbi {
 
     void Statement::cleanup() {
         if (st) {
-            st->cleanup();
             delete st;
             st = 0;
         }
@@ -92,7 +91,7 @@ namespace dbi {
         params.clear();
 
         if (!h) throw RuntimeError("Unable to call prepare() without database handle.");
-        if (st) { st->cleanup(); delete st; }
+        if (st) delete st;
 
         st = h->prepare(sql);
         return *this;

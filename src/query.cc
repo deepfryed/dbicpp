@@ -14,7 +14,6 @@ namespace dbi {
     void Query::cleanup() {
         finish();
         if (st) {
-            st->cleanup();
             delete st;
             st = 0;
         }
@@ -22,7 +21,6 @@ namespace dbi {
 
     void Query::finish() {
         if (rs) {
-            rs->cleanup();
             delete rs;
             rs = 0;
         }

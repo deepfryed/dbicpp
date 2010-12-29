@@ -59,5 +59,7 @@ namespace dbi {
 
         virtual void finish()  = 0;
         virtual void cleanup() = 0;
+
+        virtual ~AbstractStatement() {}
     };
 }

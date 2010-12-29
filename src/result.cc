@@ -29,7 +29,6 @@ namespace dbi {
 
     void Result::cleanup() {
         if (rs) {
-            rs->cleanup();
             delete rs;
             rs = 0;
         }

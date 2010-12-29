@@ -18,6 +18,10 @@ namespace dbi {
         if (result) fetchMeta(result);
     }
 
+    MySqlResult::~MySqlResult() {
+        cleanup();
+    }
+
     uint32_t MySqlResult::rows() {
         return _affected_rows > 0 ? _affected_rows : _rows;
     }

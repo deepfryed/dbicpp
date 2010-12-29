@@ -155,6 +155,8 @@ namespace dbi {
         // Once all available data has been consumed, prepare results for
         // access.
         virtual void prepareResult() = 0;
+
+        virtual ~AbstractResult() {};
     };
 
 }

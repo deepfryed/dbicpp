@@ -24,6 +24,7 @@ namespace dbi {
 
         public:
         MySqlResult(MYSQL_RES*, string, MYSQL*);
+        ~MySqlResult();
 
         void checkReady(string m);
         bool consumeResult();

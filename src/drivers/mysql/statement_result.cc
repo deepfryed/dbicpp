@@ -17,6 +17,10 @@ namespace dbi {
         }
     }
 
+    MySqlStatementResult::~MySqlStatementResult() {
+        cleanup();
+    }
+
     uint32_t MySqlStatementResult::rows() {
         return _affected_rows > 0 ? _affected_rows : _rows;
     }
