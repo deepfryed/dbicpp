@@ -8,7 +8,7 @@ using namespace dbi;
 
 long max_iter = 1;
 FILE *outfile = stdout;
-ResultRow bind;
+ResultRow params;
 char sql[4096], driver[4096];
 
 void parseOptions(int argc, char **argv) {
@@ -29,7 +29,7 @@ void parseOptions(int argc, char **argv) {
         }
         switch(c) {
             case 's': strcpy(sql, optarg); break;
-            case 'b': bind << string(optarg); break;
+            case 'b': params << string(optarg); break;
             case 'n': max_iter = atol(optarg); break;
             case 'd': strcpy(driver, optarg); break;
             case 'o': outfile = fopen(optarg, "w");
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     row.reserve(20);
 
     for (n = 0; n < max_iter; n++) {
-        rows = (int) st.execute(bind);
+        rows = (int) st.execute(params);
         cols = (int) st.columns();
         while (st.read(row)) {
             for (c = 0; c < row.size(); c++)
