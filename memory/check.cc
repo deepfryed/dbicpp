@@ -52,8 +52,9 @@ void parseOptions(int argc, char **argv) {
 int main(int argc, char *argv[]) {
     ResultRow r;
     parseOptions(argc, argv);
+    dbiInitialize();
 
-    for (int times = 0; times < 10; times++) {
+    for (int times = 0; times < 100; times++) {
         Handle h (driver, getlogin(), "", "dbicpp");
 
         printf("-- run %d --\t", times);
@@ -76,36 +77,21 @@ int main(int argc, char *argv[]) {
         Query sel (h, "select id, name, email from users order by id");
         for (int n = 0; n < iter; n++) {
             sel.execute();
-            while (sel.read(r)) { }
+            while (sel.read(r)) { r.clear(); }
         }
 
         Statement upd (h, "update users set name = ?, email = ? where id = ?");
         for (int n = 0; n < iter; n++) {
-         // sprintf(buffer, "test %d", n+1);
-         // upd % buffer;
-         // upd % "test@example.com";
-         // upd % (long)(n+1);
-         // upd.execute();
-
-            sel.execute();
-            for (int r = 0; r < sel.rows(); r++) {
-                sprintf(buffer, "test %d", r);
-                upd % buffer;
-                upd % "test@example.com";
-                upd % string((const char*)sel.read(r, 0, 0));
-                upd.execute();
-            }
+            sprintf(buffer, "test %d", n+1);
+            upd % buffer;
+            upd % "test@example.com";
+            upd % (long)(n+1);
+            upd.execute();
         }
 
-        upd.finish();
-        sel.finish();
-        ins.finish();
-
-        upd.cleanup();
-        sel.cleanup();
-        ins.cleanup();
         h.close();
     }
 
+    dbiShutdown();
     return 0;
 }
