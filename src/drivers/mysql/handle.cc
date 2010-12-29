@@ -88,7 +88,6 @@ namespace dbi {
 
         MYSQL_PREPROCESS_QUERY(sql);
         MYSQL_INTERPOLATE_BIND(conn, sql, bind);
-
         if (mysql_real_query(conn, sql.c_str(), sql.length()) != 0) boom(mysql_error(conn));
 
         rows = mysql_affected_rows(conn);

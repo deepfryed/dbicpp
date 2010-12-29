@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
 
         // create test table
         try { h.execute("drop table users"); } catch (RuntimeError &e) {}
-        h.execute("create table users(id serial, name varchar(64), email varchar(64), created_at timestamp)");
+        h.execute("create table users(id serial primary key, name text, email text, created_at timestamp)");
 
         // insert some test data
         Statement ins (h, "insert into users(name, email, created_at) values(?, ?, current_timestamp)");
@@ -81,13 +81,11 @@ int main(int argc, char *argv[]) {
 
         Statement upd (h, "update users set name = ?, email = ? where id = ?");
         for (int n = 0; n < iter; n++) {
-            /*
-            sprintf(buffer, "test %d", n+1);
-            upd % buffer;
-            upd % "test@example.com";
-            upd % (long)(n+1);
-            upd.execute();
-            */
+         // sprintf(buffer, "test %d", n+1);
+         // upd % buffer;
+         // upd % "test@example.com";
+         // upd % (long)(n+1);
+         // upd.execute();
 
             sel.execute();
             for (int r = 0; r < sel.rows(); r++) {

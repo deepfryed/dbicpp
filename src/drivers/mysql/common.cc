@@ -23,6 +23,7 @@ namespace dbi {
 
     void MYSQL_INTERPOLATE_BIND(MYSQL *conn, string &query, vector<Param> &bind) {
         int n = 0;
+        unsigned long len;
         char *repl = 0;
         string orig = query, var;
 
@@ -38,11 +39,11 @@ namespace dbi {
                 strcpy(repl, "NULL");
             }
             else {
-                repl = (char*)malloc(bind[n].value.length()*2 + 1);
-                mysql_real_escape_string(conn, repl+1, bind[n].value.c_str(), bind[n].value.length());
+                repl = (char*)malloc(bind[n].value.length()*2 + 3);
+                len  = mysql_real_escape_string(conn, repl+1, bind[n].value.c_str(), bind[n].value.length());
                 repl[0] = '\'';
-                repl[strlen(repl+1) + 1] = '\'';
-                repl[strlen(repl+1) + 2] = 0;
+                repl[len + 1] = '\'';
+                repl[len + 2] = 0;
             }
             re.Replace(repl, &query);
             free(repl);
