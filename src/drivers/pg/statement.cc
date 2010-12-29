@@ -32,7 +32,7 @@ namespace dbi {
         if (_result) { PQclear(_result); _result = 0; }
         if (_uuid.length() == 32 && PQstatus(_conn) != CONNECTION_BAD) {
             snprintf(command, 1024, "deallocate \"%s\"", _uuid.c_str());
-            PQexec(_conn, command);
+            PQclear(PQexec(_conn, command));
         }
     }
 

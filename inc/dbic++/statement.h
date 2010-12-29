@@ -16,7 +16,7 @@ namespace dbi {
         protected:
         AbstractHandle *h;
         AbstractStatement *st;
-        ResultRow params;
+        vector<Param> params;
 
         public:
         Statement();
