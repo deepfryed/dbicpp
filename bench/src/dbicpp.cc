@@ -41,7 +41,7 @@ void parseOptions(int argc, char **argv) {
 }
 
 int main(int argc, char *argv[]) {
-    int n, r, c, rows, cols;
+    int n, r, c;
     dbiInitialize("../lib/dbic++");
     parseOptions(argc, argv);
 
@@ -51,8 +51,7 @@ int main(int argc, char *argv[]) {
     row.reserve(20);
 
     for (n = 0; n < max_iter; n++) {
-        rows = (int) query.execute(values);
-        cols = (int) query.columns();
+        query.execute(values);
         while (query.read(row)) {
             for (c = 0; c < row.size(); c++)
                 fprintf(outfile, "%s\t", row[c].value.c_str());
