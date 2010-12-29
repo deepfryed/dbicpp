@@ -42,7 +42,6 @@ void parseOptions(int argc, char **argv) {
 
 int main(int argc, char *argv[]) {
     int n, r, c;
-    dbiInitialize("../lib/dbic++");
     parseOptions(argc, argv);
 
     Handle h(driver, getlogin(), "", "dbicpp");
