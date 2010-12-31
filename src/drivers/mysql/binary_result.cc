@@ -244,6 +244,7 @@ namespace dbi {
 
         nulls = row;
         row  += (_cols + 9) / 8;
+        // 2 reserved bits and 1 bit for each column to denote null value (byte aligned)
 
         rowdata.clear();
         for (int j = 0; j < _cols; j++) {
@@ -280,6 +281,8 @@ namespace dbi {
                     case MYSQL_TYPE_DATE:
                         data = fetch_result_date(&row);
                         break;
+                    /*
+                    TODO: check string and blob types and throw an error in default.
                     case MYSQL_TYPE_TINY_BLOB:
                     case MYSQL_TYPE_MEDIUM_BLOB:
                     case MYSQL_TYPE_LONG_BLOB:
@@ -287,6 +290,7 @@ namespace dbi {
                     case MYSQL_TYPE_BIT:
                         data = fetch_result_bin(&row, &length);
                         break;
+                    */
                     default:
                         data = fetch_result_bin(&row, &length);
                         break;
