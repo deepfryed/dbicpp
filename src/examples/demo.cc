@@ -38,6 +38,7 @@ int main(int argc, char *argv[]) {
     Statement ins (h, "insert into users(name, email) values(?, ?)");
     ins % "Apple Arthurton", "apple@example.com", execute();
     ins % "Benny Arthurton", "benny@example.com", execute();
+    ins % "Marty Arthurton", null(), execute();
 
     cout << endl;
     cout << "-- simple select --" << endl;

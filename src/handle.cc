@@ -106,4 +106,8 @@ namespace dbi {
     string Handle::driver() {
         return h->driver();
     }
+
+    void Handle::reconnect() {
+        h->reconnect();
+    }
 }

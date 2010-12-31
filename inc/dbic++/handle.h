@@ -220,6 +220,12 @@ namespace dbi {
         */
         string driver();
 
+        /*
+            Function: reconnect
+            See <AbstractHandle::reconnect()>
+        */
+        void reconnect();
+
         friend class Statement;
         friend class Query;
     };

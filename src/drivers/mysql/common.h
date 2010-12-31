@@ -33,36 +33,17 @@ namespace dbi {
 
     void MYSQL_PREPROCESS_QUERY(string &query);
     void MYSQL_INTERPOLATE_BIND(MYSQL *conn, string &query, vector<Param> &bind);
-    void MYSQL_PROCESS_BIND(MYSQL_BIND *params, vector<Param>&bind);
     bool MYSQL_CONNECTION_ERROR(int error);
 
     int  LOCAL_INFILE_INIT(void **ptr, const char *filename, void *unused);
     int  LOCAL_INFILE_READ(void *ptr, char *buffer, uint32_t len);
     void LOCAL_INFILE_END(void *ptr);
     int  LOCAL_INFILE_ERROR(void *ptr, char *error, uint32_t len);
-
-
-    class MySqlBind {
-        private:
-        void allocate();
-        void deallocate();
-        bool _readonly;
-
-        public:
-        int columns;
-        MYSQL_BIND *params;
-
-        MySqlBind(int);
-        MySqlBind(int, bool);
-        ~MySqlBind();
-
-        void reallocate(int c, uint64_t length);
-    };
 }
 
 
 #include "result.h"
-#include "statement_result.h"
+#include "binary_result.h"
 #include "statement.h"
 #include "handle.h"
 

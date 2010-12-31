@@ -3,7 +3,6 @@
 namespace dbi {
     void MySqlStatement::init() {
         _stmt   = 0;
-        _result = 0;
     }
 
     MySqlStatement::~MySqlStatement() {
@@ -35,27 +34,33 @@ namespace dbi {
     uint32_t MySqlStatement::execute(vector<Param> &bind) {
         finish();
 
-        MySqlBind mysqlbind(bind.size(), MYSQL_BIND_RO);
-        MYSQL_PROCESS_BIND(mysqlbind.params, bind);
+        MYSQL_BIND *params = new MYSQL_BIND[bind.size()];
+        bzero(params, sizeof(MYSQL_BIND)*bind.size());
 
-        if (mysql_stmt_bind_param(_stmt, mysqlbind.params) != 0 ) THROW_MYSQL_STMT_ERROR(_stmt);
-        if (mysql_stmt_execute(_stmt) != 0)                       THROW_MYSQL_STMT_ERROR(_stmt);
+        for (int i = 0; i < bind.size(); i++) {
+            params[i].buffer        = (void *)bind[i].value.data();
+            params[i].buffer_length = bind[i].value.length();
+            params[i].is_null       = bind[i].isnull ? &MYSQL_BOOL_TRUE : &MYSQL_BOOL_FALSE;
+            params[i].buffer_type   = bind[i].isnull ? MYSQL_TYPE_NULL : MYSQL_TYPE_STRING;
+        }
 
+        if (mysql_stmt_bind_param(_stmt, params) != 0 ) {
+            delete [] params;
+            THROW_MYSQL_STMT_ERROR(_stmt);
+        }
+
+        if (mysql_stmt_execute(_stmt) != 0) {
+            delete [] params;
+            THROW_MYSQL_STMT_ERROR(_stmt);
+        }
+
+        delete [] params;
         return storeResult();
     }
 
     uint32_t MySqlStatement::storeResult() {
-        uint32_t rows  = mysql_stmt_num_rows(_stmt);
-        MYSQL_RES *res = mysql_stmt_result_metadata(_stmt);
-        if (res) {
-            mysql_free_result(res);
-            if (!_stmt->bind_result_done) {
-                _result = new MySqlBind(_stmt->field_count, MYSQL_BIND_RW);
-                if (mysql_stmt_bind_result(_stmt, _result->params) != 0) THROW_MYSQL_STMT_ERROR(_stmt);
-            }
-            if (mysql_stmt_store_result(_stmt) != 0 ) THROW_MYSQL_STMT_ERROR(_stmt);
-        }
-
+        if (mysql_stmt_store_result(_stmt) != 0 ) THROW_MYSQL_STMT_ERROR(_stmt);
+        uint32_t rows = mysql_stmt_num_rows(_stmt);
         return rows ? rows : mysql_stmt_affected_rows(_stmt);
     }
 
@@ -66,10 +71,8 @@ namespace dbi {
     void MySqlStatement::cleanup() {
         finish();
         if (_stmt)   mysql_stmt_close(_stmt);
-        if (_result) delete _result;
 
         _stmt   = 0;
-        _result = 0;
     }
 
     void MySqlStatement::boom(const char *m) {
@@ -80,10 +83,8 @@ namespace dbi {
             throw RuntimeError(m);
     }
 
-    MySqlStatementResult* MySqlStatement::result() {
-        return _result ?
-            new MySqlStatementResult(_stmt, _result->params, _sql) :
-            new MySqlStatementResult(_stmt, 0, _sql);
+    MySqlBinaryResult* MySqlStatement::result() {
+        return new MySqlBinaryResult(_stmt);
     }
 
     uint64_t MySqlStatement::lastInsertID() {

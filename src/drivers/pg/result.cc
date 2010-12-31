@@ -143,6 +143,9 @@ namespace dbi {
         if (_bytea)  PQfreemem(_bytea);
         if (_result) PQclear(_result);
 
+        _rsfields.clear();
+        _rstypes.clear();
+
         _rowno  = 0;
         _rows   = 0;
         _result = 0;

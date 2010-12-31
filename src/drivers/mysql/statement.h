@@ -3,14 +3,13 @@
 
 namespace dbi {
     class MySqlHandle;
-    class MySqlStatementResult;
+    class MySqlBinaryResult;
 
     class MySqlStatement : public AbstractStatement {
         private:
         string _sql;
 
         MYSQL_STMT *_stmt;
-        MySqlBind  *_result;
 
         protected:
         MYSQL *conn;
@@ -32,7 +31,7 @@ namespace dbi {
         void cleanup();
         void finish();
 
-        MySqlStatementResult* result();
+        MySqlBinaryResult* result();
     };
 }
 

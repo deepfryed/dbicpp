@@ -51,15 +51,6 @@ namespace dbi {
         }
     }
 
-    void MYSQL_PROCESS_BIND(MYSQL_BIND *params, vector<Param>&bind) {
-        for (int i = 0; i < bind.size(); i++) {
-            params[i].buffer        = (void *)bind[i].value.data();
-            params[i].buffer_length = bind[i].value.length();
-            params[i].is_null       = bind[i].isnull ? &MYSQL_BOOL_TRUE : &MYSQL_BOOL_FALSE;
-            params[i].buffer_type   = bind[i].isnull ? MYSQL_TYPE_NULL : MYSQL_TYPE_STRING;
-        }
-    }
-
     bool MYSQL_CONNECTION_ERROR(int error) {
         return (error == CR_SERVER_GONE_ERROR || error == CR_SERVER_LOST ||
             error == CR_SERVER_LOST_EXTENDED || error == CR_COMMANDS_OUT_OF_SYNC);
@@ -91,54 +82,6 @@ namespace dbi {
     int LOCAL_INFILE_ERROR(void *ptr, char *error, uint32_t len) {
         strcpy(error, ptr ? "Unknown error while bulk loading data" : "Unable to find resource to copy data.");
         return CR_UNKNOWN_ERROR;
-    }
-
-    // ----------------
-    // MySqlBind
-    // ----------------
-
-    MySqlBind::MySqlBind(int n, bool readonly) {
-        columns   = n;
-        _readonly = readonly;
-        allocate();
-    }
-
-    MySqlBind::~MySqlBind() {
-        deallocate();
-    }
-
-    void MySqlBind::reallocate(int c, uint64_t length) {
-        if (!_readonly) {
-            delete [] (unsigned char*)params[c].buffer;
-            params[c].buffer  = (void*)new unsigned char[length];
-            params[c].buffer_length = length;
-        }
-    }
-
-    void MySqlBind::allocate() {
-        params = new MYSQL_BIND[columns];
-        bzero(params, sizeof(MYSQL_BIND)*columns);
-
-        if (!_readonly) {
-            for (int i = 0; i < columns; i++) {
-                params[i].length  = new unsigned long;
-                params[i].is_null = new char;
-                params[i].buffer  = (void*)new unsigned char[__MYSQL_BIND_BUFFER_LEN];
-                params[i].buffer_length = __MYSQL_BIND_BUFFER_LEN;
-            }
-        }
-    }
-
-    void MySqlBind::deallocate() {
-        if (!_readonly) {
-            for (int i = 0; i < columns; i++) {
-                delete params[i].length;
-                delete params[i].is_null;
-                delete [] (unsigned char*)params[i].buffer;
-            }
-        };
-
-        delete [] params;
     }
 }
 

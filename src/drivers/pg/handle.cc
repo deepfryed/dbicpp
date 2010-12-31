@@ -89,7 +89,8 @@ namespace dbi {
         PQ_PREPROCESS_QUERY(normalized_sql);
         PQ_PROCESS_BIND(&param_v, &param_l, &param_f, bind);
         try {
-            result = PQexecParams(conn, normalized_sql.c_str(), bind.size(), 0, (const char* const *)param_v, param_l, param_f, 0);
+            result = PQexecParams(conn, normalized_sql.c_str(), bind.size(), 0,
+                                        (const char* const *)param_v, param_l, param_f, 0);
             PQ_CHECK_RESULT(result, sql);
         } catch (Error &e) {
             delete []param_v;
