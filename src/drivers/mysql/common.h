@@ -26,8 +26,6 @@ namespace dbi {
 
     extern char MYSQL_BOOL_TRUE;
     extern char MYSQL_BOOL_FALSE;
-    extern bool MYSQL_BIND_RO;
-    extern bool MYSQL_BIND_RW;
 
     extern map<string, IO*> CopyInList;
 

@@ -7,9 +7,6 @@ namespace dbi {
     char MYSQL_BOOL_TRUE  = 1;
     char MYSQL_BOOL_FALSE = 0;
 
-    bool MYSQL_BIND_RO    = true;
-    bool MYSQL_BIND_RW    = false;
-
     map<string, IO*> CopyInList;
 
     // MYSQL does not support type specific binding

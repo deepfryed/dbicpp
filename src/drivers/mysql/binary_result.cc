@@ -365,11 +365,11 @@ namespace dbi {
     void MySqlBinaryResult::seek(uint32_t n) {
         if (n >= _rows) return;
 
+        _rowno = n;
         cursor = mysqldata;
         while (cursor && n--) {
             cursor = cursor->next;
         }
-        _rowno = n;
     }
 
     void MySqlBinaryResult::rewind() {
