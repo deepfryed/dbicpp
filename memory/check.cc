@@ -88,8 +88,6 @@ int main(int argc, char *argv[]) {
             upd % (long)(n+1);
             upd.execute();
         }
-
-        h.close();
     }
 
     dbiShutdown();

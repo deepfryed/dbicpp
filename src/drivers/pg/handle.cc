@@ -5,11 +5,13 @@ namespace dbi {
     PgHandle::PgHandle() {
         tr_nesting = 0;
         _result    = 0;
+        conn       = 0;
     }
 
     PgHandle::PgHandle(string user, string pass, string dbname, string h, string p) {
         tr_nesting = 0;
         _result    = 0;
+        conn       = 0;
 
         string conninfo;
         string host = h;
@@ -20,6 +22,9 @@ namespace dbi {
         conninfo += "user='" + user + "' ";
         conninfo += "password='" + pass + "' ";
         conninfo += "dbname='" + dbname + "' ";
+
+        // wary of memory leaks in ssl libraries. try non-ssl first and then ssl if server forces ssl.
+        conninfo += "sslmode='allow'";
 
         conn = PQconnectdb(conninfo.c_str());
 
@@ -36,13 +41,13 @@ namespace dbi {
         char sql[128];
         // server parses TZ style format. man timzone for more info.
         snprintf(sql, 127, "set time zone 'UTC%+02d:%02d'", -1* tzhour, abs(tzmin));
-        execute(sql);
+        _pgexecDirect(sql);
     }
 
     void PgHandle::setTimeZone(char *name) {
         char sql[128];
         snprintf(sql, 127, "set time zone '%s'", name);
-        execute(sql);
+        _pgexecDirect(sql);
     }
 
     PgHandle::~PgHandle() {
@@ -64,6 +69,16 @@ namespace dbi {
             _result  = 0;
         }
         return instance; // needs to be deallocated by user.
+    }
+
+    void PgHandle::_pgexecDirect(string sql) {
+        if (_result) {
+            PQclear(_result);
+            _result = 0;
+        }
+        PGresult *result = PQexec(conn, sql.c_str());
+        PQ_CHECK_RESULT(result, sql);
+        PQclear(result);
     }
 
     PGresult* PgHandle::_pgexec(string sql) {
@@ -181,19 +196,19 @@ namespace dbi {
     }
 
     bool PgHandle::begin() {
-        execute("BEGIN WORK");
+        _pgexecDirect("BEGIN WORK");
         tr_nesting++;
         return true;
     };
 
     bool PgHandle::commit() {
-        execute("COMMIT");
+        _pgexecDirect("COMMIT");
         tr_nesting = 0;
         return true;
     };
 
     bool PgHandle::rollback() {
-        execute("ROLLBACK");
+        _pgexecDirect("ROLLBACK");
         tr_nesting = 0;
         return true;
     };
@@ -203,13 +218,13 @@ namespace dbi {
             begin();
             tr_nesting = 0;
         }
-        execute("SAVEPOINT " + name);
+        _pgexecDirect("SAVEPOINT " + name);
         tr_nesting++;
         return true;
     };
 
     bool PgHandle::commit(string name) {
-        execute("RELEASE SAVEPOINT " + name);
+        _pgexecDirect("RELEASE SAVEPOINT " + name);
         tr_nesting--;
         if (tr_nesting == 0)
             commit();
@@ -217,7 +232,7 @@ namespace dbi {
     };
 
     bool PgHandle::rollback(string name) {
-        execute("ROLLBACK TO SAVEPOINT " + name);
+        _pgexecDirect("ROLLBACK TO SAVEPOINT " + name);
         tr_nesting--;
         if (tr_nesting == 0)
             rollback();
@@ -273,7 +288,7 @@ namespace dbi {
         if (_trace)
             logMessage(_trace_fd, sql);
 
-        execute(sql);
+        _pgexecDirect(sql);
 
         buffer = new char[buffer_len];
         while ((len = io->read(buffer, buffer_len)) > 0) {

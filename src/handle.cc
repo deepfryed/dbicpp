@@ -23,8 +23,8 @@ namespace dbi {
     }
 
     Handle::~Handle() {
-        h->close();
-        delete h;
+        if (h) delete h;
+        h = 0;
     }
 
     uint32_t Handle::execute(string sql) {

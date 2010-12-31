@@ -9,6 +9,9 @@ namespace dbi {
         PGresult* _pgexec(string sql);
         PGresult* _pgexec(string sql, vector<Param> &bind);
 
+        // execute queries directly and don't save results.
+        void _pgexecDirect(string sql);
+
         PGresult *_result;
 
         protected:
