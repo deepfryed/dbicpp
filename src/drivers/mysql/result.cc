@@ -38,10 +38,10 @@ namespace dbi {
 
         if (_rowno < _rows) {
             _rowno++;
-            MYSQL_ROW rowdata      = mysql_fetch_row(result);
-            unsigned long *lengths = mysql_fetch_lengths(result);
+            _rowdata         = mysql_fetch_row(result);
+            _rowdata_lengths = mysql_fetch_lengths(result);
             for (n = 0; n < _cols; n++)
-                row.push_back(rowdata[n] == 0 ? PARAM(null()) : PARAM((unsigned char*)rowdata[n], lengths[n]));
+                row.push_back(_rowdata[n] == 0 ? PARAM(null()) : PARAM((unsigned char*)_rowdata[n], _rowdata_lengths[n]));
 
             return true;
         }
@@ -57,11 +57,11 @@ namespace dbi {
 
         if (_rowno < _rows) {
             _rowno++;
-            MYSQL_ROW rowdata      = mysql_fetch_row(result);
-            unsigned long *lengths = mysql_fetch_lengths(result);
+            _rowdata         = mysql_fetch_row(result);
+            _rowdata_lengths = mysql_fetch_lengths(result);
             for (n = 0; n < _cols; n++)
                 rowhash[_rsfields[n]] = (
-                    rowdata[n] == 0 ? PARAM(null()) : PARAM((unsigned char*)rowdata[n], lengths[n])
+                    _rowdata[n] == 0 ? PARAM(null()) : PARAM((unsigned char*)_rowdata[n], _rowdata_lengths[n])
                 );
             return true;
         }
