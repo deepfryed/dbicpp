@@ -314,10 +314,10 @@ namespace dbi {
 
     string PgHandle::escape(string value) {
         int error;
-        char *dest = (char *)malloc(value.length()*2 + 1);
+        char *dest = new char[value.length()*2 + 1];
         PQescapeStringConn(conn, dest, value.data(), value.length(), &error);
         string escaped(dest);
-        free(dest);
+        delete [] dest;
         if (error)
             throw RuntimeError(PQerrorMessage(conn));
         return escaped;

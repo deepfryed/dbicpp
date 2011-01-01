@@ -249,10 +249,10 @@ namespace dbi {
     }
 
     string MySqlHandle::escape(string value) {
-        char *dest = (char *)malloc(value.length()*2 + 1);
+        char *dest = new char[value.length()*2 + 1];
         mysql_real_escape_string(conn, dest, value.data(), value.length());
         string escaped(dest);
-        free(dest);
+        delete [] dest;
         return escaped;
     }
 }

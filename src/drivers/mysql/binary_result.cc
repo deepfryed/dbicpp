@@ -111,28 +111,28 @@ namespace dbi {
     }
 
     unsigned char* MySqlBinaryResult::fetch_result_tinyint(unsigned char **row) {
-        unsigned char* data = (unsigned char*) malloc(5);
+        unsigned char* data = new unsigned char[5];
         snprintf((char*)data, 5, "%d", **row);
         (*row)++;
         return data;
     }
 
     unsigned char* MySqlBinaryResult::fetch_result_short(unsigned char **row) {
-        unsigned char* data = (unsigned char*) malloc(8);
+        unsigned char* data = new unsigned char[8];
         snprintf((char*)data, 8, "%d", (int16_t) sint2korr(*row));
         *row+= 2;
         return data;
     }
 
     unsigned char* MySqlBinaryResult::fetch_result_int32(unsigned char **row) {
-        unsigned char* data = (unsigned char*) malloc(16);
+        unsigned char* data = new unsigned char[16];
         snprintf((char*)data, 16, "%d", (int32_t) sint4korr(*row));
         *row+= 4;
         return data;
     }
 
     unsigned char* MySqlBinaryResult::fetch_result_int64(unsigned char **row) {
-        unsigned char* data = (unsigned char*) malloc(32);
+        unsigned char* data = new unsigned char[32];
         snprintf((char*)data, 32, "%ld", (int64_t) sint8korr(*row));
         *row+= 8;
         return data;
@@ -141,7 +141,7 @@ namespace dbi {
     unsigned char* MySqlBinaryResult::fetch_result_float(unsigned char **row) {
         float value;
         float4get(value, *row);
-        unsigned char* data = (unsigned char*) malloc(32);
+        unsigned char* data = new unsigned char[32];
         snprintf((char*)data, 32, "%f", value);
         *row+= 4;
         return data;
@@ -150,7 +150,7 @@ namespace dbi {
     unsigned char* MySqlBinaryResult::fetch_result_double(unsigned char **row) {
         double value;
         float8get(value, *row);
-        unsigned char* data = (unsigned char*) malloc(64);
+        unsigned char* data = new unsigned char[64];
         snprintf((char*)data, 64, "%lf", value);
         *row+= 8;
         return data;
@@ -158,7 +158,7 @@ namespace dbi {
 
     unsigned char* MySqlBinaryResult::fetch_result_time(unsigned char **row) {
         MYSQL_TIME tm;
-        unsigned char *data = (unsigned char*) malloc(128);
+        unsigned char *data = new unsigned char[128];
         read_binary_time(&tm, row);
         snprintf((char*)data, 128, "%02d:%02d:%02d", tm.hour, tm.minute, tm.second);
         return data;
@@ -166,7 +166,7 @@ namespace dbi {
 
     unsigned char* MySqlBinaryResult::fetch_result_date(unsigned char **row) {
         MYSQL_TIME tm;
-        unsigned char *data = (unsigned char*) malloc(128);
+        unsigned char *data = new unsigned char[128];
         read_binary_date(&tm, row);
         snprintf((char*)data, 128, "%04d-%02d-%02d", tm.year, tm.month, tm.day);
         return data;
@@ -174,7 +174,7 @@ namespace dbi {
 
     unsigned char* MySqlBinaryResult::fetch_result_datetime(unsigned char **row) {
         MYSQL_TIME tm;
-        unsigned char *data = (unsigned char*) malloc(128);
+        unsigned char *data = new unsigned char[128];
         read_binary_datetime(&tm, row);
         snprintf((char*)data, 128, "%04d-%02d-%02d %02d:%02d:%02d", tm.year, tm.month, tm.day,
                                                                     tm.hour, tm.minute, tm.second);
@@ -184,7 +184,7 @@ namespace dbi {
     unsigned char* MySqlBinaryResult::fetch_result_bin(unsigned char **row, unsigned long *copy_length) {
         unsigned long length = net_field_length(row);
         *copy_length = length;
-        unsigned char* data = (unsigned char*) malloc(length + 1);
+        unsigned char* data = new unsigned char[length + 1];
         memcpy(data, (unsigned char *)*row, length);
         data[length] = '\0';
         *row+= length;
@@ -298,7 +298,7 @@ namespace dbi {
                 }
 
                 rowdata.push_back(length > 0 ? PARAM(data, length) : PARAM((char*)data));
-                free(data);
+                delete [] data;
                 length = 0;
             }
 
@@ -403,10 +403,10 @@ namespace dbi {
 
         MYSQL_ROWS *next, *curr = stmt->result.data;
         while (curr) {
-            next = (MYSQL_ROWS *)malloc(sizeof(MYSQL_ROWS));
+            next = new MYSQL_ROWS;
             next->next   = 0;
             next->length = curr->length;
-            next->data   = (char**)malloc(curr->length);
+            next->data   = (char**)new unsigned char[curr->length];
             memcpy(next->data, curr->data, curr->length);
 
             if (cursor) {
@@ -438,8 +438,8 @@ namespace dbi {
             MYSQL_ROWS *next;
             while (cursor) {
                 next = cursor->next;
-                if (cursor->length && cursor->data) free(cursor->data);
-                free(cursor);
+                if (cursor->length && cursor->data) delete [] (unsigned char*)cursor->data;
+                delete cursor;
                 cursor = next;
             }
             mysqldata = 0;
