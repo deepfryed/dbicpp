@@ -24,8 +24,9 @@ namespace dbi {
     }
 
     void PgResult::fetchMeta() {
-        _rows = PQntuples(_result);
         _cols = PQnfields(_result);
+        _rows = (uint32_t)atoi(PQcmdTuples(_result));
+        _rows = _rows > 0 ? _rows : PQntuples(_result);
 
         for (int i = 0; i < (int)_cols; i++)
             _rsfields.push_back(PQfname(_result, i));
