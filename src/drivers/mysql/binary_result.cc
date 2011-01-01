@@ -33,79 +33,81 @@ namespace dbi {
     }
 
     void MySqlBinaryResult::read_binary_time(MYSQL_TIME* tm, unsigned char **pos) {
-      /* net_field_length will set pos to the first byte of data */
-      unsigned int length = net_field_length(pos);
+        /* net_field_length will set pos to the first byte of data */
+        unsigned int length = net_field_length(pos);
 
-      if (length) {
-        unsigned char *to = *pos;
+        if (length) {
+            unsigned char *to = *pos;
 
-        tm->neg         = to[0];
-        tm->day         = (unsigned long) sint4korr(to+1);
-        tm->hour        = (unsigned int) to[5];
-        tm->minute      = (unsigned int) to[6];
-        tm->second      = (unsigned int) to[7];
-        tm->second_part = (length > 8) ? (unsigned long) sint4korr(to+8) : 0;
+            tm->neg         = to[0];
+            tm->day         = (unsigned long) sint4korr(to+1);
+            tm->hour        = (unsigned int) to[5];
+            tm->minute      = (unsigned int) to[6];
+            tm->second      = (unsigned int) to[7];
+            tm->second_part = (length > 8) ? (unsigned long) sint4korr(to+8) : 0;
 
-        tm->year = tm->month= 0;
-        if (tm->day) {
-          /* Convert days to hours at once */
-          tm->hour += tm->day*24;
-          tm->day = 0;
+            tm->year = tm->month= 0;
+            if (tm->day) {
+                /* Convert days to hours at once */
+                tm->hour += tm->day*24;
+                tm->day = 0;
+            }
+            tm->time_type = MYSQL_TIMESTAMP_TIME;
+
+            *pos += length;
         }
-        tm->time_type = MYSQL_TIMESTAMP_TIME;
-
-        *pos += length;
-      }
-      else
-        set_zero_time(tm, MYSQL_TIMESTAMP_TIME);
+        else
+            set_zero_time(tm, MYSQL_TIMESTAMP_TIME);
     }
 
     void MySqlBinaryResult::read_binary_datetime(MYSQL_TIME *tm, unsigned char **pos) {
-      unsigned int length = net_field_length(pos);
+        unsigned int length = net_field_length(pos);
 
-      if (length) {
-        unsigned char *to = *pos;
+        if (length) {
+            unsigned char *to = *pos;
 
-        tm->neg   = 0;
-        tm->year  = (unsigned int) sint2korr(to);
-        tm->month = (unsigned int) to[2];
-        tm->day   = (unsigned int) to[3];
+            tm->neg   = 0;
+            tm->year  = (unsigned int) sint2korr(to);
+            tm->month = (unsigned int) to[2];
+            tm->day   = (unsigned int) to[3];
 
-        if (length > 4) {
-          tm->hour   = (unsigned int) to[4];
-          tm->minute = (unsigned int) to[5];
-          tm->second = (unsigned int) to[6];
-        }
-        else
-          tm->hour        = tm->minute= tm->second= 0;
-          tm->second_part = (length > 7) ? (unsigned long) sint4korr(to+7) : 0;
-          tm->time_type   = MYSQL_TIMESTAMP_DATETIME;
+            if (length > 4) {
+                tm->hour   = (unsigned int) to[4];
+                tm->minute = (unsigned int) to[5];
+                tm->second = (unsigned int) to[6];
+            }
+            else {
+                tm->hour = tm->minute= tm->second= 0;
+            }
 
-          *pos += length;
+            tm->second_part = (length > 7) ? (unsigned long) sint4korr(to+7) : 0;
+            tm->time_type   = MYSQL_TIMESTAMP_DATETIME;
+
+            *pos += length;
         }
         else
           set_zero_time(tm, MYSQL_TIMESTAMP_DATETIME);
     }
 
     void MySqlBinaryResult::read_binary_date(MYSQL_TIME *tm, unsigned char **pos) {
-      unsigned int length= net_field_length(pos);
+        unsigned int length= net_field_length(pos);
 
-      if (length) {
-        unsigned char *to = *pos;
+        if (length) {
+            unsigned char *to = *pos;
 
-        tm->year  =  (unsigned int) sint2korr(to);
-        tm->month =  (unsigned int) to[2];
-        tm->day   =  (unsigned int) to[3];
+            tm->year  =  (unsigned int) sint2korr(to);
+            tm->month =  (unsigned int) to[2];
+            tm->day   =  (unsigned int) to[3];
 
-        tm->hour        = tm->minute= tm->second= 0;
-        tm->second_part = 0;
-        tm->neg         = 0;
-        tm->time_type   = MYSQL_TIMESTAMP_DATE;
+            tm->hour        = tm->minute= tm->second= 0;
+            tm->second_part = 0;
+            tm->neg         = 0;
+            tm->time_type   = MYSQL_TIMESTAMP_DATE;
 
-        *pos += length;
-      }
-      else
-        set_zero_time(tm, MYSQL_TIMESTAMP_DATE);
+            *pos += length;
+        }
+        else
+            set_zero_time(tm, MYSQL_TIMESTAMP_DATE);
     }
 
     unsigned char* MySqlBinaryResult::fetch_result_tinyint(unsigned char **row) {
@@ -137,56 +139,56 @@ namespace dbi {
     }
 
     unsigned char* MySqlBinaryResult::fetch_result_float(unsigned char **row) {
-      float value;
-      float4get(value, *row);
-      unsigned char* data = (unsigned char*) malloc(32);
-      snprintf((char*)data, 32, "%f", value);
-      *row+= 4;
-      return data;
+        float value;
+        float4get(value, *row);
+        unsigned char* data = (unsigned char*) malloc(32);
+        snprintf((char*)data, 32, "%f", value);
+        *row+= 4;
+        return data;
     }
 
     unsigned char* MySqlBinaryResult::fetch_result_double(unsigned char **row) {
-      double value;
-      float8get(value, *row);
-      unsigned char* data = (unsigned char*) malloc(64);
-      snprintf((char*)data, 64, "%lf", value);
-      *row+= 8;
-      return data;
+        double value;
+        float8get(value, *row);
+        unsigned char* data = (unsigned char*) malloc(64);
+        snprintf((char*)data, 64, "%lf", value);
+        *row+= 8;
+        return data;
     }
 
     unsigned char* MySqlBinaryResult::fetch_result_time(unsigned char **row) {
-      MYSQL_TIME tm;
-      unsigned char *data = (unsigned char*) malloc(128);
-      read_binary_time(&tm, row);
-      snprintf((char*)data, 128, "%02d:%02d:%02d", tm.hour, tm.minute, tm.second);
-      return data;
+        MYSQL_TIME tm;
+        unsigned char *data = (unsigned char*) malloc(128);
+        read_binary_time(&tm, row);
+        snprintf((char*)data, 128, "%02d:%02d:%02d", tm.hour, tm.minute, tm.second);
+        return data;
     }
 
     unsigned char* MySqlBinaryResult::fetch_result_date(unsigned char **row) {
-      MYSQL_TIME tm;
-      unsigned char *data = (unsigned char*) malloc(128);
-      read_binary_date(&tm, row);
-      snprintf((char*)data, 128, "%04d-%02d-%02d", tm.year, tm.month, tm.day);
-      return data;
+        MYSQL_TIME tm;
+        unsigned char *data = (unsigned char*) malloc(128);
+        read_binary_date(&tm, row);
+        snprintf((char*)data, 128, "%04d-%02d-%02d", tm.year, tm.month, tm.day);
+        return data;
     }
 
     unsigned char* MySqlBinaryResult::fetch_result_datetime(unsigned char **row) {
-      MYSQL_TIME tm;
-      unsigned char *data = (unsigned char*) malloc(128);
-      read_binary_datetime(&tm, row);
-      snprintf((char*)data, 128, "%04d-%02d-%02dT%02d:%02d:%02d", tm.year, tm.month, tm.day,
-                                                                  tm.hour, tm.minute, tm.second);
-      return data;
+        MYSQL_TIME tm;
+        unsigned char *data = (unsigned char*) malloc(128);
+        read_binary_datetime(&tm, row);
+        snprintf((char*)data, 128, "%04d-%02d-%02d %02d:%02d:%02d", tm.year, tm.month, tm.day,
+                                                                    tm.hour, tm.minute, tm.second);
+        return data;
     }
 
     unsigned char* MySqlBinaryResult::fetch_result_bin(unsigned char **row, unsigned long *copy_length) {
-      unsigned long length = net_field_length(row);
-      *copy_length = length;
-      unsigned char* data = (unsigned char*) malloc(length + 1);
-      memcpy(data, (unsigned char *)*row, length);
-      data[length] = '\0';
-      *row+= length;
-      return data;
+        unsigned long length = net_field_length(row);
+        *copy_length = length;
+        unsigned char* data = (unsigned char*) malloc(length + 1);
+        memcpy(data, (unsigned char *)*row, length);
+        data[length] = '\0';
+        *row+= length;
+        return data;
     }
 
     void MySqlBinaryResult::fetchMeta() {
@@ -298,6 +300,7 @@ namespace dbi {
 
                 rowdata.push_back(length > 0 ? PARAM(data, length) : PARAM((char*)data));
                 free(data);
+                length = 0;
             }
 
             if (!((bit<<=1) & 255)) {
@@ -436,7 +439,7 @@ namespace dbi {
             MYSQL_ROWS *next;
             while (cursor) {
                 next = cursor->next;
-                free(cursor->data);
+                if (cursor->length && cursor->data) free(cursor->data);
                 free(cursor);
                 cursor = next;
             }
