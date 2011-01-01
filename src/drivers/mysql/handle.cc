@@ -100,12 +100,8 @@ namespace dbi {
     }
 
     AbstractResult* MySqlHandle::result() {
-        MySqlResult *rv = 0;
-        if (_result) {
-            rv = new MySqlResult(_result, _sql, 0);
-            _result = 0;
-        }
-
+        MySqlResult *rv = _result ? new MySqlResult(_result, _sql, conn) : new MySqlResult(0, _sql, conn);
+        _result = 0;
         return rv;
     }
 
