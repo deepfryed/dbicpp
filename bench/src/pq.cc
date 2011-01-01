@@ -87,7 +87,7 @@ int main(int argc, char*argv[]) {
     int i, j, n;
     char connectstr[1024];
     parseOptions(argc, argv);
-    snprintf(connectstr, 1024, "host=127.0.0.1 user=%s dbname=dbicpp", getlogin());
+    snprintf(connectstr, 1024, "host=127.0.0.1 user=%s dbname=dbicpp sslmode='allow'", getlogin());
     PGconn *conn = PQconnectdb(connectstr);
     if (conn == NULL)
         error("Unable to allocate connection");
