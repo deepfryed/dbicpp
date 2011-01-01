@@ -70,12 +70,18 @@ namespace dbi {
     }
 
     unsigned char* MySqlResult::read(uint32_t r, uint32_t c, uint64_t *l) {
-        if (!result || r >= _rows) return 0;
-        if (_rowno != r || (r == 0 && c == 0)) {
-            _rowno = r;
-            mysql_data_seek(result, r);
+        if (r >= _rows || c >= _cols || r < 0 || c < 0) return 0;
+
+        // if row data is not already buffered
+        if (r+1 != _rowno) {
+            // need first row
+            if (r == 0) rewind();
+            // or somewhere in the middle (r = _rowno is the next row to one already buffered).
+            else if (r != _rowno) seek(r);
+
             _rowdata         = mysql_fetch_row(result);
             _rowdata_lengths = mysql_fetch_lengths(result);
+            _rowno = r + 1;
         }
 
         if (l) *l = _rowdata_lengths[c];
