@@ -20,11 +20,12 @@ namespace dbi {
 
     void MYSQL_INTERPOLATE_BIND(MYSQL *conn, string &query, vector<Param> &bind) {
         int n = 0;
-        unsigned long len;
-        char *repl = 0;
+        unsigned long len, repl_len = 1024;
+        char *repl = (char *)malloc(repl_len);
         string orig = query, var;
 
         RE re("(?<!')(\\?)(?!')");
+        if (!repl) throw RuntimeError("Out of memory: MySQL bind values");
         while (re.PartialMatch(query, &var)) {
             if (n >= bind.size()) {
                 if (repl) free(repl);
@@ -32,20 +33,27 @@ namespace dbi {
                 throw RuntimeError(errormsg);
             }
             if (bind[n].isnull) {
-                repl = (char *)malloc(5);
+                len  = 4;
                 strcpy(repl, "NULL");
             }
             else {
-                repl = (char*)malloc(bind[n].value.length()*2 + 3);
+                len = bind[n].value.length()*2 + 3;
+                if (len > repl_len) {
+                    repl_len = len + 2;
+                    repl = (char*)realloc(repl, repl_len);
+                    if (!repl) throw RuntimeError("Out of memory: MySQL bind values");
+                }
                 len  = mysql_real_escape_string(conn, repl+1, bind[n].value.c_str(), bind[n].value.length());
                 repl[0] = '\'';
                 repl[len + 1] = '\'';
                 repl[len + 2] = 0;
+                len += 2;
             }
-            re.Replace(repl, &query);
-            free(repl);
-            repl = 0;
+            re.Replace(string(repl, len), &query);
+            n++;
         }
+
+        if (repl) free(repl);
     }
 
     bool MYSQL_CONNECTION_ERROR(int error) {
