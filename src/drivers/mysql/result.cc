@@ -12,7 +12,7 @@ namespace dbi {
 
         if (conn) {
             last_insert_id = mysql_insert_id(conn);
-            _affected_rows = mysql_affected_rows(conn);
+            _affected_rows = POSITIVE_OR_ZERO(mysql_affected_rows(conn));
         }
 
         if (result) fetchMeta(result);
@@ -133,6 +133,9 @@ namespace dbi {
             result = mysql_store_result(conn);
             fetchMeta(result);
         }
+
+        last_insert_id = mysql_insert_id(conn);
+        _affected_rows = POSITIVE_OR_ZERO(mysql_affected_rows(conn));
     }
 
     void MySqlResult::fetchMeta(MYSQL_RES* result) {
@@ -140,7 +143,6 @@ namespace dbi {
         MYSQL_FIELD *fields;
 
         _rows  = mysql_num_rows(result);
-        _rows  = _rows > 0 ? _rows : _affected_rows;
         _cols  = mysql_num_fields(result);
 
         fields = mysql_fetch_fields(result);

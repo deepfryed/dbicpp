@@ -197,7 +197,6 @@ namespace dbi {
 
         _cols  = mysql_num_fields(result);
         _rows  = mysql_num_rows(result);
-        _rows  = _rows > 0 ? _rows : _affected_rows;
 
         fields = mysql_fetch_fields(result);
         for (n = 0; n < _cols; n++) {
@@ -391,7 +390,7 @@ namespace dbi {
         _cols          = 0;
         _rowno         = 0;
 
-        _affected_rows = mysql_stmt_affected_rows(stmt);
+        _affected_rows = POSITIVE_OR_ZERO(mysql_stmt_affected_rows(stmt));
         last_insert_id = mysql_stmt_insert_id(stmt);
 
         if ((result = mysql_stmt_result_metadata(stmt))) {

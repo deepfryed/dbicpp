@@ -20,6 +20,8 @@
     boom(errormsg);\
 }
 
+#define POSITIVE_OR_ZERO(a) (a > 0 ? a : 0)
+
 namespace dbi {
 
     extern char errormsg[8192];
