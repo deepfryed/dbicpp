@@ -11,7 +11,7 @@ namespace dbi {
         PGresult       *_result;
         vector<string> _rsfields;
         vector<int>    _rstypes;
-        uint32_t       _rowno, _rows, _cols;
+        uint32_t       _rowno, _rows, _cols, _affected_rows;
         unsigned char  *_bytea;
         string         _sql;
 

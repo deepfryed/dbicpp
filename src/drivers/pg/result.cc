@@ -2,11 +2,12 @@
 
 namespace dbi {
     void PgResult::init() {
-        _result = 0;
-        _rowno  = 0;
-        _rows   = 0;
-        _cols   = 0;
-        _bytea  = 0;
+        _result        = 0;
+        _rowno         = 0;
+        _rows          = 0;
+        _cols          = 0;
+        _bytea         = 0;
+        _affected_rows = 0;
     }
 
     PgResult::~PgResult() {
@@ -24,9 +25,9 @@ namespace dbi {
     }
 
     void PgResult::fetchMeta() {
-        _cols = PQnfields(_result);
-        _rows = (uint32_t)atoi(PQcmdTuples(_result));
-        _rows = _rows > 0 ? _rows : PQntuples(_result);
+        _rows          = PQntuples(_result);
+        _cols          = PQnfields(_result);
+        _affected_rows = (uint32_t)atoi(PQcmdTuples(_result));
 
         for (int i = 0; i < (int)_cols; i++)
             _rsfields.push_back(PQfname(_result, i));
@@ -54,7 +55,7 @@ namespace dbi {
     }
 
     uint32_t PgResult::rows() {
-        return _rows;
+        return _affected_rows > 0 ? _affected_rows : _rows;
     }
 
     bool PgResult::consumeResult() {
