@@ -110,85 +110,82 @@ namespace dbi {
             set_zero_time(tm, MYSQL_TIMESTAMP_DATE);
     }
 
-    unsigned char* MySqlBinaryResult::fetch_result_tinyint(unsigned char **row) {
-        unsigned char* data = new unsigned char[5];
-        snprintf((char*)data, 5, "%d", **row);
+    void MySqlBinaryResult::fetch_result_tinyint(int c, unsigned char **row) {
+        pool[c].length = 0;
+        snprintf((char*)pool[c].data, 5, "%d", **row);
         (*row)++;
-        return data;
     }
 
-    unsigned char* MySqlBinaryResult::fetch_result_short(unsigned char **row) {
-        unsigned char* data = new unsigned char[8];
-        snprintf((char*)data, 8, "%d", (int16_t) sint2korr(*row));
+    void MySqlBinaryResult::fetch_result_short(int c, unsigned char **row) {
+        pool[c].length = 0;
+        snprintf((char*)pool[c].data, 8, "%d", (int16_t) sint2korr(*row));
         *row+= 2;
-        return data;
     }
 
-    unsigned char* MySqlBinaryResult::fetch_result_int32(unsigned char **row) {
-        unsigned char* data = new unsigned char[16];
-        snprintf((char*)data, 16, "%d", (int32_t) sint4korr(*row));
+    void MySqlBinaryResult::fetch_result_int32(int c, unsigned char **row) {
+        pool[c].length = 0;
+        snprintf((char*)pool[c].data, 16, "%d", (int32_t) sint4korr(*row));
         *row+= 4;
-        return data;
     }
 
-    unsigned char* MySqlBinaryResult::fetch_result_int64(unsigned char **row) {
-        unsigned char* data = new unsigned char[32];
-        snprintf((char*)data, 32, "%ld", (int64_t) sint8korr(*row));
+    void MySqlBinaryResult::fetch_result_int64(int c, unsigned char **row) {
+        pool[c].length = 0;
+        snprintf((char*)pool[c].data, 32, "%ld", (int64_t) sint8korr(*row));
         *row+= 8;
-        return data;
     }
 
-    unsigned char* MySqlBinaryResult::fetch_result_float(unsigned char **row) {
+    void MySqlBinaryResult::fetch_result_float(int c, unsigned char **row) {
         float value;
+        pool[c].length = 0;
         float4get(value, *row);
-        unsigned char* data = new unsigned char[32];
-        snprintf((char*)data, 32, "%f", value);
+        snprintf((char*)pool[c].data, 32, "%f", value);
         *row+= 4;
-        return data;
     }
 
-    unsigned char* MySqlBinaryResult::fetch_result_double(unsigned char **row) {
+    void MySqlBinaryResult::fetch_result_double(int c, unsigned char **row) {
         double value;
+        pool[c].length = 0;
         float8get(value, *row);
-        unsigned char* data = new unsigned char[64];
-        snprintf((char*)data, 64, "%lf", value);
+        snprintf((char*)pool[c].data, 64, "%lf", value);
         *row+= 8;
-        return data;
     }
 
-    unsigned char* MySqlBinaryResult::fetch_result_time(unsigned char **row) {
+    void MySqlBinaryResult::fetch_result_time(int c, unsigned char **row) {
         MYSQL_TIME tm;
-        unsigned char *data = new unsigned char[128];
+        pool[c].length = 0;
         read_binary_time(&tm, row);
-        snprintf((char*)data, 128, "%02d:%02d:%02d", tm.hour, tm.minute, tm.second);
-        return data;
+        snprintf((char*)pool[c].data, 128, "%02d:%02d:%02d", tm.hour, tm.minute, tm.second);
     }
 
-    unsigned char* MySqlBinaryResult::fetch_result_date(unsigned char **row) {
+    void MySqlBinaryResult::fetch_result_date(int c, unsigned char **row) {
         MYSQL_TIME tm;
-        unsigned char *data = new unsigned char[128];
+        pool[c].length = 0;
         read_binary_date(&tm, row);
-        snprintf((char*)data, 128, "%04d-%02d-%02d", tm.year, tm.month, tm.day);
-        return data;
+        snprintf((char*)pool[c].data, 128, "%04d-%02d-%02d", tm.year, tm.month, tm.day);
     }
 
-    unsigned char* MySqlBinaryResult::fetch_result_datetime(unsigned char **row) {
+    void MySqlBinaryResult::fetch_result_datetime(int c, unsigned char **row) {
         MYSQL_TIME tm;
-        unsigned char *data = new unsigned char[128];
+        pool[c].length = 0;
         read_binary_datetime(&tm, row);
-        snprintf((char*)data, 128, "%04d-%02d-%02d %02d:%02d:%02d", tm.year, tm.month, tm.day,
-                                                                    tm.hour, tm.minute, tm.second);
-        return data;
+        snprintf((char*)pool[c].data, 128, "%04d-%02d-%02d %02d:%02d:%02d", tm.year, tm.month, tm.day,
+                                                                            tm.hour, tm.minute, tm.second);
     }
 
-    unsigned char* MySqlBinaryResult::fetch_result_bin(unsigned char **row, unsigned long *copy_length) {
+    void MySqlBinaryResult::fetch_result_bin(int c, unsigned char **row) {
         unsigned long length = net_field_length(row);
-        *copy_length = length;
-        unsigned char* data = new unsigned char[length + 1];
-        memcpy(data, (unsigned char *)*row, length);
-        data[length] = '\0';
+        if (pool[c].alloc < length + 1) {
+            delete [] pool[c].data;
+            pool[c].data  = new unsigned char[length+1];
+            pool[c].alloc = length + 1;
+        }
+
+        memcpy(pool[c].data, (unsigned char *)*row, length);
+
+        pool[c].length       = length;
+        pool[c].data[length] = '\0';
+
         *row+= length;
-        return data;
     }
 
     void MySqlBinaryResult::fetchMeta() {
@@ -240,47 +237,46 @@ namespace dbi {
     void MySqlBinaryResult::fetchRow() {
         if (!cursor) return;
 
-        unsigned char *data, *nulls, *row = (unsigned char*)cursor->data, bit = 4;
-        unsigned long length = 0;
+        unsigned char *nulls, *row = (unsigned char*)cursor->data, bit = 4;
 
         nulls = row;
         row  += (_cols + 9) / 8;
         // 2 reserved bits and 1 bit for each column to denote null value (byte aligned)
 
-        rowdata.clear();
         for (int j = 0; j < _cols; j++) {
             if (*nulls & bit) {
-                rowdata.push_back(PARAM(null()));
+                pool[j].isnull = true;
             }
             else {
+                pool[j].isnull = false;
                 switch(result->fields[j].type) {
                     case MYSQL_TYPE_TINY:
-                        data = fetch_result_tinyint(&row);
+                        fetch_result_tinyint(j, &row);
                         break;
                     case MYSQL_TYPE_SHORT:
-                        data = fetch_result_short(&row);
+                        fetch_result_short(j, &row);
                         break;
                     case MYSQL_TYPE_LONG:
-                        data = fetch_result_int32(&row);
+                        fetch_result_int32(j, &row);
                         break;
                     case MYSQL_TYPE_LONGLONG:
-                        data = fetch_result_int64(&row);
+                        fetch_result_int64(j, &row);
                         break;
                     case MYSQL_TYPE_FLOAT:
-                        data = fetch_result_float(&row);
+                        fetch_result_float(j, &row);
                         break;
                     case MYSQL_TYPE_DOUBLE:
-                        data = fetch_result_double(&row);
+                        fetch_result_double(j, &row);
                         break;
                     case MYSQL_TYPE_TIMESTAMP:
                     case MYSQL_TYPE_DATETIME:
-                        data = fetch_result_datetime(&row);
+                        fetch_result_datetime(j, &row);
                         break;
                     case MYSQL_TYPE_TIME:
-                        data = fetch_result_time(&row);
+                        fetch_result_time(j, &row);
                         break;
                     case MYSQL_TYPE_DATE:
-                        data = fetch_result_date(&row);
+                        fetch_result_date(j, &row);
                         break;
                     /*
                     TODO: check string and blob types and throw an error in default.
@@ -293,13 +289,9 @@ namespace dbi {
                         break;
                     */
                     default:
-                        data = fetch_result_bin(&row, &length);
+                        fetch_result_bin(j, &row);
                         break;
                 }
-
-                rowdata.push_back(length > 0 ? PARAM(data, length) : PARAM((char*)data));
-                delete [] data;
-                length = 0;
             }
 
             if (!((bit<<=1) & 255)) {
@@ -307,6 +299,7 @@ namespace dbi {
                 nulls++;
             }
         }
+
         cursor = cursor->next;
     }
 
@@ -314,7 +307,14 @@ namespace dbi {
         if (_rowno >= _rows) return false;
         fetchRow();
         _rowno++;
-        row = rowdata;
+
+        row.clear();
+        for (int j = 0; j < _cols; j++) {
+            row.push_back(pool[j].isnull ?
+                PARAM(null()) :
+                pool[j].length > 0 ? PARAM(pool[j].data, pool[j].length) : PARAM((char*)pool[j].data)
+            );
+        }
         return true;
     }
 
@@ -324,7 +324,11 @@ namespace dbi {
         _rowno++;
 
         rowhash.clear();
-        for (int n = 0; n < _cols; n++) rowhash[_rsfields[n]] = rowdata[n];
+        for (int j = 0; j < _cols; j++) {
+            rowhash[_rsfields[j]] = pool[j].isnull ?
+                PARAM(null()) :
+                pool[j].length > 0 ? PARAM(pool[j].data, pool[j].length) : PARAM((char*)pool[j].data);
+        }
         return true;
     }
 
@@ -342,8 +346,8 @@ namespace dbi {
             _rowno = r + 1;
         }
 
-        if (length) *length = rowdata[c].length;
-        return (unsigned char*)rowdata[c].value.c_str();
+        if (length) *length = pool[c].isnull ? 0 : pool[c].length > 0 ? pool[c].length : strlen((char*)pool[c].data);
+        return pool[c].isnull ? 0 : (unsigned char*)pool[c].data;
     }
 
     uint32_t MySqlBinaryResult::rows() {
@@ -386,9 +390,10 @@ namespace dbi {
     }
 
     MySqlBinaryResult::MySqlBinaryResult(MYSQL_STMT *stmt) {
-        _rows          = 0;
-        _cols          = 0;
-        _rowno         = 0;
+        pool   = 0;
+        _rows  = 0;
+        _cols  = 0;
+        _rowno = 0;
 
         _affected_rows = POSITIVE_OR_ZERO(mysql_stmt_affected_rows(stmt));
         last_insert_id = mysql_stmt_insert_id(stmt);
@@ -400,27 +405,35 @@ namespace dbi {
 
         // make a copy of the binary resultset.
         mysqldata = cursor = 0;
+        if (_rows > 0) {
+            MYSQL_ROWS *next, *curr = stmt->result.data;
+            while (curr) {
+                next = new MYSQL_ROWS;
+                next->next   = 0;
+                next->length = curr->length;
+                next->data   = (char**)new unsigned char[curr->length];
+                memcpy(next->data, curr->data, curr->length);
 
-        MYSQL_ROWS *next, *curr = stmt->result.data;
-        while (curr) {
-            next = new MYSQL_ROWS;
-            next->next   = 0;
-            next->length = curr->length;
-            next->data   = (char**)new unsigned char[curr->length];
-            memcpy(next->data, curr->data, curr->length);
+                if (cursor) {
+                    cursor->next = next;
+                    cursor = next;
+                }
+                else {
+                    mysqldata = cursor = next;
+                }
 
-            if (cursor) {
-                cursor->next = next;
-                cursor = next;
+                curr = curr->next;
             }
-            else {
-                mysqldata = cursor = next;
-            }
 
-            curr = curr->next;
+            cursor = mysqldata;
+
+            if (_cols > 0) pool = new ResultBuffer[_cols];
+            for (int n = 0; n < _cols; n++) {
+                pool[n].data   = new unsigned char[1024];
+                pool[n].alloc  = 1024;
+                pool[n].length = 0;
+            }
         }
-
-        cursor = mysqldata;
     }
 
     MySqlBinaryResult::~MySqlBinaryResult() {
@@ -443,6 +456,12 @@ namespace dbi {
                 cursor = next;
             }
             mysqldata = 0;
+        }
+
+        if (pool) {
+            for (int n = 0; n < _cols; n++) delete [] pool[n].data;
+            delete [] pool;
+            pool = 0;
         }
     }
 

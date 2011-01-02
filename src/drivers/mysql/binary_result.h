@@ -7,6 +7,12 @@
 #include <stdint.h>
 
 namespace dbi {
+    struct ResultBuffer {
+        unsigned char *data;
+        uint64_t length, alloc;
+        bool isnull;
+    };
+
     class MySqlBinaryResult : public AbstractResult {
         private:
         vector<string>  _rsfields;
@@ -17,7 +23,8 @@ namespace dbi {
         MYSQL_RES  *result;
         MYSQL_ROWS *mysqldata, *cursor;
 
-        ResultRow rowdata;
+        ResultBuffer *pool;
+
         uint64_t last_insert_id;
 
         /* following methods have been stolen from mysql codebase for parsing binary resultset */
@@ -29,16 +36,16 @@ namespace dbi {
         void read_binary_datetime(MYSQL_TIME*, unsigned char **);
         void read_binary_date(MYSQL_TIME*, unsigned char **);
 
-        unsigned char* fetch_result_tinyint(unsigned char **);
-        unsigned char* fetch_result_short(unsigned char**);
-        unsigned char* fetch_result_int32(unsigned char**);
-        unsigned char* fetch_result_int64(unsigned char**);
-        unsigned char* fetch_result_float(unsigned char**);
-        unsigned char* fetch_result_double(unsigned char**);
-        unsigned char* fetch_result_time(unsigned char**);
-        unsigned char* fetch_result_date(unsigned char**);
-        unsigned char* fetch_result_datetime(unsigned char**);
-        unsigned char* fetch_result_bin(unsigned char **, unsigned long *);
+        void fetch_result_tinyint(int, unsigned char **);
+        void fetch_result_short(int, unsigned char**);
+        void fetch_result_int32(int, unsigned char**);
+        void fetch_result_int64(int, unsigned char**);
+        void fetch_result_float(int, unsigned char**);
+        void fetch_result_double(int, unsigned char**);
+        void fetch_result_time(int, unsigned char**);
+        void fetch_result_date(int, unsigned char**);
+        void fetch_result_datetime(int, unsigned char**);
+        void fetch_result_bin(int, unsigned char **);
 
         /* end of stolen mysql code */
 
