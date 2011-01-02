@@ -55,7 +55,7 @@ namespace dbi {
         ~ConnectionPool();
 
         /*
-            Function: execute(string, ResultRow&, Callback, void *)
+            Function: execute(string, vector<Param>&, Callback, void *)
             Executes the given SQL using the bind parameters and invokes the callback when
             results are ready.
 
@@ -66,7 +66,7 @@ namespace dbi {
             context  - A void pointer to any additional context information you need along
                        with the results (optional).
         */
-        Request* execute(string sql, ResultRow &bind, Callback callback, void *context = 0);
+        Request* execute(string sql, vector<Param> &bind, Callback callback, void *context = 0);
         /*
             Function: execute(string, Callback, void *)
             Executes the given SQL and invokes the callback when results are ready.

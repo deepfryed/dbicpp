@@ -25,7 +25,7 @@ namespace dbi {
         return rv;
     }
 
-    bool dbiInitialize(string path = DEFAULT_DRIVER_PATH) {
+    bool dbiInitialize(string path) {
         string filename;
         struct dirent *file;
         Driver* (*info)(void);
@@ -67,11 +67,11 @@ namespace dbi {
                         drivers[driver->name] = driver;
                     }
                 }
-                else if (_trace) {
+                else {
                     logMessage(_trace_fd, "WARNING: Ignoring" + filename + ":" + dlerror());
                 }
             }
-            else if (_trace) {
+            else {
                 logMessage(_trace_fd, "WARNING: Ignoring" + filename + ":" + dlerror());
             }
         }
@@ -93,7 +93,7 @@ namespace dbi {
     }
 
     vector<string> available_drivers () {
-        vector <string>list;
+        vector<string> list;
 
         if (!drivers.size())
             dbiInitialize();

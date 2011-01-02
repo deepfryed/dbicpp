@@ -13,7 +13,7 @@ namespace dbi {
         AbstractHandle* (*connect)(string user, string pass, string dbname, string host, string port);
     };
 
-    bool dbiInitialize(string path);
+    bool dbiInitialize(string path = DEFAULT_DRIVER_PATH);
     void dbiShutdown();
 
     bool trace();

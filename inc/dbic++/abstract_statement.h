@@ -8,7 +8,7 @@ namespace dbi {
         Pure virtual class that defines the api that individual database drivers need to support.
         Use this as a reference only. It is recommended to use the Statement class for any real work.
     */
-    class AbstractStatement : public AbstractResult {
+    class AbstractStatement {
         public:
         /*
             Function: command
@@ -42,15 +42,24 @@ namespace dbi {
         virtual uint32_t execute(vector<Param> &bind) = 0;
 
         /*
-            Function: driver
-            Returns the driver this statement is associated with.
+            Function: result
+            Returns a pointer to a result object. This needs to be
+            deallocated explicitly.
 
             Returns:
-            name - string value.
+            AbstractResult* - Pointer to the Result set object.
         */
-        virtual string driver() = 0;
+        virtual AbstractResult* result() = 0;
+
+        /*
+            Function: lastInsertID
+            See <AbstractResult::lastInsertID()>
+        */
+        virtual uint64_t lastInsertID() = 0;
+
+        virtual void finish()  = 0;
+        virtual void cleanup() = 0;
+
+        virtual ~AbstractStatement() {}
     };
 }
-
-
-

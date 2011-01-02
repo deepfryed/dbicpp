@@ -19,7 +19,7 @@
 #include <uuid/uuid.h>
 #include <stdint.h>
 
-#define DBI_VERSION      0.4.1
+#define DBI_VERSION      0.5.0
 
 namespace dbi {
     struct null {};
@@ -60,6 +60,8 @@ namespace dbi {
 #include "dbic++/abstract_statement.h"
 #include "dbic++/handle.h"
 #include "dbic++/statement.h"
+#include "dbic++/result.h"
+#include "dbic++/query.h"
 #include "dbic++/socketinfo.h"
 
 #endif

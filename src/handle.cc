@@ -23,9 +23,8 @@ namespace dbi {
     }
 
     Handle::~Handle() {
-        h->close();
-        h->cleanup();
-        delete h;
+        if (h) delete h;
+        h = 0;
     }
 
     uint32_t Handle::execute(string sql) {
@@ -38,8 +37,17 @@ namespace dbi {
         return h->execute(sql, bind);
     }
 
-    Statement Handle::prepare(string sql) {
-        return Statement(h->prepare(sql));
+    Result* Handle::result() {
+        return new Result(h->result());
+    }
+
+    Statement* Handle::prepare(string sql) {
+        return new Statement(h->prepare(sql));
+    }
+
+    // syntactic sugar.
+    Statement* Handle::operator<<(string sql) {
+        return new Statement(h->prepare(sql));
     }
 
     bool Handle::begin() {
@@ -79,16 +87,8 @@ namespace dbi {
         return trx;
     }
 
-    void* Handle::call(string name, void* arg, uint64_t l) {
-        return h->call(name, arg, l);
-    }
-
     uint64_t Handle::write(string table, FieldSet &fields, IO* io) {
         return h->write(table, fields, io);
-    }
-
-    AbstractResult* Handle::results() {
-        return h->results();
     }
 
     void Handle::setTimeZoneOffset(int tzhour, int tzmin) {
@@ -105,5 +105,9 @@ namespace dbi {
 
     string Handle::driver() {
         return h->driver();
+    }
+
+    void Handle::reconnect() {
+        h->reconnect();
     }
 }

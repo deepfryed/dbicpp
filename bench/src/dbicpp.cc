@@ -8,7 +8,7 @@ using namespace dbi;
 
 long max_iter = 1;
 FILE *outfile = stdout;
-ResultRow params;
+vector<Param> values;
 char sql[4096], driver[4096];
 
 void parseOptions(int argc, char **argv) {
@@ -29,7 +29,7 @@ void parseOptions(int argc, char **argv) {
         }
         switch(c) {
             case 's': strcpy(sql, optarg); break;
-            case 'b': params << string(optarg); break;
+            case 'b': values.push_back(PARAM(optarg)); break;
             case 'n': max_iter = atol(optarg); break;
             case 'd': strcpy(driver, optarg); break;
             case 'o': outfile = fopen(optarg, "w");
@@ -41,19 +41,17 @@ void parseOptions(int argc, char **argv) {
 }
 
 int main(int argc, char *argv[]) {
-    int n, r, c, rows, cols;
-    dbiInitialize("../lib/dbic++");
+    int n, r, c;
     parseOptions(argc, argv);
 
     Handle h(driver, getlogin(), "", "dbicpp");
-    Statement st(h, sql);
+    Query query(h, sql);
     ResultRow row;
     row.reserve(20);
 
     for (n = 0; n < max_iter; n++) {
-        rows = (int) st.execute(params);
-        cols = (int) st.columns();
-        while (st.read(row)) {
+        query.execute(values);
+        while (query.read(row)) {
             for (c = 0; c < row.size(); c++)
                 fprintf(outfile, "%s\t", row[c].value.c_str());
             fprintf(outfile, "\n");

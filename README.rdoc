@@ -31,25 +31,25 @@ Drivers for the following will be available soon.
       // Handle h ("driver", "user", "password", "database", "host", "port");
       Handle h ("postgresql", getlogin(), "", "dbicpp");
 
-      Statement st (h, "SELECT id, name, email FROM users WHERE id >= ? AND id < ?");
+      Query query (h, "SELECT id, name, email FROM users WHERE id >= ? AND id < ?");
 
       // bind and execute the statement.
-      st % 1L, 10L;
-      st.execute();
+      query % 1L, 10L;
+      query.execute();
 
       ResultRow r;
-      while (st.read(r))
+      while (query.read(r))
           cout << r.join("\t") << endl;
 
       // or you can do
-      st.rewind();
+      query.rewind();
       ResultRowHash rh;
-      while (st.read(rh))
+      while (query.read(rh))
           cout << rh["id"]    << "\t"
                << rh["name"]  << "\t"
                << rh["email"] << endl;
 
-      st.finish();
+      query.finish();
   }
 
 See src/examples for more specific examples.
@@ -58,40 +58,6 @@ See src/examples for more specific examples.
 
 You need to install swift (http://github.com/shanna/swift), it includes ruby bindings for
 dbic++.
-
-  require 'swift'
-  require 'etc'
-
-  Swift.setup :default, Swift::DB::Postgres, db: 'dbicpp'
-  Swift.trace true
-
-  Swift.db do |db|
-    st = db.prepare "select id, name, email from users where id > ? AND id < ?"
-
-    st.execute(0, 10) do |row|
-      puts row.values_at(:id, :name, :email).join("\t")
-    end
-
-    # Named save point.
-    db.transaction :delete_stuff
-      db.execute "delete from users where id = ?", 2
-      begin
-        # UUID save point.
-        db.transaction do
-          db.execute "delete from users"
-          raise "changed my mind"
-        end
-      rescue => e
-        # nop
-        p e
-      end
-    end
-
-    st.execute(0, 10) do |row|
-      puts row.values_at(:id, :name, :email).join("\t")
-    end
-  end
-
 
 == INSTALL
 

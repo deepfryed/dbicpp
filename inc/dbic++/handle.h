@@ -3,7 +3,9 @@ namespace dbi {
     using namespace std;
     using namespace pcrecpp;
 
+    class Result;
     class Statement;
+
     /*
         Class: Handle
         Facade for AbstractHandle. This is the class that you should normally use.
@@ -26,11 +28,11 @@ namespace dbi {
             // Set trace on and log queries to stderr
             trace(true, fileno(stderr));
 
-            Statement stmt (h, "select id, name from users where name like ? limit 5");
+            Query query (h, "select id, name from users where name like ? limit 5");
 
-            stmt % "james%", execute();
+            query % "james%", execute();
 
-            while (stmt.read(res)) {
+            while (query.read(res)) {
                 cout << "id: "   << res["id"]
                      << "name: " << res["name"]
                      << endl;
@@ -101,6 +103,16 @@ namespace dbi {
         uint32_t execute(string sql, vector<Param> &bind);
 
         /*
+            Function: result
+            Returns a pointer to a result object. This needs to be
+            deallocated explicitly.
+
+            Returns:
+            Result* - Pointer to the Result set object.
+        */
+        Result* result();
+
+        /*
             Function: prepare(string)
             Prepares a SQL and returns a statement handle.
 
@@ -108,9 +120,9 @@ namespace dbi {
             sql - SQL statement.
 
             Returns:
-            Statement object.
+            A pointer to Statement.
         */
-        Statement prepare(string sql);
+        Statement* prepare(string sql);
 
         /*
             Operator: <<(string)
@@ -120,9 +132,9 @@ namespace dbi {
             sql - SQL statement.
 
             Returns:
-            A pointer to AbstractStatement.
+            A pointer to Statement.
         */
-        Statement operator<<(string sql);
+        Statement* operator<<(string sql);
 
         /*
             Function: begin
@@ -185,12 +197,6 @@ namespace dbi {
         uint64_t write(string table, FieldSet &fields, IO*);
 
         /*
-            Function: results
-            See <AbstractHandle::results()>
-        */
-        AbstractResult* results();
-
-        /*
             Function: setTimeZoneOffset(int, int)
             See <AbstractHandle::setTimeZoneOffset(int, int)>
         */
@@ -214,8 +220,14 @@ namespace dbi {
         */
         string driver();
 
-        void* call(string name, void*, uint64_t);
+        /*
+            Function: reconnect
+            See <AbstractHandle::reconnect()>
+        */
+        void reconnect();
+
         friend class Statement;
+        friend class Query;
     };
 }
 

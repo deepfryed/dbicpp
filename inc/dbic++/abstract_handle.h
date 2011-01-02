@@ -48,6 +48,16 @@ namespace dbi {
         virtual uint32_t execute(string sql, vector<Param> &bind) = 0;
 
         /*
+            Function: result
+            Returns a pointer to a result object. This needs to be
+            deallocated explicitly.
+
+            Returns:
+            AbstractResult* - Pointer to the Result set object.
+        */
+        virtual AbstractResult* result() = 0;
+
+        /*
             Function: begin
             Starts a transaction. This will rollback any previous uncommited transactions on this handle.
 
@@ -110,8 +120,6 @@ namespace dbi {
         */
         virtual bool rollback(string name) = 0;
 
-        virtual void* call(string name, void*, uint64_t) = 0;
-
         /*
             Function: close
             Close connection.
@@ -147,19 +155,6 @@ namespace dbi {
             rows   - The number of rows written to database.
         */
         virtual uint64_t write(string table, FieldSet &fields, IO*) = 0;
-
-        /*
-            Function: results
-            Returns the Result associated with a previous query.
-
-            Returns:
-            results - An object conforming to AbstractResult.
-                      NULL If the previous query did not return any results.
-
-            *Important*: You need to call cleanup() on the result set before deleting it and
-                        then deleted it when done with it.
-        */
-        virtual AbstractResult* results() = 0;
 
         /*
             Function: setTimeZoneOffset(int, int)
@@ -204,15 +199,19 @@ namespace dbi {
         friend class ConnectionPool;
         friend class Request;
 
-        virtual int socket() = 0;
+        virtual int  socket()    = 0;
+        virtual void reconnect() = 0;
+
+        virtual ~AbstractHandle() {}
 
         // ASYNC API
         protected:
+        virtual AbstractResult* aexecute(string sql) = 0;
         virtual AbstractResult* aexecute(string sql, vector<Param> &bind) = 0;
+
         virtual void initAsync() = 0;
-        virtual bool isBusy() = 0;
-        virtual bool cancel() = 0;
+        virtual bool isBusy()    = 0;
+        virtual bool cancel()    = 0;
     };
 
 }
-

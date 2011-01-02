@@ -32,39 +32,19 @@ namespace dbi {
     }
 
     Statement::~Statement() {
-        finish();
-        if (st) {
-            st->cleanup();
-            delete st;
-            st = 0;
-        }
+        cleanup();
     }
 
-    uint32_t Statement::rows() {
-        return st->rows();
-    }
-
-    bool Statement::read(ResultRow& r) {
-        return st->read(r);
-    }
-
-    bool Statement::read(ResultRowHash &r) {
-        return st->read(r);
-    }
-
-    bool Statement::finish() {
+    void Statement::finish() {
         params.clear();
-        return st->finish();
+        if (st) st->finish();
     }
 
     void Statement::cleanup() {
-        if (st) st->cleanup();
-    }
-
-
-    // syntactic sugar.
-    Statement Handle::operator<<(string sql) {
-        return Statement(h->prepare(sql));
+        if (st) {
+            delete st;
+            st = 0;
+        }
     }
 
     Statement& Statement::operator,(string v) {
@@ -110,8 +90,8 @@ namespace dbi {
     Statement& Statement::operator<<(string sql) {
         params.clear();
 
-        if (st) delete st;
         if (!h) throw RuntimeError("Unable to call prepare() without database handle.");
+        if (st) delete st;
 
         st = h->prepare(sql);
         return *this;
@@ -133,30 +113,6 @@ namespace dbi {
         params.push_back(PARAM(val));
     }
 
-    vector<string> Statement::fields() {
-        return st->fields();
-    }
-
-    uint32_t Statement::columns() {
-        return st->columns();
-    }
-
-    unsigned char* Statement::read(uint32_t r, uint32_t c, uint64_t *l = 0) {
-        return st->read(r, c, l);
-    }
-
-    unsigned char* Statement::operator()(uint32_t r, uint32_t c) {
-        return st->read(r, c, 0);
-    }
-
-    uint32_t Statement::tell() {
-        return st->tell();
-    }
-
-    vector<int>& Statement::types() {
-        return st->types();
-    }
-
     uint32_t Statement::execute() {
         uint32_t rc;
         if (_trace)
@@ -173,27 +129,14 @@ namespace dbi {
     }
 
     uint32_t Statement::operator,(dbi::execute const &e) {
-        uint32_t rc;
-        if (_trace)
-            logMessage(_trace_fd, formatParams(st->command(), params));
-        rc = st->execute(params);
-        params.clear();
-        return rc;
+        return execute();
+    }
+
+    Result* Statement::result() {
+        return new Result(st->result());
     }
 
     uint64_t Statement::lastInsertID() {
         return st->lastInsertID();
-    }
-
-    void Statement::rewind() {
-        st->rewind();
-    }
-
-    void Statement::seek(uint32_t r) {
-        st->seek(r);
-    }
-
-    string Statement::driver() {
-        return st->driver();
     }
 }
