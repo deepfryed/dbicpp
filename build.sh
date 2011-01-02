@@ -2,6 +2,7 @@
 
 export PG_VERSION=$(cat src/drivers/pg/common.h | grep "VERSION \+" | sed 's/^.*VERSION *//' | sed 's/"//g')
 export MYSQL_VERSION=$(cat src/drivers/mysql/common.h | grep "VERSION \+" | sed 's/^.*VERSION *//' | sed 's/"//g')
+export SQLITE3_VERSION=$(cat src/drivers/sqlite3/common.h | grep "VERSION \+" | sed 's/^.*VERSION *//' | sed 's/"//g')
 
 cleanup() {
   make clean
@@ -90,7 +91,7 @@ _install() {
   _uninstall
   cmake -DCMAKE_PG_VERSION=$PG_VERSION \
         -DCMAKE_MYSQL_VERSION=$MYSQL_VERSION \
-        -DCMAKE_DB2_VERSION=$DB2_VERSION \
+        -DCMAKE_SQLITE3_VERSION=$SQLITE3_VERSION \
         -DCMAKE_INSTALL_PREFIX:PATH=/usr
   make
   make install
@@ -111,7 +112,7 @@ debian_source_build() {
 local_build() {
   cmake -DCMAKE_PG_VERSION=$PG_VERSION \
         -DCMAKE_MYSQL_VERSION=$MYSQL_VERSION \
-        -DCMAKE_DB2_VERSION=$DB2_VERSION \
+        -DCMAKE_SQLITE3_VERSION=$SQLITE3_VERSION \
         -DCMAKE_INSTALL_PREFIX:PATH=tmp/
   make
   make install

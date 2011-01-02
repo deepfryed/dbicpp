@@ -5,12 +5,14 @@ namespace dbi {
     Sqlite3Handle::Sqlite3Handle() {
         tr_nesting = 0;
         conn       = 0;
+        _result    = 0;
     }
 
-    Sqlite3Handle::Sqlite3Handle(string user, string pass, string dbname, string h, string p) {
+    Sqlite3Handle::Sqlite3Handle(string dbname) {
         tr_nesting = 0;
         conn       = 0;
         _dbname    = dbname;
+        _result    = 0;
 
         reconnect();
     }
@@ -34,32 +36,29 @@ namespace dbi {
     }
 
     Sqlite3Result* Sqlite3Handle::result() {
-        Sqlite3Result *instance = 0;
-        if (_result) {
-            instance = new Sqlite3Result(_result, _sql, conn);
-            _result  = 0;
-        }
+        Sqlite3Result *instance = _result;
+        _result = 0;
         return instance;
     }
 
     uint32_t Sqlite3Handle::execute(string sql) {
         _sql = sql;
 
-        Sqlite3Statement st (conn, sql);
+        Sqlite3Statement st(sql, conn);
         st.execute();
         _result = st.result();
 
-        return _result.rows();
+        return _result->rows();
     }
 
     uint32_t Sqlite3Handle::execute(string sql, vector<Param> &bind) {
         _sql = sql;
 
-        Sqlite3Statement st (conn, sql);
+        Sqlite3Statement st(sql, conn);
         st.execute(bind);
         _result = st.result();
 
-        return _result.rows();
+        return _result->rows();
     }
 
     int Sqlite3Handle::socket() {
@@ -97,8 +96,8 @@ namespace dbi {
 
     void Sqlite3Handle::_execute(string sql) {
         char *error;
-        if (sqlite3_exec(conn, sql, 0, 0, &error) != SQLITE_OK) {
-            strncpy(errormsg, 8192, error);
+        if (sqlite3_exec(conn, sql.c_str(), 0, 0, &error) != SQLITE_OK) {
+            snprintf(errormsg, 8192, "%s", error);
             sqlite3_free(error);
             throw RuntimeError(errormsg);
         }
@@ -156,10 +155,9 @@ namespace dbi {
 
     void Sqlite3Handle::reconnect() {
         close();
-        if (sqlite3_open(dbname.c_str(), &conn) != SQLITE_OK) {
-            const char *error = sqlite3_errmsg(conn);
-            strncpy(errormsg, error, 8192);
-            sqlite3_close(conn);
+        int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+        if (sqlite3_open_v2(_dbname.c_str(), &conn, flags, 0) != SQLITE_OK) {
+            snprintf(errormsg, 8192, "%s", sqlite3_errmsg(conn));
             throw ConnectionError(errormsg);
         }
     }

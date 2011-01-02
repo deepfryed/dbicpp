@@ -5,22 +5,25 @@ namespace dbi {
     class Sqlite3Result : public AbstractResult {
 
         private:
-        vector<string> _rsfields;
-        vector<int>    _rstypes;
-        uint32_t       _rowno, _rows, _cols, _affected_rows;
-        string         _sql;
+        string            _sql;
+        uint32_t          _rowno, _rows, _cols;
+        vector<int>       _rstypes;
+        vector<string>    _rsfields;
+        vector<ResultRow> _rowdata;
 
         void init();
-        void fetchMeta();
+        void fetchMeta(sqlite3_stmt*);
 
         public:
+        uint32_t affected_rows;
+        uint64_t last_insert_id;
+
         Sqlite3Result(sqlite3_stmt *stmt, string sql);
         ~Sqlite3Result();
 
         void cleanup();
         bool consumeResult();
         void prepareResult();
-        void boom(const char *);
 
         uint32_t        rows();
         uint32_t        columns();
@@ -36,6 +39,10 @@ namespace dbi {
         uint32_t tell();
         void     rewind();
         void     seek(uint32_t);
+
+        void write(unsigned char *data, uint64_t length);
+        void flush();
+        void clear();
     };
 }
 

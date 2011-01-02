@@ -10,6 +10,8 @@ namespace dbi {
         Sqlite3Result *_result;
         string _dbname;
 
+        void _execute(string);
+
         protected:
         int tr_nesting;
         void boom(const char *);
@@ -18,7 +20,7 @@ namespace dbi {
         sqlite3 *conn;
 
         Sqlite3Handle();
-        Sqlite3Handle(string user, string pass, string dbname, string h, string p);
+        Sqlite3Handle(string dbname);
         ~Sqlite3Handle();
         void cleanup();
 

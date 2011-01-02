@@ -25,6 +25,7 @@ else (PQ_LIBRARIES AND PQ_INCLUDE_DIRS)
       /usr/include/postgresql
       /usr/local/include/postgresql
       /opt/local/include
+      /opt/local/include/postgresql90
       /opt/local/include/postgresql85
       /opt/local/include/postgresql84
       /sw/include
@@ -37,6 +38,7 @@ else (PQ_LIBRARIES AND PQ_INCLUDE_DIRS)
       /usr/lib
       /usr/local/lib
       /opt/local/lib
+      /opt/local/lib/postgresql90
       /opt/local/lib/postgresql85
       /opt/local/lib/postgresql84
       /sw/lib

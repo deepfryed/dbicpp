@@ -8,12 +8,11 @@ namespace dbi {
         private:
         string _sql;
         sqlite3 *_conn;
+        sqlite3_stmt *_stmt;
         Sqlite3Result *_result;
 
         protected:
-        void init();
-        void prepare();
-        void boom(const char *);
+        uint64_t last_insert_id;
 
         public:
         Sqlite3Statement();

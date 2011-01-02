@@ -2,12 +2,21 @@
 
 namespace dbi {
     void Sqlite3Result::init() {
-        _result        = 0;
         _rowno         = 0;
         _rows          = 0;
         _cols          = 0;
-        _bytea         = 0;
-        _affected_rows = 0;
+
+        affected_rows  = 0;
+        last_insert_id = 0;
+    }
+
+    void Sqlite3Result::clear() {
+        _rowno         = 0;
+        _rows          = 0;
+        affected_rows  = 0;
+        last_insert_id = 0;
+
+        _rowdata.clear();
     }
 
     Sqlite3Result::~Sqlite3Result() {
@@ -16,13 +25,35 @@ namespace dbi {
 
     Sqlite3Result::Sqlite3Result(sqlite3_stmt *stmt, string sql) {
         init();
+
+        _sql = sql;
+        fetchMeta(stmt);
     }
 
-    void Sqlite3Result::fetchMeta() {
+    void Sqlite3Result::fetchMeta(sqlite3_stmt *stmt) {
+        _cols = sqlite3_column_count(stmt);
+        for (int n = 0; n < _cols; n++) {
+            _rsfields.push_back(sqlite3_column_name(stmt, n));
+            switch(sqlite3_column_type(stmt, n)) {
+                case SQLITE_INTEGER: _rstypes.push_back(DBI_TYPE_INT);     break;
+                case SQLITE_FLOAT:   _rstypes.push_back(DBI_TYPE_NUMERIC); break;
+                case SQLITE_TEXT:    _rstypes.push_back(DBI_TYPE_TEXT);    break;
+                case SQLITE_BLOB:    _rstypes.push_back(DBI_TYPE_BLOB);    break;
+                default:             _rstypes.push_back(DBI_TYPE_TEXT);
+            }
+        }
+    }
+
+    void Sqlite3Result::write(unsigned char *data, uint64_t length) {
+        _rowdata[_rowno].push_back(data ? PARAM(data,length) : PARAM(null()));
+    }
+
+    void Sqlite3Result::flush() {
+        _rowno++;
     }
 
     uint32_t Sqlite3Result::rows() {
-        return _affected_rows > 0 ? _affected_rows : _rows;
+        return affected_rows > 0 ? affected_rows : _rows;
     }
 
     bool Sqlite3Result::consumeResult() {
@@ -30,18 +61,41 @@ namespace dbi {
     }
 
     void Sqlite3Result::prepareResult() {
+        // NOP
     }
 
     uint64_t Sqlite3Result::lastInsertID() {
-        return 0;
+        return last_insert_id;
     }
 
     bool Sqlite3Result::read(ResultRow &row) {
+        if (_rowno < _rows) {
+            row = _rowdata[_rowno++];
+            return true;
+        }
         return false;
     }
 
     bool Sqlite3Result::read(ResultRowHash &rowhash) {
+        if (_rowno < _rows) {
+            rowhash.clear();
+            for (int n = 0; n < _cols; n++) rowhash[_rsfields[n]] = _rowdata[_rowno][n];
+            _rowno++;
+            return true;
+        }
         return false;
+    }
+
+    unsigned char* Sqlite3Result::read(uint32_t r, uint32_t c, uint64_t *l) {
+        if (r >= _rows || c >= _cols || r < 0 || c < 0) return 0;
+
+        if (_rowdata[r][c].isnull) {
+            return 0;
+        }
+        else {
+            if (l) *l = _rowdata[r][c].value.length();
+            return (unsigned char*)_rowdata[r][c].value.c_str();
+        }
     }
 
     vector<string>& Sqlite3Result::fields() {
@@ -58,19 +112,11 @@ namespace dbi {
 
         _rowno  = 0;
         _rows   = 0;
-        _result = 0;
-        _bytea  = 0;
-    }
-
-    unsigned char* Sqlite3Result::read(uint32_t r, uint32_t c, uint64_t *l) {
-        return 0;
+        _cols   = 0;
     }
 
     uint32_t Sqlite3Result::tell() {
         return _rowno;
-    }
-
-    void Sqlite3Result::boom(const char* m) {
     }
 
     void Sqlite3Result::rewind() {
