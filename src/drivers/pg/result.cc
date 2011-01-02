@@ -20,7 +20,7 @@ namespace dbi {
         _conn   = c;
         _sql    = sql;
 
-        fetchMeta();
+        if (_result) fetchMeta();
     }
 
     void PgResult::fetchMeta() {
@@ -154,17 +154,16 @@ namespace dbi {
     }
 
     unsigned char* PgResult::read(uint32_t r, uint32_t c, uint64_t *l) {
+        if (r >= _rows || c >= _cols || r < 0 || c < 0) return 0;
+
         _rowno = r;
-        if (PQgetisnull(_result, r, c)) {
-            return 0;
-        }
-        else if (_rstypes[c] != DBI_TYPE_BLOB) {
+        if (PQgetisnull(_result, r, c)) return 0;
+
+        if (_rstypes[c] != DBI_TYPE_BLOB) {
             if (l) *l = PQgetlength(_result, r, c);
             return (unsigned char*)PQgetvalue(_result, r, c);
         }
-        else {
-            return unescapeBytea(r, c, l);
-        }
+        else return unescapeBytea(r, c, l);
     }
 
     uint32_t PgResult::tell() {

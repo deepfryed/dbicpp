@@ -84,32 +84,25 @@ namespace dbi {
     }
 
     uint32_t PgStatement::execute() {
-        uint32_t rows, ctuples = 0;
+        uint32_t rows;
         PGresult *result = _pgexec();
 
-        rows    = (uint32_t)PQntuples(result);
-        ctuples = (uint32_t)atoi(PQcmdTuples(result));
-
-        return ctuples > 0 ? ctuples : rows;
+        rows = (uint32_t)PQntuples(result);
+        return rows > 0 ? rows : (uint32_t)atoi(PQcmdTuples(result));
     }
 
     uint32_t PgStatement::execute(vector<Param> &bind) {
-        uint32_t rows, ctuples = 0;
+        uint32_t rows;
         PGresult *result = _pgexec(bind);
 
-        rows    = (uint32_t)PQntuples(result);
-        ctuples = (uint32_t)atoi(PQcmdTuples(result));
-
-        return ctuples > 0 ? ctuples : rows;
+        rows = (uint32_t)PQntuples(result);
+        return rows > 0 ? rows : (uint32_t)atoi(PQcmdTuples(result));
     }
 
     PgResult* PgStatement::result() {
-        PgResult *instance = 0;
-        if (_result) {
-            instance = new PgResult(_result, _sql, _conn);
-            _result  = 0;
-        }
-        return instance; // needs to be deallocated by user.
+        PgResult *instance = new PgResult(_result, _sql, _conn);
+        _result  = 0;
+        return instance;
     }
 
     void PgStatement::boom(const char* m) {
