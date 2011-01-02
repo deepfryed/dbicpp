@@ -1,3 +1,12 @@
+dbic++ (0.5.0) lucid; urgency=medium
+
+  * improvements: native binary resultset parsing for mysql without MYSQL_BIND, faster read().
+  * bugfixes: malloc() calls were not checking for successful allocation.
+  * api: Statement#results -> Statement#result and Handle#results -> Handle#result.
+  * api: Query encapsulates Result and Statement.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Sun, 02 Jan 2011 11:20:00 +1100
+
 dbic++ (0.4.1) lucid; urgency=medium
 
   * bugfix: mysql driver - return empty resultset after Handle#excute with no results.
