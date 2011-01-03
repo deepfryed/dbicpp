@@ -32,6 +32,7 @@ namespace dbi {
 
     void Sqlite3Result::fetchMeta(sqlite3_stmt *stmt) {
         _cols = sqlite3_column_count(stmt);
+
         for (int n = 0; n < _cols; n++) {
             _rsfields.push_back(sqlite3_column_name(stmt, n));
             switch(sqlite3_column_type(stmt, n)) {
@@ -45,11 +46,20 @@ namespace dbi {
     }
 
     void Sqlite3Result::write(unsigned char *data, uint64_t length) {
-        _rowdata[_rowno].push_back(data ? PARAM(data,length) : PARAM(null()));
+        if (_rowdata.size() <= _rowno) {
+            ResultRow r;
+            _rowdata.push_back(r);
+        }
+        _rowdata[_rowno].push_back(
+            data ?
+                length ? PARAM(data,length) : PARAM((char*)data)
+                : PARAM(null())
+        );
     }
 
     void Sqlite3Result::flush() {
         _rowno++;
+        _rows++;
     }
 
     uint32_t Sqlite3Result::rows() {
@@ -109,10 +119,11 @@ namespace dbi {
     void Sqlite3Result::cleanup() {
         _rsfields.clear();
         _rstypes.clear();
+        _rowdata.clear();
 
-        _rowno  = 0;
-        _rows   = 0;
-        _cols   = 0;
+        _rowno   = 0;
+        _rows    = 0;
+        _cols    = 0;
     }
 
     uint32_t Sqlite3Result::tell() {

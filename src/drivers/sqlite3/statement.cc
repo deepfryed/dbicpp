@@ -2,9 +2,10 @@
 
 namespace dbi {
     Sqlite3Statement::Sqlite3Statement(string sql,  sqlite3 *conn) {
-        _sql  = sql;
-        _conn = conn;
-        _stmt = 0;
+        _sql    = sql;
+        _conn   = conn;
+        _stmt   = 0;
+        _result = 0;
 
         SQLITE3_PREPROCESS_QUERY(sql);
         if (sqlite3_prepare_v2(conn, sql.c_str(), sql.length(), &_stmt, 0) != SQLITE_OK) {
@@ -72,6 +73,7 @@ namespace dbi {
             throw RuntimeError(errormsg);
         }
 
+        _result->rewind();
         _result->affected_rows  = sqlite3_changes(_conn);
         _result->last_insert_id = last_insert_id = sqlite3_last_insert_rowid(_conn);
         return _result->rows();

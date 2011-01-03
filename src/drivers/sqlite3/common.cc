@@ -13,7 +13,7 @@ namespace dbi {
     }
 
     void SQLITE3_PROCESS_BIND(sqlite3_stmt *stmt, vector<Param> &bind) {
-        uint32_t cols = sqlite3_column_count(stmt);
+        uint32_t cols = sqlite3_bind_parameter_count(stmt);
         if (bind.size() != cols) {
             snprintf(errormsg, 8192, "Given %lu but expected %d bind args", bind.size(), cols);
             throw RuntimeError(errormsg);
@@ -21,10 +21,10 @@ namespace dbi {
 
         for (uint32_t i = 0; i < cols; i++) {
             if (bind[i].isnull) {
-                sqlite3_bind_null(stmt, i);
+                sqlite3_bind_null(stmt, i+1);
                 continue;
             }
-            sqlite3_bind_text(stmt, i, bind[i].value.c_str(), bind[i].value.length(), 0);
+            sqlite3_bind_text(stmt, i+1, bind[i].value.c_str(), bind[i].value.length(), 0);
         }
     }
 

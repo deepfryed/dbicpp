@@ -104,7 +104,7 @@ namespace dbi {
     }
 
     bool Sqlite3Handle::begin() {
-        _execute("BEGIN WORK");
+        _execute("BEGIN");
         tr_nesting++;
         return true;
     };

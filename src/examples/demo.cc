@@ -28,7 +28,10 @@ int main(int argc, char *argv[]) {
 
     // create test table
     h.execute("drop table if exists users");
-    h.execute("create table users(id serial, name text, email text, primary key (id))");
+    if (driver == "sqlite3")
+        h.execute("create table users(id integer, name text, email text, primary key (id))");
+    else
+        h.execute("create table users(id serial, name text, email text, primary key (id))");
 
     // create table.
     cout << endl;
