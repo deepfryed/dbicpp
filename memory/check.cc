@@ -54,21 +54,24 @@ int main(int argc, char *argv[]) {
     parseOptions(argc, argv);
     dbiInitialize();
 
-    for (int times = 0; times < 100; times++) {
-        Handle h (driver, getlogin(), "", "dbicpp");
+    bool sqlite3 = strcmp(driver, "sqlite3") == 0;
+
+    for (int times = 0; times < 200; times++) {
+        Handle h (driver, getlogin(), "", sqlite3 ? ":memory:" : "dbicpp");
 
         printf("-- run %d --\t", times);
         top();
 
         // create test table
-        try { h.execute("drop table users"); } catch (RuntimeError &e) {}
-        h.execute("create table users(id serial primary key, name text, email text, created_at timestamp)");
+        h.execute("drop table if exists users");
+        h.execute("create table users(id integer primary key, name text, email text, created_at timestamp)");
 
         // insert some test data
-        Statement ins (h, "insert into users(name, email, created_at) values(?, ?, current_timestamp)");
+        Statement ins (h, "insert into users(id, name, email, created_at) values(?, ?, ?, current_timestamp)");
 
         for (int n = 0; n < rows; n++) {
             sprintf(buffer, "test %d", n);
+            ins % (long)(n+1);
             ins % buffer;
             ins % "test@example.com";
             ins.execute();
