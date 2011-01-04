@@ -1,8 +1,8 @@
 #include "dbic++.h"
 
 namespace dbi {
-    FileIO::FileIO(const char *path, uint32_t mode) {
-        if (!(fp = fopen(path, "r+")))
+    FileIO::FileIO(const char *path, char* mode) {
+        if (!(fp = fopen(path, mode)))
             throw RuntimeError(strerror(errno));
     }
 
