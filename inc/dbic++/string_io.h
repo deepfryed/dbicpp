@@ -37,9 +37,9 @@ namespace dbi {
                  << h.write("users", fields, &buffer)
                  << " rows" << endl;
 
-            Statement stmt(h, "select * from users");
-            stmt.execute();
-            while (stmt.read(res))
+            Query query(h, "select * from users");
+            query.execute();
+            while (query.read(res))
                 cout << res["id"]    << "\t"
                      << res["name"]  << "\t"
                      << res["email"] << endl;
