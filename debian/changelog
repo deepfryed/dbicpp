@@ -1,3 +1,9 @@
+dbic++ (0.5.1-2~lucid1) lucid; urgency=medium
+
+  * fixed compile errors on i386.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Tue, 04 Jan 2011 23:30:00 +1100
+
 dbic++ (0.5.1-1~lucid2) lucid; urgency=medium
 
   * fixed debian build dependency.
