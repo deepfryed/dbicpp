@@ -6,14 +6,14 @@ dbic++ is a database client library written in C++ which comes with support for 
 * MySQL      >= 5.0
 * SQLite     >= 3.7
 
-== Main Features
+== MAIN FEATURES
 
 * Simple and fast.
 * Support for PostgreSQL, MySQL and SQLite3.
 * Nested transactions.
 * API for async queries (PostgreSQL and MySQL).
 
-== Examples
+== EXAMPLES
 
 === C++
 
@@ -141,7 +141,7 @@ On most unix systems it can be done as,
 
 Refer to http://dev.mysql.com/doc/refman/5.1/en/mysql-tzinfo-to-sql.html.
 
-== Benchmarks
+== BENCHMARKS
 
 You can run these yourself if you're keen. The makefile might need some tweaks
 on non-debian based distributions. The following results were obtained on a
@@ -180,7 +180,7 @@ Core2DUO 2.53GHz, 4GB, 5200rpm drive with stock database configs.
 * mysql: Proper bind parameter interpolation for Handle::execute(string, vector<Param>&)
 * Cursor support, generic interface to database specific api.
 
-== Gotchas
+== GOTCHAS
 
 * sqlite3: No support for async operations yet.
 * mysql: Handle::execute(...) replaces ? with given bind parameters if bind parameters are provided.
@@ -188,7 +188,7 @@ Core2DUO 2.53GHz, 4GB, 5200rpm drive with stock database configs.
   Handle::execute(...) with bind arguments, make sure to provide all values as bind parameters to
   avoid the confusion and resulting errors.
    
-== Support
+== SUPPORT
 
 {Support dbic++ on fundry}[https://fundry.com/project/5-dbic]
 
@@ -196,7 +196,7 @@ Core2DUO 2.53GHz, 4GB, 5200rpm drive with stock database configs.
 
 See LICENSE.
 
-== Warning
+== WARNING
 
 I'm no C++ or Ruby expert. So the code may have horrendous, hideous or outdated code/coding style. If
 you are lucky, you may not encounter any bugs. So suffice to say, if you have any comments,
