@@ -1,5 +1,8 @@
 #include "common.h"
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 namespace dbi {
     void MySqlBinaryResult::set_zero_time(MYSQL_TIME *tm, enum enum_mysql_timestamp_type time_type) {
         bzero((void*) tm, sizeof(*tm));
@@ -130,7 +133,7 @@ namespace dbi {
 
     void MySqlBinaryResult::fetch_result_int64(int c, unsigned char **row) {
         pool[c].length = 0;
-        snprintf((char*)pool[c].data, 32, "%ld", (int64_t) sint8korr(*row));
+        snprintf((char*)pool[c].data, 32, "%" PRIi64 , (int64_t) sint8korr(*row));
         *row+= 8;
     }
 

@@ -77,7 +77,8 @@ c++ compiler (XCode if you are a MacOSX user).
 ==== Debian
 
     sudo apt-get install build-essential
-    sudo apt-get install cmake libpcre3-dev uuid-dev libevent-dev libmysqlclient-dev libpq-dev libsqlite3-dev
+    sudo apt-get install cmake libpcre3-dev uuid-dev libevent-dev
+    sudo apt-get install libmysqlclient-dev libpq-dev libsqlite3-dev
 
 ==== MacOSX
 
@@ -88,8 +89,10 @@ You need to install the required dependencies first,
     sudo port install pcre
     sudo port install postgresql84
     sudo port install mysql5 mysql5-server
+    sudo port install sqlite3
 
-You don't need both database ports if you only want to test or work with one of them.
+The last three database ports are optional. You only need to install the ones you want to
+test or use.
 
 === Building libraries and demos
 
@@ -114,14 +117,12 @@ To build debian packages for your local architecture,
 
     ./build -d
 
-It is recommended that for debian based distributions you use the builds from my
-ppa repository at https://launchpad.net/~deepfryed/+archive/ppa.
+If you are too lazy to compile your own binaries you can use the ubuntu ppa at
+https://launchpad.net/~deepfryed/+archive/ppa.
 
-Add the following to /etc/apt/sources.list, run apt-get update as root and you should
-be able to install the latest packages.
-
-    deb http://ppa.launchpad.net/deepfryed/ppa/ubuntu lucid main
-    deb-src http://ppa.launchpad.net/deepfryed/ppa/ubuntu lucid main
+    sudo add-apt-repository ppa:deepfryed/dbic++
+    sudo apt-get update
+    sudo apt-get install dbic++-dev dbic++-pg dbic++-sqlite3 dbic++-mysql
 
 === Running the demo
 
@@ -151,9 +152,9 @@ Core2DUO 2.53GHz, 4GB, 5200rpm drive with stock database configs.
   * The dataset size is 50 rows of 3 fields (id, text, timestamp)
   * 10000 SELECT queries run back to back, fetching all rows and printing them.
 
-    cd bench/ && make 
+    cd bench/ && make
 
-    ./benchmarks.sh 
+    ./benchmarks.sh
 
     + Setting up sample data (50 rows)
       * mysql
@@ -163,16 +164,16 @@ Core2DUO 2.53GHz, 4GB, 5200rpm drive with stock database configs.
     ./benchmarks.sh -w bench -n10000
 
     + Benchmarking mysql
-    
+
       * mysql      user 0.78 sys 0.12 real 3.00
       * mysql++    user 1.09 sys 0.17 real 3.35
       * dbicpp     user 1.00 sys 0.15 real 3.32
-    
+
     + Benchmarking postgresql
-    
+
       * pq         user 0.72 sys 0.10 real 2.94
       * dbicpp     user 0.87 sys 0.13 real 3.13
-    
+
     + Finished
 
 == TODO
@@ -188,7 +189,7 @@ Core2DUO 2.53GHz, 4GB, 5200rpm drive with stock database configs.
   Any literal values with ? character will be interpreted as a bind argument. If you are using
   Handle::execute(...) with bind arguments, make sure to provide all values as bind parameters to
   avoid the confusion and resulting errors.
-   
+
 == SUPPORT
 
 {Support dbic++ on fundry}[https://fundry.com/project/5-dbic]

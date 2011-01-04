@@ -1,5 +1,8 @@
 #include "common.h"
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 namespace dbi {
 
     char errormsg[8192];
@@ -14,7 +17,7 @@ namespace dbi {
     void SQLITE3_PROCESS_BIND(sqlite3_stmt *stmt, vector<Param> &bind) {
         uint32_t cols = sqlite3_bind_parameter_count(stmt);
         if (bind.size() != cols) {
-            snprintf(errormsg, 8192, "Given %lu but expected %d bind args", bind.size(), cols);
+            snprintf(errormsg, 8192, "Given %" PRIu64 " but expected %d bind args", bind.size(), cols);
             throw RuntimeError(errormsg);
         }
 
