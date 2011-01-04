@@ -4,20 +4,16 @@ What is dbic++ ?:
 
 dbic++ is a database client library written in C++ which comes with support for the following databases,
 
-    * PostgreSQL >= 8.0
+    * PostgreSQL >= 8.3
     * MySQL      >= 5.0
-
-Drivers for the following will be available soon.
-
-    * SQLite >= 3
-
+    * SQLite     >= 3.7
 
 Main Features:
 
-    * Simple API to maximize cross database support.
-    * Supports nested transactions.
-    * Auto reconnect, re-prepare & execute statements again unless inside a transaction.
-    * Provides APIs for async queries and a simple reactor API built on libevent.
+    * Simple and fast.
+    * Support for PostgreSQL, MySQL and SQLite3.
+    * Nested transactions.
+    * API for async queries (PostgreSQL and MySQL).
 
 Source:
 
@@ -34,13 +30,13 @@ and <Statement> work. It is also recommended that you read through documentation
 
 Examples:
 
-Checkout <Handle>, <IOStream> or <Reactor> for some quick examples. dbic++ source distribution
+Checkout <Handle>, <StringIO> or <Reactor> for some quick examples. dbic++ source distribution
 also contains some examples that can be found under src/examples/.
 
 To compile code that uses dbic++, use pkg-config to get the correct compiler flags.
 
 (begin code)
-g++ `pkg-config --libs --cflags dbic++` -o example example.cc
+g++ `pkg-config --libs --cflags dbic++` -o myprogram myprogram.cc
 (end)
 
 Benchmarks:

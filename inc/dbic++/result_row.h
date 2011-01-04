@@ -45,7 +45,7 @@ namespace dbi {
     /*
         Class: FieldSet
         A glorified vector<string> really, with some decorators.
-        See <IOStream> for an example where you can use this.
+        See <StringIO> for an example where you can use this.
     */
     class FieldSet : public ResultRow {
         public:
