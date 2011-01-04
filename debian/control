@@ -2,7 +2,7 @@ Source: dbic++
 Section: devel
 Priority: optional
 Maintainer: Bharanee Rathna <deepfryed@gmail.com>
-Build-Depends: debhelper (>= 7.4.0), libpcre3-dev, uuid-dev, libmysqlclient-dev, libpq-dev, libevent-dev, cdbs, cmake
+Build-Depends: debhelper (>= 7.4.0), libpcre3-dev, uuid-dev, libmysqlclient-dev, libpq-dev, libsqlite3-dev, libevent-dev, cdbs, cmake
 Standards-Version: 3.8.4
 
 Package: dbic++-dev

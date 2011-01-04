@@ -1,3 +1,9 @@
+dbic++ (0.5.1-1~lucid2) lucid; urgency=medium
+
+  * fixed debian build dependency.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Tue, 04 Jan 2011 21:29:00 +1100
+
 dbic++ (0.5.1-1~lucid1) lucid; urgency=medium
 
   * lucid port.
