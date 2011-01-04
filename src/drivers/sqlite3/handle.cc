@@ -3,24 +3,26 @@
 namespace dbi {
 
     Sqlite3Handle::Sqlite3Handle() {
-        tr_nesting = 0;
         conn       = 0;
         _result    = 0;
+        tr_nesting = 0;
     }
 
     Sqlite3Handle::Sqlite3Handle(string dbname) {
-        tr_nesting = 0;
         conn       = 0;
-        _dbname    = dbname;
         _result    = 0;
+        tr_nesting = 0;
+        _dbname    = dbname;
 
         reconnect();
     }
 
     void Sqlite3Handle::setTimeZoneOffset(int tzhour, int tzmin) {
+        throw RuntimeError("Sqlite3Handle::setTimeZoneOffset is not implemented");
     }
 
     void Sqlite3Handle::setTimeZone(char *name) {
+        throw RuntimeError("Sqlite3Handle::setTimeZone is not implemented");
     }
 
     Sqlite3Handle::~Sqlite3Handle() {
@@ -46,6 +48,8 @@ namespace dbi {
 
         Sqlite3Statement st(sql, conn);
         st.execute();
+
+        if (_result) delete _result;
         _result = st.result();
 
         return _result->rows();
@@ -56,6 +60,8 @@ namespace dbi {
 
         Sqlite3Statement st(sql, conn);
         st.execute(bind);
+
+        if (_result) delete _result;
         _result = st.result();
 
         return _result->rows();
@@ -95,12 +101,14 @@ namespace dbi {
     }
 
     void Sqlite3Handle::_execute(string sql) {
-        char *error;
+        char *error = 0;
         if (sqlite3_exec(conn, sql.c_str(), 0, 0, &error) != SQLITE_OK) {
             snprintf(errormsg, 8192, "%s", error);
             sqlite3_free(error);
             throw RuntimeError(errormsg);
         }
+
+        if (error) sqlite3_free(error);
     }
 
     bool Sqlite3Handle::begin() {
@@ -166,7 +174,49 @@ namespace dbi {
     }
 
     uint64_t Sqlite3Handle::write(string table, FieldSet &fields, IO* io) {
-        return 0;
+        if (fields.size() == 0)
+            throw RuntimeError("Handle::write needs atleast one field.");
+
+        string sql = "insert into " + table + "(" + fields.join(", ") + ") values(?";
+        for (int n = 1; n < fields.size(); n++) sql += ", ?";
+        sql += ")";
+
+        string line;
+        uint32_t col  = 0;
+        uint64_t rows = 0;
+        sqlite3_stmt *stmt;
+        if (sqlite3_prepare_v2(conn, sql.c_str(), sql.length(), &stmt, 0) != SQLITE_OK) {
+            snprintf(errormsg, 8192, "Error in SQL: %s %s", sql.c_str(), sqlite3_errmsg(conn));
+            throw RuntimeError(errormsg);
+        }
+        while (io->readline(line)) {
+            col = 0;
+            char *end, *start = (char*)line.c_str();
+            while (*start) {
+                end = start;
+                while (*end && *end != '\t') end++;
+                if (*end) {
+                    if (end-start == 1)
+                        sqlite3_bind_null(stmt, ++col);
+                    else
+                        sqlite3_bind_text(stmt, ++col, start, end-start, 0);
+                    start = end + 1;
+                }
+                else start = end;
+            }
+
+            if (sqlite3_step(stmt) != SQLITE_DONE) {
+                sqlite3_finalize(stmt);
+                snprintf(errormsg, 8192, "%s", sqlite3_errmsg(conn));
+                throw RuntimeError(errormsg);
+            }
+
+            sqlite3_clear_bindings(stmt);
+            sqlite3_reset(stmt);
+            rows++;
+        }
+
+        return rows;
     }
 
     string Sqlite3Handle::escape(string value) {
@@ -179,5 +229,4 @@ namespace dbi {
     string Sqlite3Handle::driver() {
         return DRIVER_NAME;
     }
-
 }

@@ -20,6 +20,8 @@ namespace dbi {
     }
 
     void Sqlite3Statement::cleanup() {
+        finish();
+
         if (_stmt)   sqlite3_finalize(_stmt);
         if (_result) delete _result;
 
@@ -28,8 +30,10 @@ namespace dbi {
     }
 
     void Sqlite3Statement::finish() {
-        sqlite3_reset(_stmt);
-        sqlite3_clear_bindings(_stmt);
+        if (_stmt) {
+            sqlite3_reset(_stmt);
+            sqlite3_clear_bindings(_stmt);
+        }
     }
 
     string Sqlite3Statement::command() {

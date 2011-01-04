@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
 
     cout << "-- bulk copy in --" << endl;
 
-    IOStream buffer;
+    StringIO buffer;
     buffer.write("sally\tsally@local\n");
     buffer.write("jonas\tjonas@local\n");
 

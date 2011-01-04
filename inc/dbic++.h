@@ -53,8 +53,8 @@ namespace dbi {
 
 #include "dbic++/util.h"
 #include "dbic++/io.h"
-#include "dbic++/io_stream.h"
-#include "dbic++/io_filestream.h"
+#include "dbic++/string_io.h"
+#include "dbic++/file_io.h"
 #include "dbic++/abstract_handle.h"
 #include "dbic++/abstract_result.h"
 #include "dbic++/abstract_statement.h"

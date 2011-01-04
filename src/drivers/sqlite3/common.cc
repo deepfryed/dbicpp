@@ -6,7 +6,6 @@ namespace dbi {
 
     void SQLITE3_PREPROCESS_QUERY(string &query) {
         string var;
-
         RE re("(?<!')(%(?:[dsfu]|l[dfu]))(?!')");
         while (re.PartialMatch(query, &var))
             re.Replace("?", &query);

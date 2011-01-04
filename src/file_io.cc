@@ -1,0 +1,60 @@
+#include "dbic++.h"
+
+namespace dbi {
+    FileIO::FileIO(const char *path, uint32_t mode) {
+        if (!(fp = fopen(path, "r+")))
+            throw RuntimeError(strerror(errno));
+    }
+
+    string& FileIO::read() {
+        uint32_t count;
+        char buffer[16384];
+        count = ::read(fileno(fp), buffer, 16384);
+        if (count > 0) {
+            stringdata = string(buffer, count);
+            return stringdata;
+        }
+
+        return empty;
+    }
+
+    uint32_t FileIO::read(char *buffer, uint32_t len) {
+        len = ::read(fileno(fp), buffer, len);
+        return len;
+    }
+
+    FileIO::~FileIO() {
+        if (fp) fclose(fp);
+    }
+
+    void FileIO::truncate() {
+        // NOP
+    }
+
+    void FileIO::write(const char *data) {
+        write(data, strlen(data));
+    }
+
+    void FileIO::write(const char *data, uint32_t size) {
+        if (fp)
+            size = ::write(fileno(fp), data, size);
+    }
+
+    bool FileIO::readline(string &line) {
+        char *buffer;
+        size_t size;
+
+        size = getline(&buffer, &size, fp);
+        if (size > 0) {
+            line = string(buffer, size);
+            free(buffer);
+            return true;
+        }
+
+        return false;
+    }
+
+    char* FileIO::readline() {
+        return readline(stringdata) ? (char*)stringdata.c_str() : 0;
+    }
+}

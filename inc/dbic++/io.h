@@ -13,26 +13,10 @@ namespace dbi {
         Row data needs to be '\t' delimited and terminated by '\n'.
         Databases will usually throw an exception when given CRLF terminated row data,
         so suffice to say don't use CRLF terminator.
-
-        Tips:
-        You could use <IOStream> or <IOFileStream> which implement the interface.
-        Alternatively you could implement your own subclass which can be used to
-        bulk load data without buffering.
     */
     class IO {
         public:
-        IO() {}
-        /*
-            Constructor: IO(const char*, uint64_t)
-            Initializes an IO object with data.
-
-            Parameters:
-            data - char pointer to string data (you cannot use this api to load blob)
-            len  - uint64_t value specifying the length.
-        */
-        IO(const char *data, uint64_t len) {}
-
-        virtual string &read(void) = 0;
+        virtual string&  read(void) = 0;
         virtual uint32_t read(char *buffer, uint32_t) = 0;
 
         /*
@@ -58,7 +42,10 @@ namespace dbi {
             Function: truncate
             Truncates existing data in io object.
         */
-        virtual void truncate(void) = 0;
+        virtual void truncate() = 0;
+
+        virtual bool  readline(string &) = 0;
+        virtual char* readline() = 0;
     };
 
 }

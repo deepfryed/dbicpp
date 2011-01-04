@@ -4,7 +4,7 @@ namespace dbi {
     using namespace pcrecpp;
 
     /*
-        Class: IOStream
+        Class: StringIO
         Concrete implementation of IO that can handle string data. Generally useful when
         you just want to insert data into a table (or fetch data from a table) without
         the overhead of multiple statement execution.
@@ -25,7 +25,7 @@ namespace dbi {
             // Set trace on and log queries to stderr
             trace(true, fileno(stderr));
 
-            IOStream buffer;
+            StringIO buffer;
 
             // columns are tab separated
             // rows are terminated by a single newline
@@ -47,21 +47,21 @@ namespace dbi {
         }
         (end)
     */
-    class IOStream : public IO {
-        private:
-        bool eof;
-        uint32_t loc;
+    class StringIO : public IO {
         protected:
-        string empty;
-        string data;
-        public:
-        IOStream() { eof = false; loc = 0; }
+        string stringdata, empty;
+        unsigned char* data;
+        uint64_t alloc, wpos, rpos;
 
+        public:
         /*
-            Constructor: IOStream(const char*, uint64_t)
+            Constructor: StringIO(const char*, uint64_t)
             See <IO::IO(const char*, uint64_t)>
         */
-        IOStream(const char *, uint64_t);
+        StringIO(const char *, uint64_t);
+        StringIO();
+
+        ~StringIO();
 
         /*
             Function: write(const char*)
@@ -90,8 +90,11 @@ namespace dbi {
         */
         void truncate(void);
 
-        string &read(void);
+        string&  read(void);
         uint32_t read(char *buffer, uint32_t);
+
+        bool  readline(string &);
+        char* readline();
     };
 }
 
