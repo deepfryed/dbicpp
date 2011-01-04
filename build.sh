@@ -103,7 +103,7 @@ debian_binary_build() {
 }
 
 debian_source_build() {
-  PREFIX=dbic++-$(cat debian/changelog | head -n1 | grep -o "[0-9.]\+")
+  PREFIX=dbic++-$(cat debian/changelog | head -n1 | grep -o "[0-9.]\+" | head -n1)
   git archive --remote=$PWD --format=tar --prefix=$PREFIX/ HEAD | tar -C $PWD/.. -xvf -
   cd $PWD/../$PREFIX
   debuild -S -sa
