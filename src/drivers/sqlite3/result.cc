@@ -1,4 +1,6 @@
 #include "common.h"
+#include <cctype>
+#include <algorithm>
 
 namespace dbi {
     void Sqlite3Result::init() {
@@ -32,17 +34,23 @@ namespace dbi {
 
     void Sqlite3Result::fetchMeta(sqlite3_stmt *stmt) {
         _cols = sqlite3_column_count(stmt);
-
         for (int n = 0; n < _cols; n++) {
+            const char *sql_decltype = sqlite3_column_decltype(stmt, n);
             _rsfields.push_back(sqlite3_column_name(stmt, n));
-            switch(sqlite3_column_type(stmt, n)) {
-                case SQLITE_INTEGER: _rstypes.push_back(DBI_TYPE_INT);     break;
-                case SQLITE_NULL:    // aggregate functions return SQLITE_NULL as type :(
-                case SQLITE_FLOAT:   _rstypes.push_back(DBI_TYPE_NUMERIC); break;
-                case SQLITE_TEXT:    _rstypes.push_back(DBI_TYPE_TEXT);    break;
-                case SQLITE_BLOB:    _rstypes.push_back(DBI_TYPE_BLOB);    break;
-                default:             _rstypes.push_back(DBI_TYPE_TEXT);
-            }
+            string type(sql_decltype ? sql_decltype : "null");
+            std::transform(type.begin(), type.end(), type.begin(), (int(*)(int)) tolower);
+            if(type =="integer")   { _rstypes.push_back(DBI_TYPE_INT);       continue; }
+            if(type =="float")     { _rstypes.push_back(DBI_TYPE_FLOAT);     continue; }
+            if(type =="numeric")   { _rstypes.push_back(DBI_TYPE_NUMERIC);   continue; }
+            if(type =="text")      { _rstypes.push_back(DBI_TYPE_TEXT);      continue; }
+            if(type =="blob")      { _rstypes.push_back(DBI_TYPE_BLOB);      continue; }
+            if(type =="timestamp") { _rstypes.push_back(DBI_TYPE_TIMESTAMP); continue; }
+            if(type =="boolean")   { _rstypes.push_back(DBI_TYPE_BOOLEAN);   continue; }
+            if(type =="bool")      { _rstypes.push_back(DBI_TYPE_BOOLEAN);   continue; }
+            if(type =="null")      { _rstypes.push_back(DBI_TYPE_NUMERIC);   continue; }
+            if(type =="date")      { _rstypes.push_back(DBI_TYPE_DATE);      continue; }
+            if(type =="time")      { _rstypes.push_back(DBI_TYPE_TIME);      continue; }
+            _rstypes.push_back(DBI_TYPE_TEXT);
         }
     }
 
