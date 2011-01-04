@@ -19,40 +19,40 @@ namespace dbi {
     }
 
     void MYSQL_INTERPOLATE_BIND(MYSQL *conn, string &query, vector<Param> &bind) {
-        int n = 0;
-        unsigned long len, repl_len = 1024;
-        char *repl = new char[repl_len];
-        string orig = query, var;
-
-        RE re("(?<!')(\\?)(?!')");
-        while (re.PartialMatch(query, &var)) {
-            if (n >= bind.size()) {
-                if (repl) delete [] repl;
-                sprintf(errormsg, "Only %d parameters provided for query: %s", (int)bind.size(), orig.c_str());
-                throw RuntimeError(errormsg);
-            }
-            if (bind[n].isnull) {
-                len  = 4;
-                strcpy(repl, "NULL");
-            }
-            else {
-                len = bind[n].value.length()*2 + 3;
-                if (len > repl_len) {
-                    repl_len = len + 2;
-                    delete [] repl;
-                    repl = new char[repl_len];
-                }
-                len  = mysql_real_escape_string(conn, repl+1, bind[n].value.c_str(), bind[n].value.length());
-                repl[0] = '\'';
-                repl[len + 1] = '\'';
-                repl[len + 2] = 0;
-                len += 2;
-            }
-            re.Replace(string(repl, len), &query);
-            n++;
+        vector<string> parts;
+        const char *cptr = query.c_str();
+        uint64_t max = query.length(),  begin = 0, end = 0;
+        while (begin < max) {
+            while (end < max && *(cptr+end) != '?') end++;
+            parts.push_back(string(cptr+begin, end-begin));
+            begin = ++end;
         }
 
-        if (repl) delete [] repl;
+        query = parts[0];
+        uint64_t len, alloc = 1024;
+        char *escaped = new char[alloc];
+        for (int n = 1; n < parts.size(); n++) {
+            if (bind[n-1].isnull) {
+                query += "NULL" + parts[n];
+            }
+            else {
+                len = bind[n-1].value.length()*2 + 3;
+                if (len > alloc) {
+                    alloc = len + 2;
+                    delete [] escaped;
+                    escaped = new char[alloc];
+                }
+                len  = mysql_real_escape_string(conn, escaped+1, bind[n-1].value.c_str(), bind[n-1].value.length());
+                escaped[0] = '\'';
+                escaped[len + 1] = '\'';
+                escaped[len + 2] = 0;
+                len += 2;
+
+                query += string(escaped, len) + parts[n];
+            }
+        }
+
+        if (escaped) delete [] escaped;
     }
 
     bool MYSQL_CONNECTION_ERROR(int error) {

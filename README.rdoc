@@ -175,12 +175,18 @@ Core2DUO 2.53GHz, 4GB, 5200rpm drive with stock database configs.
 
 == TODO
 
-* Simulate async IO operations for sqlite3 driver.
-
-=== Features
-
+* sqlite3: Simulate async IO operations.
+* mysql: Proper bind parameter interpolation for Handle::execute(string, vector<Param>&)
 * Cursor support, generic interface to database specific api.
 
+== Gotchas
+
+* sqlite3: No support for async operations yet.
+* mysql: Handle::execute(...) replaces ? with given bind parameters if bind parameters are provided.
+  Any literal values with ? character will be interpreted as a bind argument. If you are using
+  Handle::execute(...) with bind arguments, make sure to provide all values as bind parameters to
+  avoid the confusion and resulting errors.
+   
 === Support
 
 {Support dbic++ on fundry}[https://fundry.com/project/5-dbic]
