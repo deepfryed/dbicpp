@@ -1,3 +1,9 @@
+dbic++ (0.5.1-2~maverick1) maverick; urgency=medium
+
+  * maverick port.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Tue, 04 Jan 2011 23:50:00 +1100
+
 dbic++ (0.5.1-2~lucid1) lucid; urgency=medium
 
   * fixed compile errors on i386.
