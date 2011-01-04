@@ -91,6 +91,12 @@ int main(int argc, char *argv[]) {
             upd % (long)(n+1);
             upd.execute();
         }
+
+        FieldSet fields(3, "id", "name", "email");
+        StringIO buffer;
+        buffer.writef("%d\tuser1\tuser1@local\n", rows + 1);
+        buffer.writef("%d\tuser2\tuser2@local\n", rows + 2);
+        h.write("users", fields, &buffer);
     }
 
     dbiShutdown();

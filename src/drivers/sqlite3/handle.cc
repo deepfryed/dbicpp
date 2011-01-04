@@ -189,6 +189,7 @@ namespace dbi {
             snprintf(errormsg, 8192, "Error in SQL: %s %s", sql.c_str(), sqlite3_errmsg(conn));
             throw RuntimeError(errormsg);
         }
+
         while (io->readline(line)) {
             col = 0;
             char *end, *start = (char*)line.c_str();
@@ -216,6 +217,7 @@ namespace dbi {
             rows++;
         }
 
+        sqlite3_finalize(stmt);
         return rows;
     }
 
