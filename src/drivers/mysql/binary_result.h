@@ -65,7 +65,7 @@ namespace dbi {
 
         bool read(ResultRow &);
         bool read(ResultRowHash &);
-        unsigned char* read(uint32_t r, uint32_t c, unsigned long *len);
+        unsigned char* read(uint32_t r, uint32_t c, uint64_t *len);
 
         uint32_t tell();
         void seek(uint32_t);

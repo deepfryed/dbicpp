@@ -332,7 +332,7 @@ namespace dbi {
         return true;
     }
 
-    unsigned char* MySqlBinaryResult::read(uint32_t r, uint32_t c, unsigned long *length) {
+    unsigned char* MySqlBinaryResult::read(uint32_t r, uint32_t c, uint64_t *length) {
         if (r >= _rows || c >= _cols || r < 0 || c < 0) return 0;
 
         // if row data is not already buffered
