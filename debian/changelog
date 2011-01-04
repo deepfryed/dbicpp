@@ -1,3 +1,9 @@
+dbic++ (0.5.2-1~maverick1) maverick; urgency=medium
+
+  * sqlite3: defers type detection of dynamic expressions and aggregate functions until a row is read.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Wed, 05 Jan 2011 08:30:00 +1100
+
 dbic++ (0.5.1-2~maverick1) maverick; urgency=medium
 
   * maverick port.

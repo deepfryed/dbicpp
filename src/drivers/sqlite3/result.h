@@ -6,6 +6,7 @@ namespace dbi {
 
         private:
         string            _sql;
+        bool              _lazy_typed;
         uint32_t          _rowno, _rows, _cols;
         vector<int>       _rstypes;
         vector<string>    _rsfields;
@@ -41,7 +42,7 @@ namespace dbi {
         void     seek(uint32_t);
 
         void write(unsigned char *data, uint64_t length);
-        void flush();
+        void flush(sqlite3_stmt*);
         void clear();
     };
 }

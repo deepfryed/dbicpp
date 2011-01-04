@@ -19,7 +19,7 @@
 #include <uuid/uuid.h>
 #include <stdint.h>
 
-#define DBI_VERSION      0.5.1
+#define DBI_VERSION      0.5.2
 
 namespace dbi {
     struct null {};
@@ -33,6 +33,7 @@ namespace dbi {
 
 #define DEFAULT_DRIVER_PATH "/usr/lib/dbic++"
 
+#define DBI_TYPE_UNKNOWN   0
 #define DBI_TYPE_INT       1
 #define DBI_TYPE_TIME      2
 #define DBI_TYPE_TEXT      3

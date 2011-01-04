@@ -77,7 +77,7 @@ namespace dbi {
                         _result->write(data, 0);
                 }
             }
-            _result->flush();
+            _result->flush(_stmt);
         }
 
         if (rc != SQLITE_DONE) {

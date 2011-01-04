@@ -4,19 +4,20 @@
 
 namespace dbi {
     void Sqlite3Result::init() {
-        _rowno         = 0;
-        _rows          = 0;
-        _cols          = 0;
-
-        affected_rows  = 0;
-        last_insert_id = 0;
+        _rowno          = 0;
+        _rows           = 0;
+        _cols           = 0;
+        _lazy_typed     = false;
+        affected_rows   = 0;
+        last_insert_id  = 0;
     }
 
     void Sqlite3Result::clear() {
-        _rowno         = 0;
-        _rows          = 0;
-        affected_rows  = 0;
-        last_insert_id = 0;
+        _rowno          = 0;
+        _rows           = 0;
+        _lazy_typed     = false;
+        affected_rows   = 0;
+        last_insert_id  = 0;
 
         _rowdata.clear();
     }
@@ -47,10 +48,17 @@ namespace dbi {
             if(type == "timestamp") { _rstypes.push_back(DBI_TYPE_TIMESTAMP); continue; }
             if(type == "boolean")   { _rstypes.push_back(DBI_TYPE_BOOLEAN);   continue; }
             if(type == "bool")      { _rstypes.push_back(DBI_TYPE_BOOLEAN);   continue; }
-            if(type == "null")      { _rstypes.push_back(DBI_TYPE_NUMERIC);   continue; }
             if(type == "date")      { _rstypes.push_back(DBI_TYPE_DATE);      continue; }
             if(type == "time")      { _rstypes.push_back(DBI_TYPE_TIME);      continue; }
-            _rstypes.push_back(DBI_TYPE_TEXT);
+
+
+            if(type == "null")  {
+                _lazy_typed = true;
+                _rstypes.push_back(DBI_TYPE_UNKNOWN);
+            }
+            else {
+                _rstypes.push_back(DBI_TYPE_TEXT);
+            }
         }
     }
 
@@ -66,9 +74,23 @@ namespace dbi {
         );
     }
 
-    void Sqlite3Result::flush() {
+    void Sqlite3Result::flush(sqlite3_stmt *stmt) {
         _rowno++;
         _rows++;
+
+        if (_rowno == 1 && _lazy_typed) {
+            for (int n = 0; n < _cols; n++) {
+                if (_rstypes[n] != DBI_TYPE_UNKNOWN) continue;
+                switch(sqlite3_column_type(stmt, n)) {
+                    case SQLITE_INTEGER: _rstypes[n] = DBI_TYPE_INT;   break;
+                    case SQLITE_FLOAT:   _rstypes[n] = DBI_TYPE_FLOAT; break;
+                    case SQLITE_BLOB:    _rstypes[n] = DBI_TYPE_BLOB;  break;
+                    default:             _rstypes[n] = DBI_TYPE_TEXT;
+                }
+            }
+
+            _lazy_typed = false;
+        }
     }
 
     uint32_t Sqlite3Result::rows() {
