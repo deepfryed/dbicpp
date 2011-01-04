@@ -51,6 +51,14 @@ namespace dbi {
         uint64_t length;
 
         finish();
+
+        int expect_bind_count = sqlite3_bind_parameter_count(_stmt);
+        if (bind.size() != expect_bind_count) {
+            snprintf(errormsg, 8192, "In SQL: %s, expected %d bind values got %d\n",
+                               _sql.c_str(), expect_bind_count, (int)bind.size());
+            throw RuntimeError(errormsg);
+        }
+
         if (_result) _result->clear();
         else _result = new Sqlite3Result(_stmt, _sql);
 
