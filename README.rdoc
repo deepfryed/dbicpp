@@ -8,10 +8,10 @@ dbic++ is a database client library written in C++ which comes with support for 
 
 == Main Features
 
-* Simple API to maximize cross database support.
-* Supports nested transactions.
-* Auto reconnect, re-prepare & execute statements again unless inside a transaction.
-* Provides APIs for async queries and a simple reactor API built on libevent.
+* Simple and fast.
+* Support for PostgreSQL, MySQL and SQLite3.
+* Nested transactions.
+* API for async queries (PostgreSQL and MySQL).
 
 == Examples
 
@@ -69,9 +69,10 @@ c++ compiler (XCode if you are a MacOSX user).
 * cmake
 * pcre3 development libraries
 * uuid development libraries
-* mysql client libraries
-* postgresql client libraries
 * libevent development libraries
+* mysql client libraries (optional)
+* postgresql client libraries (optional)
+* sqlite3 development libraries (optional)
 
 ==== Debian
 
@@ -126,7 +127,7 @@ be able to install the latest packages.
 A few c++ examples can be found under src/examples/ and once you finish building the
 binaries can be found under demo/
 
-    ./demo/demo  [mysql|postgresql]
+    ./demo/demo  [mysql|postgresql|sqlite3]
     ./demo/async [mysql|postgresql]
 
 === Populating MySQL time zone tables.
