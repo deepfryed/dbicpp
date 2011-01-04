@@ -4,10 +4,7 @@ dbic++ is a database client library written in C++ which comes with support for 
 
 * PostgreSQL >= 8.3
 * MySQL      >= 5.0
-
-Drivers for the following will be available soon.
-
-* SQLite >= 3
+* SQLite     >= 3.7
 
 == Main Features
 
@@ -177,6 +174,8 @@ Core2DUO 2.53GHz, 4GB, 5200rpm drive with stock database configs.
     + Finished
 
 == TODO
+
+* Simulate async IO operations for sqlite3 driver.
 
 === Features
 
