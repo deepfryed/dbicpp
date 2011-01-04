@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
     string driver(argc > 1 ? argv[1] : "postgresql");
 
     // Handle h (driver, user, password, database, host, port);
-    Handle h (driver, getlogin(), "", "dbicpp");
+    Handle h (driver, getlogin(), "", driver == "sqlite3" ? ":memory:" : "dbicpp");
 
     // Set trace on and log queries to stderr
     trace(true, fileno(stderr));

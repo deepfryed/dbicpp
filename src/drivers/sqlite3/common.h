@@ -16,7 +16,6 @@ namespace dbi {
     extern char errormsg[8192];
     void SQLITE3_PREPROCESS_QUERY(string &query);
     void SQLITE3_PROCESS_BIND(sqlite3_stmt *, vector<Param> &bind);
-    void SQLITE3_INTERPOLATE_BIND(string &query, vector<Param> &bind);
 }
 
 #include "result.h"

@@ -26,29 +26,6 @@ namespace dbi {
             sqlite3_bind_text(stmt, i+1, bind[i].value.c_str(), bind[i].value.length(), 0);
         }
     }
-
-    void SQLITE3_INTERPOLATE_BIND(string &query, vector<Param> &bind) {
-        int n = 0;
-        char *repl;
-        string orig = query, var;
-
-        RE re("(?<!')(\\?)(?!')");
-        while (re.PartialMatch(query, &var)) {
-            if (n >= bind.size()) {
-                sprintf(errormsg, "Only %d parameters provided for query: %s", (int)bind.size(), orig.c_str());
-                throw RuntimeError(errormsg);
-            }
-            if (bind[n].isnull) {
-                repl = sqlite3_mprintf("%Q", 0);
-            }
-            else {
-                repl = sqlite3_mprintf("%Q", bind[n].value.c_str());
-            }
-            re.Replace(repl, &query);
-            sqlite3_free(repl);
-            n++;
-        }
-    }
 }
 
 using namespace std;
