@@ -1,3 +1,15 @@
+dbic++ (0.5.1-1~lucid1) lucid; urgency=medium
+
+  * lucid port.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Tue, 04 Jan 2011 21:15:00 +1100
+
+dbic++ (0.5.0) unstable; urgency=medium
+
+  * version bump.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Tue, 04 Jan 2011 21:14:00 +1100
+
 dbic++ (0.5.0) lucid; urgency=medium
 
   * improvements: native binary resultset parsing for mysql without MYSQL_BIND, faster read().
