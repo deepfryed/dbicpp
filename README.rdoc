@@ -76,7 +76,8 @@ c++ compiler (XCode if you are a MacOSX user).
 
 ==== Debian
 
-    sudo apt-get install cmake libpcre3-dev uuid-dev libmysqlclient-dev libpq-dev libevent-dev
+    sudo apt-get install build-essential
+    sudo apt-get install cmake libpcre3-dev uuid-dev libevent-dev libmysqlclient-dev libpq-dev libsqlite3-dev
 
 ==== MacOSX
 
