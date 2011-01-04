@@ -37,6 +37,7 @@ namespace dbi {
             _rsfields.push_back(sqlite3_column_name(stmt, n));
             switch(sqlite3_column_type(stmt, n)) {
                 case SQLITE_INTEGER: _rstypes.push_back(DBI_TYPE_INT);     break;
+                case SQLITE_NULL:    // aggregate functions return SQLITE_NULL as type :(
                 case SQLITE_FLOAT:   _rstypes.push_back(DBI_TYPE_NUMERIC); break;
                 case SQLITE_TEXT:    _rstypes.push_back(DBI_TYPE_TEXT);    break;
                 case SQLITE_BLOB:    _rstypes.push_back(DBI_TYPE_BLOB);    break;

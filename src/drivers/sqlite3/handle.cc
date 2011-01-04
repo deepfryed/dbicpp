@@ -174,18 +174,33 @@ namespace dbi {
     }
 
     uint64_t Sqlite3Handle::write(string table, FieldSet &fields, IO* io) {
-        if (fields.size() == 0)
-            throw RuntimeError("Handle::write needs atleast one field.");
+        string sql  = "insert into " + table;
+        int columns = fields.size();
 
-        string sql = "insert into " + table + "(" + fields.join(", ") + ") values(?";
-        for (int n = 1; n < fields.size(); n++) sql += ", ?";
+        if (columns < 1) {
+            sqlite3_stmt *tmp = 0;
+            string sel = "select * from " + table + " limit 0";
+            if (sqlite3_prepare_v2(conn, sel.c_str(), sel.length(), &tmp, 0) != SQLITE_OK) {
+                if (tmp) sqlite3_finalize(tmp);
+                snprintf(errormsg, 8192, "Error in SQL: %s %s", sql.c_str(), sqlite3_errmsg(conn));
+                throw RuntimeError(errormsg);
+            }
+            columns = sqlite3_column_count(tmp);
+            sqlite3_finalize(tmp);
+        }
+
+        if (fields.size() > 0) sql +=  "(" + fields.join(", ") + ") ";
+
+        sql += " values(?";
+        for (int n = 1; n < columns; n++) sql += ", ?";
         sql += ")";
 
         string line;
         uint32_t col  = 0;
         uint64_t rows = 0;
-        sqlite3_stmt *stmt;
+        sqlite3_stmt *stmt = 0;
         if (sqlite3_prepare_v2(conn, sql.c_str(), sql.length(), &stmt, 0) != SQLITE_OK) {
+            if (stmt) sqlite3_finalize(stmt);
             snprintf(errormsg, 8192, "Error in SQL: %s %s", sql.c_str(), sqlite3_errmsg(conn));
             throw RuntimeError(errormsg);
         }
