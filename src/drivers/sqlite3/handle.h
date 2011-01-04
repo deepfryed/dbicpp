@@ -14,7 +14,6 @@ namespace dbi {
 
         protected:
         int tr_nesting;
-        void boom(const char *);
 
         public:
         sqlite3 *conn;

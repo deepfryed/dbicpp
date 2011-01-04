@@ -170,9 +170,6 @@ namespace dbi {
         }
     }
 
-    void Sqlite3Handle::boom(const char* m) {
-    }
-
     uint64_t Sqlite3Handle::write(string table, FieldSet &fields, IO* io) {
         string sql  = "insert into " + table;
         int columns = fields.size();
