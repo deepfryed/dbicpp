@@ -33,10 +33,13 @@ debian/dbic++-dev/
 debian/dbic++-mysql/
 debian/dbic++-pg/
 debian/dbic++-db2/
+debian/dbic++-sqlite3/
 debian/files
 debian/stamp-autotools-files
 memory/check
 debian/stamp-makefile-build
+debian/stamp-autotools
+debian/stamp-makefile-install
 debian/tmp/
 test/
 demo/*
