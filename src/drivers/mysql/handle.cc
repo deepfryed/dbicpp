@@ -194,7 +194,7 @@ namespace dbi {
             if(mysql_ping(conn) != 0)
                 connectionError("Lost connection, unable to reconnect");
             else {
-                sprintf(errormsg, "WARNING: Socket changed during auto reconnect to database %s on host %s\n",
+                sprintf(errormsg, "NOTICE: Socket changed during auto reconnect to database %s on host %s\n",
                     _db.c_str(), _host.c_str());
                 logMessage(_trace_fd, errormsg);
             }

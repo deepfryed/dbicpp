@@ -70,7 +70,7 @@ namespace dbi {
 
     void MySqlStatement::cleanup() {
         finish();
-        if (_stmt)   mysql_stmt_close(_stmt);
+        if (_stmt) mysql_stmt_close(_stmt);
 
         _stmt   = 0;
     }

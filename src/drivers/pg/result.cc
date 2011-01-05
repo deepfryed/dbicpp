@@ -73,8 +73,7 @@ namespace dbi {
     }
 
     uint64_t PgResult::lastInsertID() {
-        ResultRow r;
-        return read(r) && r.size() > 0 ? atol(r[0].value.c_str()) : 0;
+        return PQgetisnull(_result, 0, 0) ? 0 : atol(PQgetvalue(_result, 0, 0));
     }
 
     unsigned char* PgResult::unescapeBytea(int r, int c, uint64_t *l) {

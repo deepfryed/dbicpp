@@ -2,8 +2,9 @@
 
 namespace dbi {
     void PgStatement::init() {
-        _uuid   = generateCompactUUID();
-        _result = 0;
+        _uuid           = generateCompactUUID();
+        _result         = 0;
+        _last_insert_id = 0;
     }
 
     void PgStatement::prepare() {
@@ -41,6 +42,7 @@ namespace dbi {
 
     void PgStatement::finish() {
         if (_result) { PQclear(_result); _result = 0; }
+        _last_insert_id = 0;
     }
 
     string PgStatement::command() {
@@ -49,9 +51,10 @@ namespace dbi {
 
     PGresult* PgStatement::_pgexec() {
         PGresult *result;
+
+        finish();
         result = PQexecPrepared(_conn, _uuid.c_str(), 0, 0, 0, 0, 0);
         PQ_CHECK_RESULT(result, _sql);
-        if (_result) PQclear(_result);
         return _result = result;
     }
 
@@ -62,6 +65,7 @@ namespace dbi {
 
         if (bind.size() == 0) return _pgexec();
 
+        finish();
         PQ_PROCESS_BIND(&param_v, &param_l, &param_f, bind);
 
         try {
@@ -79,29 +83,32 @@ namespace dbi {
         delete []param_l;
         delete []param_f;
 
-        if (_result) PQclear(_result);
         return _result = result;
     }
 
     uint32_t PgStatement::execute() {
         uint32_t rows;
-        PGresult *result = _pgexec();
 
-        rows = (uint32_t)PQntuples(result);
+        PGresult *result = _pgexec();
+        rows             = (uint32_t)PQntuples(result);
+        _last_insert_id  = PQgetisnull(result, 0, 0) ? 0 : atol(PQgetvalue(result, 0, 0));
+
         return rows > 0 ? rows : (uint32_t)atoi(PQcmdTuples(result));
     }
 
     uint32_t PgStatement::execute(vector<Param> &bind) {
         uint32_t rows;
-        PGresult *result = _pgexec(bind);
 
-        rows = (uint32_t)PQntuples(result);
+        PGresult *result = _pgexec(bind);
+        rows             = (uint32_t)PQntuples(result);
+        _last_insert_id  = PQgetisnull(result, 0, 0) ? 0 : atol(PQgetvalue(result, 0, 0));
+
         return rows > 0 ? rows : (uint32_t)atoi(PQcmdTuples(result));
     }
 
     PgResult* PgStatement::result() {
         PgResult *instance = new PgResult(_result, _sql, _conn);
-        _result  = 0;
+        _result            = 0;
         return instance;
     }
 
@@ -113,12 +120,6 @@ namespace dbi {
     }
 
     uint64_t PgStatement::lastInsertID() {
-        if (_result) {
-            if (PQgetisnull(_result, 0, 0))
-                return 0;
-            else
-                return atol(PQgetvalue(_result, 0, 0));
-        }
-        return 0;
+        return _last_insert_id;
     }
 }

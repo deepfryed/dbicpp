@@ -4,6 +4,7 @@
 namespace dbi {
     class PgStatement : public AbstractStatement {
         private:
+        uint64_t _last_insert_id;
         string _sql, _uuid;
         PGconn *_conn;
 
