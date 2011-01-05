@@ -1,3 +1,9 @@
+dbic++ (0.5.2-2~maverick1) maverick; urgency=medium
+
+  * pg: fix PgStatement::lastInsertID() returns 0 after PgStatement::result() is called.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Wed, 05 Jan 2011 14:36:00 +1100
+
 dbic++ (0.5.2-1~lucid1) lucid; urgency=medium
 
   * lucid backport.
