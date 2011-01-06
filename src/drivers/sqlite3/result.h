@@ -41,7 +41,7 @@ namespace dbi {
         void     rewind();
         void     seek(uint32_t);
 
-        void write(unsigned char *data, uint64_t length);
+        void write(int c, unsigned char *data, uint64_t length);
         void flush(sqlite3_stmt*);
         void clear();
     };

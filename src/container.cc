@@ -3,42 +3,36 @@
 
 namespace dbi {
 
-    ResultRow::ResultRow(int n, ...) {
-        char *ptr;
-        va_list ap;
-        va_start(ap, n);
-        for (int i = 0; i < n; i++) {
-            ptr = va_arg(ap, char *);
-            this->push_back(PARAM(ptr));
-        }
-        va_end(ap);
+    //--------------------------------------------------------------------------
+    // ResultRow
+    //--------------------------------------------------------------------------
+
+    void ResultRow::resize(int n) {
+        fields.resize(n);
     }
 
-    string ResultRow::join(string delim) {
-        unsigned i;
-        stringstream out;
-
-        if (size() > 0) {
-            for (i = 0; i < size() - 1; i++)
-                out << at(i) << delim;
-            out << at(size()-1);
-        }
-
-        return out.str();
+    void ResultRow::clear() {
+        fields.clear();
     }
 
-    void ResultRow::operator<<(string v) {
-        this->push_back(PARAM(v));
+    int ResultRow::size() {
+        return fields.size();
     }
 
-    void ResultRow::operator<<(Param &v) {
-        this->push_back(v);
+    Param& ResultRow::operator[](int n) {
+        return n < fields.size() ? fields[n] : nil;
     }
 
     ostream& operator<< (ostream &out, ResultRow &r) {
-        out << r.join("\t");
+        for (int n = 0; n < r.fields.size() - 1; n++)
+            out << r[n].value << "\t";
+        out << r[r.size()-1].value;
         return out;
     }
+
+    //--------------------------------------------------------------------------
+    // ResultRowHash
+    //--------------------------------------------------------------------------
 
     void ResultRowHash::clear() {
         data.clear();
@@ -70,6 +64,9 @@ namespace dbi {
         return out;
     }
 
+    //--------------------------------------------------------------------------
+    // FieldSet
+    //--------------------------------------------------------------------------
 
     FieldSet::FieldSet(int n, ...) {
         char *ptr;
@@ -77,13 +74,24 @@ namespace dbi {
         va_start(ap, n);
         for (int i = 0; i < n; i++) {
             ptr = va_arg(ap, char *);
-            this->push_back(PARAM(ptr));
+            fields.push_back(ptr ? string(ptr) : "");
         }
         va_end(ap);
     }
 
-    FieldSet::FieldSet(vector<string> names) {
-        for (int i = 0; i < names.size(); i++)
-            this->push_back(PARAM(names[i]));
+    string FieldSet::join(string delim) {
+        if (size() > 0) {
+            unsigned i;
+            string out;
+            for (i = 0; i < fields.size() - 1; i++)
+                out += fields[i] + delim;
+            out += fields[fields.size() - 1];
+            return out;
+        }
+        return "";
+    }
+
+    int FieldSet::size() {
+        return fields.size();
     }
 }

@@ -308,15 +308,22 @@ namespace dbi {
 
     bool MySqlBinaryResult::read(ResultRow &row) {
         if (_rowno >= _rows) return false;
+
         fetchRow();
         _rowno++;
+        row.resize(_cols);
 
-        row.clear();
-        for (int j = 0; j < _cols; j++) {
-            row.push_back(pool[j].isnull ?
-                PARAM(null()) :
-                pool[j].length > 0 ? PARAM(pool[j].data, pool[j].length) : PARAM((char*)pool[j].data)
-            );
+        for (int n = 0; n < _cols; n++) {
+            if (pool[n].isnull) {
+                row[n].isnull = true;
+                row[n].value  = "";
+            }
+            else {
+                row[n].isnull = false;
+                row[n].value  = pool[n].length > 0 ? string((char*)pool[n].data, pool[n].length)
+                                                   : string((char*)pool[n].data);
+                row[n].binary = _rstypes[n] == DBI_TYPE_BLOB;
+            }
         }
         return true;
     }
@@ -324,13 +331,13 @@ namespace dbi {
     bool MySqlBinaryResult::read(ResultRowHash &rowhash) {
         if (_rowno >= _rows) return false;
         fetchRow();
-        _rowno++;
 
+        _rowno++;
         rowhash.clear();
-        for (int j = 0; j < _cols; j++) {
-            rowhash[_rsfields[j]] = pool[j].isnull ?
+        for (int n = 0; n < _cols; n++) {
+            rowhash[_rsfields[n]] = pool[n].isnull ?
                 PARAM(null()) :
-                pool[j].length > 0 ? PARAM(pool[j].data, pool[j].length) : PARAM((char*)pool[j].data);
+                pool[n].length > 0 ? PARAM(pool[n].data, pool[n].length) : PARAM((char*)pool[n].data);
         }
         return true;
     }

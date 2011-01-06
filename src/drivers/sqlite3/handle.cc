@@ -208,15 +208,16 @@ namespace dbi {
             while (*start) {
                 end = start;
                 while (*end && *end != '\t') end++;
-                if (*end) {
-                    if (end-start == 1)
-                        sqlite3_bind_null(stmt, ++col);
-                    else
-                        sqlite3_bind_text(stmt, ++col, start, end-start, 0);
-                    start = end + 1;
-                }
-                else start = end;
+
+                if (end-start == 1)
+                    sqlite3_bind_null(stmt, ++col);
+                else
+                    sqlite3_bind_text(stmt, ++col, start, end-start, 0);
+
+                start = *end ? end + 1 : end;
             }
+
+            while (col < columns) sqlite3_bind_null(stmt, ++col);
 
             if (sqlite3_step(stmt) != SQLITE_DONE) {
                 sqlite3_finalize(stmt);

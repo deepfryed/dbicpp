@@ -70,11 +70,11 @@ namespace dbi {
                     case SQLITE_BLOB:
                         data   = (unsigned char*)sqlite3_column_blob(_stmt, n);
                         length = sqlite3_column_bytes(_stmt, n);
-                        _result->write(data, length);
+                        _result->write(n, data, length);
                         break;
                     default:
                         data = (unsigned char*)sqlite3_column_text(_stmt, n);
-                        _result->write(data, 0);
+                        _result->write(n, data, data ? strlen((char*)data) : 0);
                 }
             }
             _result->flush(_stmt);

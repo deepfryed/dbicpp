@@ -62,16 +62,23 @@ namespace dbi {
         }
     }
 
-    void Sqlite3Result::write(unsigned char *data, uint64_t length) {
+    void Sqlite3Result::write(int c, unsigned char *data, uint64_t length) {
         if (_rowdata.size() <= _rowno) {
             ResultRow r;
             _rowdata.push_back(r);
+            _rowdata[_rowno].resize(_cols);
         }
-        _rowdata[_rowno].push_back(
-            data ?
-                length ? PARAM(data,length) : PARAM((char*)data)
-                : PARAM(null())
-        );
+
+        if (data) {
+            _rowdata[_rowno][c].isnull = false;
+            _rowdata[_rowno][c].value  = string((char*)data, length);
+            _rowdata[_rowno][c].binary = _rstypes[c] == DBI_TYPE_BLOB;
+        }
+        else {
+            _rowdata[_rowno][c].isnull = true;
+            _rowdata[_rowno][c].value  = "";
+            _rowdata[_rowno][c].binary = _rstypes[c] == DBI_TYPE_BLOB;
+        }
     }
 
     void Sqlite3Result::flush(sqlite3_stmt *stmt) {

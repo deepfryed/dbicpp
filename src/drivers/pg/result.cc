@@ -88,17 +88,24 @@ namespace dbi {
         uint64_t len;
         unsigned char *data;
 
-        row.clear();
-
         if (_rowno < _rows) {
-            for (uint32_t i = 0; i < _cols; i++) {
-                if (PQgetisnull(_result, _rowno, i))
-                    row.push_back(PARAM(null()));
-                else if (_rstypes[i] != DBI_TYPE_BLOB)
-                    row.push_back(PG2PARAM(_result, _rowno, i));
+            row.resize(_cols);
+
+            for (int n = 0; n < _cols; n++) {
+                if (PQgetisnull(_result, _rowno, n)) {
+                    row[n].isnull = true;
+                    row[n].value  = "";
+                }
+                else if (_rstypes[n] != DBI_TYPE_BLOB) {
+                    row[n].isnull = false;
+                    row[n].binary = false;
+                    row[n].value  = string(PQgetvalue(_result, _rowno, n), PQgetlength(_result, _rowno, n));
+                }
                 else {
-                    data = unescapeBytea(_rowno, i, &len);
-                    row.push_back(PARAM(data, len));
+                    data = unescapeBytea(_rowno, n, &len);
+                    row[n].isnull = false;
+                    row[n].binary = true;
+                    row[n].value  = string((char*)data, len);
                 }
             }
             _rowno++;

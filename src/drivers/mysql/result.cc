@@ -33,16 +33,23 @@ namespace dbi {
     bool MySqlResult::read(ResultRow &row) {
         if (!result) return false;
 
-        int n;
-        row.clear();
-
         if (_rowno < _rows) {
             _rowno++;
+            row.resize(_cols);
+
             _rowdata         = mysql_fetch_row(result);
             _rowdata_lengths = mysql_fetch_lengths(result);
-            for (n = 0; n < _cols; n++)
-                row.push_back(_rowdata[n] == 0 ? PARAM(null()) : PARAM((unsigned char*)_rowdata[n], _rowdata_lengths[n]));
-
+            for (int n = 0; n < _cols; n++) {
+                if(_rowdata[n] == 0) {
+                    row[n].isnull = true;
+                    row[n].value  = "";
+                }
+                else {
+                    row[n].isnull = false;
+                    row[n].value  = string(_rowdata[n], _rowdata_lengths[n]);
+                    row[n].binary = _rstypes[n] == DBI_TYPE_BLOB;
+                }
+            }
             return true;
         }
 
@@ -52,14 +59,14 @@ namespace dbi {
     bool MySqlResult::read(ResultRowHash &rowhash) {
         if (!result) return false;
 
-        int n;
-        rowhash.clear();
-
         if (_rowno < _rows) {
             _rowno++;
+            rowhash.clear();
+
             _rowdata         = mysql_fetch_row(result);
             _rowdata_lengths = mysql_fetch_lengths(result);
-            for (n = 0; n < _cols; n++)
+
+            for (int n = 0; n < _cols; n++)
                 rowhash[_rsfields[n]] = (
                     _rowdata[n] == 0 ? PARAM(null()) : PARAM((unsigned char*)_rowdata[n], _rowdata_lengths[n])
                 );

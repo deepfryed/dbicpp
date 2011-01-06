@@ -13,7 +13,6 @@ namespace dbi {
 
         (begin code)
         struct Param {
-            public:
             bool   isnull;
             string value;
             bool   binary;
@@ -21,7 +20,6 @@ namespace dbi {
         (end)
     */
     struct Param {
-        public:
         bool   isnull;
         string value;
         bool   binary;

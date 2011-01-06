@@ -9,36 +9,50 @@ namespace dbi {
         Class: ResultRow
         Encapsulates an array of parameters in a result.
     */
-    class ResultRow : public vector<Param> {
+    class ResultRow {
+        protected:
+        vector<Param> fields;
+        Param nil;
+
         public:
         ResultRow() {}
-        ResultRow(int n, ...);
 
         /*
-            Function: join(string)
-            Concatenates the row data delimited by the string given.
+            Function: resize(int columns)
+            Sets up the number of fields in the row.
 
             Parameters:
-            delim - string used as a delimiter.
+            columns - number of columns in a row.
+        */
+        void resize(int);
+
+        /*
+            Function: clear()
+            Clears a row completely, you need to call resize after this if you intend to store column data.
+            Same as calling resize(0).
+        */
+        void clear();
+
+        /*
+            Function: size()
+            Returns the number of columns in a row.
 
             Returns:
-            value - concatenated string.
+            integer
         */
-        string join(string delim);
+        int  size();
 
         /*
-            Operator: <<(string)
-            Shorcut for push_back() method.
-        */
-        void operator<<(string v);
+            Operator: [](int n)
+            Returns the column data at given position.
 
-        /*
-            Operator: <<(Param&)
-            Shorcut for push_back() method.
-        */
-        void operator<<(Param &v);
+            Parameters:
+            n - position
 
-        operator bool() { return size() > 0; }
+            Returns:
+            Reference to <Param>
+        */
+        Param& operator[](int);
         friend ostream& operator<< (ostream &out, ResultRow &r);
     };
 
@@ -47,9 +61,11 @@ namespace dbi {
         A glorified vector<string> really, with some decorators.
         See <StringIO> for an example where you can use this.
     */
-    class FieldSet : public ResultRow {
+    class FieldSet {
+        protected:
+        vector<string> fields;
+
         public:
-        FieldSet() {}
         /*
             Constructor: FieldSet(int, ...)
             (begin code)
@@ -59,7 +75,26 @@ namespace dbi {
         */
         FieldSet(int n, ...);
 
-        FieldSet(vector<string>);
+        /*
+            Function: size()
+            Returns the number of fields.
+
+            Returns:
+            integer
+        */
+        int size();
+
+        /*
+            Function: join(string delim)
+            Concatenates the field names with a given delimiter.
+
+            Parameters:
+            delim - a string delimiter.
+
+            Returns:
+            string
+        */
+        string join(string delim);
     };
 
 }

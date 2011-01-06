@@ -17,7 +17,7 @@ setup() {
     echo "  * $driver"
     $exe -d $driver -s "drop table if exists users"
     $exe -d $driver -s "create table users(id serial, name text, created_at timestamp, primary key(id))"
-    $exe -d $driver -s "insert into users(name, created_at) values(?, now())" -b "Jimmy James" -n $rows
+    $exe -d $driver -s "insert into users(name, created_at) values(?, now())" -b "Jimmy James" -n $rows > /dev/null
   done
 
   echo "+ Done"
