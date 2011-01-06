@@ -1,3 +1,9 @@
+dbic++ (0.5.3-1~lucid1) lucid; urgency=medium
+
+  * lucid backport.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Thu, 06 Jan 2011 22:35:00 +1100
+
 dbic++ (0.5.3-1~maverick1) maverick; urgency=medium
 
   * sqlite3: fix Handle::write() bug that skipped last column.
