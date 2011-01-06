@@ -14,20 +14,17 @@ namespace dbi {
         (begin code)
         struct Param {
             public:
-            bool isnull;
+            bool   isnull;
             string value;
-            bool binary;
-            operator bool() { return value.length() > 0; }
+            bool   binary;
         };
         (end)
     */
     struct Param {
         public:
-        bool isnull;
+        bool   isnull;
         string value;
-        bool binary;
-        uint64_t length;
-        operator bool() { return value.length() > 0; }
+        bool   binary;
     };
 
     /*

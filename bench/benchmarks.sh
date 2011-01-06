@@ -30,7 +30,8 @@ benchmark() {
   echo
   for file in mysql mysql++ dbicpp; do
     stats=`$timer -f "user %U sys %S real %e" $dir/bin/$file -d mysql -b 1 -s "$mysql_query" -n $runs -o /dev/null 2>&1`
-    printf "  * %-10s %s" $file "$stats"
+    label=$(echo $file | sed 's/dbicpp/dbic++/')
+    printf "  * %-10s %s" $label "$stats"
     echo
   done
 
@@ -39,7 +40,8 @@ benchmark() {
   echo
   for file in pq dbicpp; do
     stats=`$timer -f "user %U sys %S real %e" $dir/bin/$file -d postgresql -b 1 -s "$pgsql_query" -n $runs -o /dev/null 2>&1`
-    printf "  * %-10s %s" $file "$stats"
+    label=$(echo $file | sed 's/dbicpp/dbic++/')
+    printf "  * %-10s %s" $label "$stats"
     echo
   done
 

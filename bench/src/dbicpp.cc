@@ -45,16 +45,16 @@ int main(int argc, char *argv[]) {
     parseOptions(argc, argv);
 
     Handle h(driver, getlogin(), "", "dbicpp");
-    Query query(h, sql);
-    ResultRow row;
-    row.reserve(20);
+    Statement st(h, sql);
 
     for (n = 0; n < max_iter; n++) {
-        query.execute(values);
-        while (query.read(row)) {
-            for (c = 0; c < row.size(); c++)
-                fprintf(outfile, "%s\t", row[c].value.c_str());
+        st.execute(values);
+        Result *res = st.result();
+        for (r = 0; r < res->rows(); r++) {
+            for (c = 0; c < res->columns(); c++)
+                fprintf(outfile, "%s\t", res->read(r,c,0));
             fprintf(outfile, "\n");
         }
+        delete res;
     }
 }
