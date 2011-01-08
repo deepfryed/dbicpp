@@ -1,3 +1,9 @@
+dbic++ (0.5.3-2~maverick1) maverick; urgency=medium
+
+  * sqlite3: fix Sqlite3Result::rows() returning data from previous INSERT, UPDATE or DELETE.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Sun, 09 Jan 2011 08:30:00 +1100
+
 dbic++ (0.5.3-1~lucid1) lucid; urgency=medium
 
   * lucid backport.
