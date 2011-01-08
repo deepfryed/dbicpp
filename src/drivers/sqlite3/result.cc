@@ -101,7 +101,7 @@ namespace dbi {
     }
 
     uint32_t Sqlite3Result::rows() {
-        return affected_rows > 0 ? affected_rows : _rows;
+        return _cols > 0 ? _rows : affected_rows;
     }
 
     bool Sqlite3Result::consumeResult() {
