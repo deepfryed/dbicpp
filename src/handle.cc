@@ -51,31 +51,37 @@ namespace dbi {
     }
 
     bool Handle::begin() {
+        if (_trace) logMessage(_trace_fd, "begin");
         return h->begin();
     }
 
     bool Handle::commit() {
         trx.clear();
+        if (_trace) logMessage(_trace_fd, "commit");
         return h->commit();
     }
 
     bool Handle::rollback() {
         trx.clear();
+        if (_trace) logMessage(_trace_fd, "rollback");
         return h->rollback();
     }
 
     bool Handle::begin(string name) {
         trx.push_back(name);
+        if (_trace) logMessage(_trace_fd, "begin " + name);
         return h->begin(name);
     }
 
     bool Handle::commit(string name) {
         trx.pop_back();
+        if (_trace) logMessage(_trace_fd, "commit " + name);
         return h->commit(name);
     }
 
     bool Handle::rollback(string name) {
         trx.pop_back();
+        if (_trace) logMessage(_trace_fd, "rollback " + name);
         return h->rollback(name);
     }
 
