@@ -1,3 +1,9 @@
+dbic++ (0.5.3-3~maverick1) maverick; urgency=medium
+
+  * pg: fix warning on reading last insert id when no rows are returned.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Tue, 11 Jan 2011 11:20:00 +1100
+
 dbic++ (0.5.3-2~lucid1) lucid; urgency=medium
 
   * lucid backport.
