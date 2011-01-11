@@ -91,7 +91,7 @@ namespace dbi {
 
         PGresult *result = _pgexec();
         rows             = (uint32_t)PQntuples(result);
-        _last_insert_id  = PQgetisnull(result, 0, 0) ? 0 : atol(PQgetvalue(result, 0, 0));
+        _last_insert_id  = rows > 0 ? PQgetisnull(result, 0, 0) ? 0 : atol(PQgetvalue(result, 0, 0)) : 0;
 
         return rows > 0 ? rows : (uint32_t)atoi(PQcmdTuples(result));
     }
@@ -101,7 +101,7 @@ namespace dbi {
 
         PGresult *result = _pgexec(bind);
         rows             = (uint32_t)PQntuples(result);
-        _last_insert_id  = PQgetisnull(result, 0, 0) ? 0 : atol(PQgetvalue(result, 0, 0));
+        _last_insert_id  = rows > 0 ? PQgetisnull(result, 0, 0) ? 0 : atol(PQgetvalue(result, 0, 0)) : 0;
 
         return rows > 0 ? rows : (uint32_t)atoi(PQcmdTuples(result));
     }
