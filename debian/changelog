@@ -1,3 +1,9 @@
+dbic++ (0.5.4-1~maverick1) maverick; urgency=medium
+
+  * mysql: fix bind interpolation errors.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Thu, 13 Jan 2011 13:26:00 +1100
+
 dbic++ (0.5.3-3~lucid1) lucid; urgency=medium
 
   * lucid backport.
