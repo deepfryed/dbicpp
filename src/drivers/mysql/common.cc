@@ -31,7 +31,7 @@ namespace dbi {
         query = parts[0];
         uint64_t len, alloc = 1024;
         char *escaped = new char[alloc];
-        for (int n = 1; n < parts.size(); n++) {
+        for (int n = 1; n <= parts.size(); n++) {
             if (bind[n-1].isnull) {
                 query += "NULL" + parts[n];
             }
@@ -48,7 +48,8 @@ namespace dbi {
                 escaped[len + 2] = 0;
                 len += 2;
 
-                query += string(escaped, len) + parts[n];
+                query += string(escaped, len);
+                if (n < parts.size()) query += parts[n];
             }
         }
 
