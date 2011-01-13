@@ -28,28 +28,31 @@ namespace dbi {
             begin = ++end;
         }
 
-        query = parts[0];
+        query = "";
         uint64_t len, alloc = 1024;
         char *escaped = new char[alloc];
-        for (int n = 1; n <= parts.size(); n++) {
-            if (bind[n-1].isnull) {
-                query += "NULL" + parts[n];
-            }
-            else {
-                len = bind[n-1].value.length()*2 + 3;
-                if (len > alloc) {
-                    alloc = len + 2;
-                    delete [] escaped;
-                    escaped = new char[alloc];
+        for (int n = 0; n < parts.size(); n++) {
+            query += parts[n];
+            if (n < bind.size()) {
+                if (bind[n].isnull) {
+                    query += "NULL";
                 }
-                len  = mysql_real_escape_string(conn, escaped+1, bind[n-1].value.c_str(), bind[n-1].value.length());
-                escaped[0] = '\'';
-                escaped[len + 1] = '\'';
-                escaped[len + 2] = 0;
-                len += 2;
+                else {
+                    len = bind[n].value.length()*2 + 3;
+                    if (len > alloc) {
+                        alloc = len + 2;
+                        delete [] escaped;
+                        escaped = new char[alloc];
+                    }
 
-                query += string(escaped, len);
-                if (n < parts.size()) query += parts[n];
+                    len = mysql_real_escape_string(conn, escaped+1, bind[n].value.c_str(), bind[n].value.length());
+                    escaped[0] = '\'';
+                    escaped[len + 1] = '\'';
+                    escaped[len + 2] = 0;
+                    len += 2;
+
+                    query += string(escaped, len);
+                }
             }
         }
 
