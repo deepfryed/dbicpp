@@ -9,8 +9,7 @@ namespace dbi {
 
         SQLITE3_PREPROCESS_QUERY(sql);
         if (sqlite3_prepare_v2(conn, sql.c_str(), sql.length(), &_stmt, 0) != SQLITE_OK) {
-            const char *error = sqlite3_errmsg(conn);
-            snprintf(errormsg, 8192, "%s", error);
+            snprintf(errormsg, 8192, "%s", sqlite3_errmsg(conn));
             throw RuntimeError(errormsg);
         }
     }
