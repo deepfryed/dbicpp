@@ -51,7 +51,9 @@ namespace dbi {
 
         finish();
 
-        int expect_bind_count = sqlite3_bind_parameter_count(_stmt);
+        uint64_t affected_rows = sqlite3_total_changes(_conn);
+        int expect_bind_count  = sqlite3_bind_parameter_count(_stmt);
+
         if (bind.size() != expect_bind_count) {
             snprintf(errormsg, 8192, "In SQL: %s, expected %d bind values got %d\n",
                                _sql.c_str(), expect_bind_count, (int)bind.size());
@@ -85,7 +87,7 @@ namespace dbi {
         }
 
         _result->rewind();
-        _result->affected_rows  = sqlite3_changes(_conn);
+        _result->affected_rows  = sqlite3_total_changes(_conn) - affected_rows;
         _result->last_insert_id = last_insert_id = sqlite3_last_insert_rowid(_conn);
         return _result->rows();
     }
