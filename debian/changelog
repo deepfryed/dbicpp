@@ -1,3 +1,9 @@
+dbic++ (0.5.6-1~lucid1) lucid; urgency=high
+
+  * lucid backport.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Sat, 22 Jan 2011 08:43:00 +1100
+
 dbic++ (0.5.6-1~maverick1) maverick; urgency=high
 
   * sqlite3: fix coercion of '' as null. sqlite3_column_blob() returns NULL for empty strings in 3.7.4.
