@@ -48,6 +48,7 @@ namespace dbi {
         int rc, n;
         unsigned char *data;
         uint64_t length;
+        unsigned char *empty = (unsigned char*)"";
 
         finish();
 
@@ -67,11 +68,14 @@ namespace dbi {
         while ((rc = sqlite3_step(_stmt)) == SQLITE_ROW) {
             for (n = 0; n < _result->columns(); n++) {
                 switch(sqlite3_column_type(_stmt, n)) {
+                    case SQLITE_NULL:
+                        _result->write(n, 0, 0);
+                        break;
                     case SQLITE_TEXT:
                     case SQLITE_BLOB:
                         data   = (unsigned char*)sqlite3_column_blob(_stmt, n);
                         length = sqlite3_column_bytes(_stmt, n);
-                        _result->write(n, data, length);
+                        _result->write(n, data ? data : empty, length);
                         break;
                     default:
                         data = (unsigned char*)sqlite3_column_text(_stmt, n);
