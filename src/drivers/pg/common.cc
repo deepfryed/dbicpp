@@ -77,13 +77,13 @@ using namespace std;
 using namespace dbi;
 
 extern "C" {
-    PgHandle* dbdConnect(string user, string pass, string dbname, string host, string port) {
+    PgHandle* dbdConnect(string user, string pass, string dbname, string host, string port, char *options) {
         if (host == "")
             host = "127.0.0.1";
         if (port == "0" || port == "")
             port = "5432";
 
-        return new PgHandle(user, pass, dbname, host, port);
+        return new PgHandle(user, pass, dbname, host, port, options);
     }
 
     Driver* dbdInfo(void) {

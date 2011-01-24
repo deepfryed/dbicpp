@@ -39,7 +39,7 @@ namespace dbi {
             host   - Host name or ip address.
             port   - Port number as string.
         */
-        ConnectionPool(int size, string driver, string user, string pass, string dbname, string host, string port);
+        ConnectionPool(int size, string driver, string user, string pass, string dbname, string host, string port, char *options = 0);
         /*
             Constructor: ConnectionPool(int, string, string, string, string)
             Creates a connection pool of a given size and connects to localhost on the default port.

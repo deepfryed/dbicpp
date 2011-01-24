@@ -4,14 +4,14 @@ namespace dbi {
     extern map<string, Driver *> drivers;
     void initCheck(string);
 
-    Handle::Handle(string driver_name, string user, string pass, string dbname, string host, string port) {
+    Handle::Handle(string driver_name, string user, string pass, string dbname, string host, string port, char *options) {
         initCheck(driver_name);
-        h = drivers[driver_name]->connect(user, pass, dbname, host, port);
+        h = drivers[driver_name]->connect(user, pass, dbname, host, port, options);
     }
 
     Handle::Handle(string driver_name, string user, string pass, string dbname) {
         initCheck(driver_name);
-        h = drivers[driver_name]->connect(user, pass, dbname, "", "");
+        h = drivers[driver_name]->connect(user, pass, dbname, "", "", 0);
     }
 
     AbstractHandle* Handle::conn() {

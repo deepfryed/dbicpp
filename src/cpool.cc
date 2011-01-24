@@ -5,12 +5,12 @@ namespace dbi {
     extern map<string, Driver *> drivers;
 
     ConnectionPool::ConnectionPool(
-        int size, string driver_name, string user, string pass, string dbname, string host, string port
+        int size, string driver_name, string user, string pass, string dbname, string host, string port, char *options
     ) {
         initCheck(driver_name);
         struct Connection c;
         for (int n = 0; n < size; n++) {
-            AbstractHandle *h = drivers[driver_name]->connect(user, pass, dbname, host, port);
+            AbstractHandle *h = drivers[driver_name]->connect(user, pass, dbname, host, port, options);
             h->initAsync();
             c.handle = h;
             c.busy   = false;
@@ -22,7 +22,7 @@ namespace dbi {
         initCheck(driver_name);
         struct Connection c;
         for (int n = 0; n < size; n++) {
-            AbstractHandle *h = drivers[driver_name]->connect(user, pass, dbname, "", "");
+            AbstractHandle *h = drivers[driver_name]->connect(user, pass, dbname, "", "", 0);
             h->initAsync();
             c.handle = h;
             c.busy   = false;

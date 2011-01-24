@@ -32,7 +32,7 @@ using namespace std;
 using namespace dbi;
 
 extern "C" {
-    Sqlite3Handle* dbdConnect(string user, string pass, string dbname, string host, string port) {
+    Sqlite3Handle* dbdConnect(string user, string pass, string dbname, string host, string port, char *options) {
         return new Sqlite3Handle(dbname);
     }
 

@@ -13,16 +13,18 @@ namespace dbi {
         void _pgexecDirect(string sql);
 
         PGresult *_result;
+        string _connextra;
 
         protected:
         int tr_nesting;
         void boom(const char *);
+        string parseOptions(char*);
 
         public:
         PGconn *conn;
 
         PgHandle();
-        PgHandle(string user, string pass, string dbname, string h, string p);
+        PgHandle(string user, string pass, string dbname, string h, string p, char *options);
         ~PgHandle();
         void cleanup();
 

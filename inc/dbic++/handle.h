@@ -47,16 +47,31 @@ namespace dbi {
         AbstractHandle *h;
         public:
         /*
-            Constructor: Handle(string, string, string, string, string, string)
+            Constructor: Handle(string, string, string, string, string, string, char*)
             Parameters:
-                driver - driver name (postgresql, mysql, etc.)
-                user   - database user name
-                pass   - database password, can be empty string.
-                dbname - database name.
-                host   - host name or ip address (socket based connections are not supported at this time).
-                port   - port number as a string.
+                driver  - driver name (postgresql, mysql, etc.)
+                user    - database user name
+                pass    - database password, can be empty string.
+                dbname  - database name.
+                host    - host name or ip address (socket based connections are not supported at this time).
+                port    - port number as a string.
+                options - driver specific options as a string, only ssl specific options are supported at present.
+                  e.g.
+                    "sslca=$HOME/certs/ca-cert.pem"
+                    "sslcert=$HOME/certs/client-cert.pem;sslkey=$HOME/certs/client-key.pem"
+
+                  The mysql driver supports the following settings at present,
+                    sslca, sslcert, sslkey, sslcapath, sslcipher
+
+                  The postgresql driver can be set to use client certificates using the following settings,
+                    sslcert, sslkey
+
+                  sqlite3 driver ignores these options currently.
+
+
+
         */
-        Handle(string driver, string user, string pass, string dbname, string host, string port);
+        Handle(string driver, string user, string pass, string dbname, string host, string port, char *options = 0);
 
         /*
             Constructor: Handle(string, string, string, string)

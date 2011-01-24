@@ -1,11 +1,13 @@
 #include "common.h"
 
+#define CSTRING_OR_NULL(s) (s.size() > 0 ? s.c_str() : 0)
+
 namespace dbi {
     MySqlHandle::MySqlHandle() {
         tr_nesting = 0;
     }
 
-    MySqlHandle::MySqlHandle(string user, string pass, string dbname, string host, string port) {
+    MySqlHandle::MySqlHandle(string user, string pass, string dbname, string host, string port, char *options) {
         tr_nesting   = 0;
         _result      = 0;
 
@@ -18,6 +20,9 @@ namespace dbi {
         mysql_options(conn, MYSQL_OPT_RECONNECT,    &MYSQL_BOOL_TRUE);
         mysql_options(conn, MYSQL_OPT_LOCAL_INFILE, 0);
 
+        if (options)
+            parseOptions(options);
+
         if (!mysql_real_connect(conn, host.c_str(), user.c_str(), pass.c_str(), dbname.c_str(),
             _port, 0, CLIENT_FOUND_ROWS))
             connectionError();
@@ -27,7 +32,34 @@ namespace dbi {
             LOCAL_INFILE_INIT, LOCAL_INFILE_READ, LOCAL_INFILE_END, LOCAL_INFILE_ERROR, 0);
     }
 
-   void MySqlHandle::setTimeZoneOffset(int tzhour, int tzmin) {
+    void MySqlHandle::parseOptions(char *options) {
+        pcrecpp::RE re("([^ =;]+) *= *([^ =;]+)");
+        pcrecpp::StringPiece input(options);
+
+        string option;
+        string value;
+
+        bool ssl = false;
+        string opt_ssl_key, opt_ssl_cert, opt_ssl_ca, opt_ssl_capath, opt_ssl_cipher;
+        while (re.FindAndConsume(&input, &option, &value)) {
+            if      (option == "sslkey")    { opt_ssl_key  = value; ssl = true; }
+            else if (option == "sslcert")   { opt_ssl_cert = value; ssl = true; }
+            else if (option == "sslca")     { opt_ssl_ca   = value; ssl = true; }
+            else if (option == "sslcapath") { opt_ssl_capath = value; ssl = true; }
+            else if (option == "sslcipher") { opt_ssl_cipher = value; ssl = true; }
+        }
+
+        if (ssl) {
+            mysql_ssl_set(conn,
+                CSTRING_OR_NULL(opt_ssl_key),
+                CSTRING_OR_NULL(opt_ssl_cert),
+                CSTRING_OR_NULL(opt_ssl_ca),
+                CSTRING_OR_NULL(opt_ssl_capath),
+                CSTRING_OR_NULL(opt_ssl_cipher));
+        }
+    }
+
+    void MySqlHandle::setTimeZoneOffset(int tzhour, int tzmin) {
         char sql[128];
         // server parses TZ style format. man timzone for more info.
         snprintf(sql, 127, "set time_zone = '%+02d:%02d'", tzhour, abs(tzmin));

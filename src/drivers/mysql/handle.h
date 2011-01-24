@@ -17,11 +17,12 @@ namespace dbi {
         void boom(const char*);
         void connectionError(const char *msg = 0);
         void runtimeError(const char *msg = 0);
+        void parseOptions(char*);
 
         public:
         MYSQL *conn;
         MySqlHandle();
-        MySqlHandle(string user, string pass, string dbname, string host, string port);
+        MySqlHandle(string user, string pass, string dbname, string host, string port, char *options);
         ~MySqlHandle();
 
         MySqlStatement* prepare(string sql);

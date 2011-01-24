@@ -97,13 +97,13 @@ using namespace std;
 using namespace dbi;
 
 extern "C" {
-    MySqlHandle* dbdConnect(string user, string pass, string dbname, string host, string port) {
+    MySqlHandle* dbdConnect(string user, string pass, string dbname, string host, string port, char *options) {
         if (host == "")
             host = "127.0.0.1";
         if (port == "0" || port == "")
             port = "3306";
 
-        return new MySqlHandle(user, pass, dbname, host, port);
+        return new MySqlHandle(user, pass, dbname, host, port, options);
     }
 
     Driver* dbdInfo(void) {

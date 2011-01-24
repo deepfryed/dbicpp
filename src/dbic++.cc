@@ -1,6 +1,6 @@
 #include "dbic++.h"
 
-#define CONNECT_FUNC(f) ((AbstractHandle* (*)(string, string, string, string, string)) f)
+#define CONNECT_FUNC(f) ((AbstractHandle* (*)(string, string, string, string, string, char*)) f)
 
 namespace dbi {
 

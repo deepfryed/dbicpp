@@ -8,25 +8,35 @@ namespace dbi {
         conn       = 0;
     }
 
-    PgHandle::PgHandle(string user, string pass, string dbname, string h, string p) {
+    string PgHandle::parseOptions(char *options) {
+        pcrecpp::RE re("([^ =;]+) *= *([^ =;]+)");
+        pcrecpp::StringPiece input(options);
+
+        string option;
+        string value;
+        string extra;
+        while (re.FindAndConsume(&input, &option, &value)) {
+            extra += " " + option + "='" + value + "'";
+        }
+
+        return extra;
+    }
+
+    PgHandle::PgHandle(string user, string pass, string dbname, string host, string port, char *options) {
         tr_nesting = 0;
         _result    = 0;
         conn       = 0;
 
-        string conninfo;
-        string host = h;
-        string port = p;
+        char conninfo[4096];
+        snprintf(conninfo, 1024, "dbname='%s' user='%s' password='%s' host='%s' port='%s' sslmode='allow'",
+            dbname.c_str(), user.c_str(), pass.c_str(), host.c_str(), port.c_str());
 
-        conninfo += "host='" + host + "' ";
-        conninfo += "port='" + port + "' ";
-        conninfo += "user='" + user + "' ";
-        conninfo += "password='" + pass + "' ";
-        conninfo += "dbname='" + dbname + "' ";
+        if (options) {
+            _connextra = parseOptions(options);
+            strncat(conninfo, _connextra.c_str(), 4095-strlen(conninfo));
+        }
 
-        // wary of memory leaks in ssl libraries. try non-ssl first and then ssl if server forces ssl.
-        conninfo += "sslmode='allow'";
-
-        conn = PQconnectdb(conninfo.c_str());
+        conn = PQconnectdb(conninfo);
 
         if (!conn)
             throw ConnectionError("Unable to allocate db handle");
@@ -250,9 +260,13 @@ namespace dbi {
         PQreset(conn);
         if (PQstatus(conn) == CONNECTION_BAD) {
             if (tr_nesting == 0) {
-                char conninfo[8192];
-                snprintf(conninfo, 8192, "dbname=%s user=%s password=%s host=%s port=%s",
+                char conninfo[4096];
+                snprintf(conninfo, 4096, "dbname='%s' user='%s' password='%s' host='%s' port='%s' sslmode='allow'",
                     PQdb(conn), PQuser(conn), PQpass(conn), PQhost(conn), PQport(conn));
+
+                if (_connextra.size() > 0)
+                    strncat(conninfo, _connextra.c_str(), 4095-strlen(conninfo));
+
                 PQfinish(conn);
                 conn = PQconnectdb(conninfo);
                 if (PQstatus(conn) == CONNECTION_BAD) throw ConnectionError(PQerrorMessage(conn));
