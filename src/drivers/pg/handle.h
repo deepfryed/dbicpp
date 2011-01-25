@@ -19,6 +19,7 @@ namespace dbi {
         int tr_nesting;
         void boom(const char *);
         string parseOptions(char*);
+        string escaped(string);
 
         public:
         PGconn *conn;

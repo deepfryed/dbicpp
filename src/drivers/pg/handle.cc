@@ -16,10 +16,17 @@ namespace dbi {
         string value;
         string extra;
         while (re.FindAndConsume(&input, &option, &value)) {
-            extra += " " + option + "='" + value + "'";
+            extra += " " + option + "='" + escaped(value) + "'";
         }
 
         return extra;
+    }
+
+    string PgHandle::escaped(string value) {
+        string dup = value;
+        pcrecpp::RE re("(['\\\\])");
+        re.GlobalReplace("\\\\\\1", &dup);
+        return dup;
     }
 
     PgHandle::PgHandle(string user, string pass, string dbname, string host, string port, char *options) {
@@ -29,7 +36,7 @@ namespace dbi {
 
         char conninfo[4096];
         snprintf(conninfo, 1024, "dbname='%s' user='%s' password='%s' host='%s' port='%s' sslmode='allow'",
-            dbname.c_str(), user.c_str(), pass.c_str(), host.c_str(), port.c_str());
+            dbname.c_str(), escaped(user).c_str(), escaped(pass).c_str(), host.c_str(), port.c_str());
 
         if (options) {
             _connextra = parseOptions(options);
@@ -262,7 +269,7 @@ namespace dbi {
             if (tr_nesting == 0) {
                 char conninfo[4096];
                 snprintf(conninfo, 4096, "dbname='%s' user='%s' password='%s' host='%s' port='%s' sslmode='allow'",
-                    PQdb(conn), PQuser(conn), PQpass(conn), PQhost(conn), PQport(conn));
+                    PQdb(conn), escaped(PQuser(conn)).c_str(), escaped(PQpass(conn)).c_str(), PQhost(conn), PQport(conn));
 
                 if (_connextra.size() > 0)
                     strncat(conninfo, _connextra.c_str(), 4095-strlen(conninfo));
@@ -270,7 +277,7 @@ namespace dbi {
                 PQfinish(conn);
                 conn = PQconnectdb(conninfo);
                 if (PQstatus(conn) == CONNECTION_BAD) throw ConnectionError(PQerrorMessage(conn));
-                sprintf(errormsg, "WARNING: Socket changed during auto reconnect to database %s on host %s\n",
+                sprintf(errormsg, "NOTICE: Socket changed during auto reconnect to database %s on host %s\n",
                     PQdb(conn), PQhost(conn));
                 logMessage(_trace_fd, errormsg);
             }
