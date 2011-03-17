@@ -12,7 +12,7 @@ namespace dbi {
         string normalized_sql = _sql;
         PQ_PREPROCESS_QUERY(normalized_sql);
 
-        result = PQprepare(_conn, _uuid.c_str(), normalized_sql.c_str(), 0, 0);
+        result = PQprepare(*_conn, _uuid.c_str(), normalized_sql.c_str(), 0, 0);
         if (!result) boom("Unable to allocate statement");
 
         PQ_CHECK_RESULT(result, _sql);
@@ -23,7 +23,7 @@ namespace dbi {
         cleanup();
     }
 
-    PgStatement::PgStatement(string normalized_sql,  PGconn *conn) {
+    PgStatement::PgStatement(string normalized_sql,  PGconn **conn) {
         _sql  = normalized_sql;
         _conn = conn;
 
@@ -34,9 +34,9 @@ namespace dbi {
     void PgStatement::cleanup() {
         char command[1024];
         if (_result) { PQclear(_result); _result = 0; }
-        if (_uuid.length() == 32 && PQstatus(_conn) != CONNECTION_BAD) {
+        if (_uuid.length() == 32 && PQstatus(*_conn) != CONNECTION_BAD) {
             snprintf(command, 1024, "deallocate \"%s\"", _uuid.c_str());
-            PQclear(PQexec(_conn, command));
+            PQclear(PQexec(*_conn, command));
         }
     }
 
@@ -53,7 +53,7 @@ namespace dbi {
         PGresult *result;
 
         finish();
-        result = PQexecPrepared(_conn, _uuid.c_str(), 0, 0, 0, 0, 0);
+        result = PQexecPrepared(*_conn, _uuid.c_str(), 0, 0, 0, 0, 0);
         PQ_CHECK_RESULT(result, _sql);
         return _result = result;
     }
@@ -69,7 +69,7 @@ namespace dbi {
         PQ_PROCESS_BIND(&param_v, &param_l, &param_f, bind);
 
         try {
-            result = PQexecPrepared(_conn, _uuid.c_str(), bind.size(),
+            result = PQexecPrepared(*_conn, _uuid.c_str(), bind.size(),
                                    (const char* const *)param_v, (const int*)param_l, (const int*)param_f, 0);
             PQ_CHECK_RESULT(result, _sql);
         } catch (Error &e) {
@@ -107,13 +107,13 @@ namespace dbi {
     }
 
     PgResult* PgStatement::result() {
-        PgResult *instance = new PgResult(_result, _sql, _conn);
+        PgResult *instance = new PgResult(_result, _sql, *_conn);
         _result            = 0;
         return instance;
     }
 
     void PgStatement::boom(const char* m) {
-        if (PQstatus(_conn) == CONNECTION_BAD)
+        if (PQstatus(*_conn) == CONNECTION_BAD)
             throw ConnectionError(m);
         else
             throw RuntimeError(m);

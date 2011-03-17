@@ -6,7 +6,7 @@ namespace dbi {
         private:
         uint64_t _last_insert_id;
         string _sql, _uuid;
-        PGconn *_conn;
+        PGconn **_conn;
 
         PGresult *_result;
 
@@ -22,7 +22,7 @@ namespace dbi {
         public:
         PgStatement();
         ~PgStatement();
-        PgStatement(string query, PGconn *conn);
+        PgStatement(string query, PGconn **conn);
         void cleanup();
         void finish();
         string command();

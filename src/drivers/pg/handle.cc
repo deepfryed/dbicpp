@@ -209,7 +209,7 @@ namespace dbi {
     }
 
     PgStatement* PgHandle::prepare(string sql) {
-        return new PgStatement(sql, conn);
+        return new PgStatement(sql, &conn);
     }
 
     bool PgHandle::begin() {
