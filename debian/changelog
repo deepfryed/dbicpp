@@ -1,3 +1,9 @@
+dbic++ (0.5.8-1~lucid1) lucid; urgency=high
+
+  * lucid backport.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Fri, 06 May 2011 15:40:00 +1000
+
 dbic++ (0.5.8-1~maverick1) maverick; urgency=high
 
   * dirent.d_type is not portable, using lstat instead.
