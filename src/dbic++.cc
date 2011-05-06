@@ -28,6 +28,8 @@ namespace dbi {
     bool dbiInitialize(string path) {
         string filename;
         struct dirent *file;
+        struct stat st;
+
         Driver* (*info)(void);
         pcrecpp::RE re("\\.so\\.\\d+|\\.dylib");
 
@@ -39,12 +41,14 @@ namespace dbi {
             return false;
 
         while((file = readdir(dir))) {
-            if (file->d_type != DT_REG)
+            filename = path + "/" + string(file->d_name);
+
+            lstat(filename.c_str(), &st);
+            if (!S_ISREG(st.st_mode))
                 continue;
             if (!re.PartialMatch(file->d_name))
                 continue;
 
-            filename = path + "/" + string(file->d_name);
             void *handle = dlopen(filename.c_str(), RTLD_NOW|RTLD_LOCAL);
 
             if (handle != NULL) {
