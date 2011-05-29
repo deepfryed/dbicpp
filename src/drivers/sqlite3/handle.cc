@@ -168,6 +168,11 @@ namespace dbi {
             snprintf(errormsg, 8192, "%s", sqlite3_errmsg(conn));
             throw ConnectionError(errormsg);
         }
+        else {
+            snprintf(errormsg, 8192, "NOTICE: sqlite3 reopened %s", _dbname.c_str());
+            if (_trace)
+                logMessage(_trace_fd, errormsg);
+        }
     }
 
     uint64_t Sqlite3Handle::write(string table, FieldSet &fields, IO* io) {

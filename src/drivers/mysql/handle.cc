@@ -228,7 +228,8 @@ namespace dbi {
             else {
                 sprintf(errormsg, "NOTICE: Socket changed during auto reconnect to database %s on host %s\n",
                     _db.c_str(), _host.c_str());
-                logMessage(_trace_fd, errormsg);
+                if (_trace)
+                    logMessage(_trace_fd, errormsg);
             }
         }
     }

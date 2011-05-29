@@ -279,14 +279,16 @@ namespace dbi {
                 if (PQstatus(conn) == CONNECTION_BAD) throw ConnectionError(PQerrorMessage(conn));
                 sprintf(errormsg, "NOTICE: Socket changed during auto reconnect to database %s on host %s\n",
                     PQdb(conn), PQhost(conn));
-                logMessage(_trace_fd, errormsg);
+                if (_trace)
+                    logMessage(_trace_fd, errormsg);
             }
             else throw ConnectionError(PQerrorMessage(conn));
         }
         else {
             sprintf(errormsg, "NOTICE: Auto reconnected on same socket to database %s on host %s\n",
                 PQdb(conn), PQhost(conn));
-            logMessage(_trace_fd, errormsg);
+            if (_trace)
+                logMessage(_trace_fd, errormsg);
         }
     }
 
