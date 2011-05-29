@@ -1,3 +1,9 @@
+dbic++ (0.5.9-2~natty1) natty; urgency=medium
+
+  * Forgot to version bump, what an idiot.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Mon, 30 May 2011 07:46:00 +1000
+
 dbic++ (0.5.9-1~lucid1) lucid; urgency=low
 
   * lucid backport.
