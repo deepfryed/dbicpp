@@ -40,17 +40,19 @@ namespace dbi {
             _rsfields.push_back(sqlite3_column_name(stmt, n));
             string type(sql_decltype ? sql_decltype : "null");
             std::transform(type.begin(), type.end(), type.begin(), (int(*)(int)) tolower);
+            if(type == "int")       { _rstypes.push_back(DBI_TYPE_INT);       continue; }
             if(type == "integer")   { _rstypes.push_back(DBI_TYPE_INT);       continue; }
+            if(type == "real")      { _rstypes.push_back(DBI_TYPE_FLOAT);     continue; }
             if(type == "float")     { _rstypes.push_back(DBI_TYPE_FLOAT);     continue; }
+            if(type == "decimal")   { _rstypes.push_back(DBI_TYPE_NUMERIC);   continue; }
             if(type == "numeric")   { _rstypes.push_back(DBI_TYPE_NUMERIC);   continue; }
             if(type == "text")      { _rstypes.push_back(DBI_TYPE_TEXT);      continue; }
             if(type == "blob")      { _rstypes.push_back(DBI_TYPE_BLOB);      continue; }
             if(type == "timestamp") { _rstypes.push_back(DBI_TYPE_TIMESTAMP); continue; }
-            if(type == "boolean")   { _rstypes.push_back(DBI_TYPE_BOOLEAN);   continue; }
             if(type == "bool")      { _rstypes.push_back(DBI_TYPE_BOOLEAN);   continue; }
+            if(type == "boolean")   { _rstypes.push_back(DBI_TYPE_BOOLEAN);   continue; }
             if(type == "date")      { _rstypes.push_back(DBI_TYPE_DATE);      continue; }
             if(type == "time")      { _rstypes.push_back(DBI_TYPE_TIME);      continue; }
-
 
             if(type == "null")  {
                 _lazy_typed = true;
