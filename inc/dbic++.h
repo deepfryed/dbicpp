@@ -65,4 +65,6 @@ namespace dbi {
 #include "dbic++/query.h"
 #include "dbic++/socketinfo.h"
 
+extern int getline(char **, size_t *, FILE *);
+
 #endif

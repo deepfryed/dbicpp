@@ -14,7 +14,11 @@ FIND_PACKAGE(sqlite3)
 
 INCLUDE_DIRECTORIES(inc ${UUID_INCLUDE_DIRS} ${PCRE_INCLUDE_DIRS} ${EVENT_INCLUDE_DIRS})
 
-FILE(GLOB SOURCES "src/*.cc")
+IF (APPLE)
+  FILE(GLOB SOURCES "src/*.cc" "src/bsd/getline.cc")
+ELSE ()
+  FILE(GLOB SOURCES "src/*.cc")
+ENDIF ()
 ADD_LIBRARY(dbic++ STATIC ${SOURCES})
 
 SET(CMAKE_INSTALL_LIBDIR lib CACHE PATH "Output directory for libraries")

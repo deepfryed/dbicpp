@@ -41,11 +41,11 @@ namespace dbi {
     }
 
     bool FileIO::readline(string &line) {
-        char *buffer;
         size_t size;
+        char *buffer = 0;
 
         size = getline(&buffer, &size, fp);
-        if (size > 0) {
+        if (size >= 0) {
             line = string(buffer, size);
             free(buffer);
             return true;
