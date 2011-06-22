@@ -33,6 +33,7 @@ else (PCRE_LIBRARIES AND PCRE_INCLUDE_DIRS)
       pcrecpp
     PATHS
       /usr/lib
+      /usr/lib/x86_64-linux-gnu
       /usr/local/lib
       /opt/local/lib
       /sw/lib
