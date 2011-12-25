@@ -94,7 +94,7 @@ namespace dbi {
             _result = 0;
         }
         PGresult *result = PQexec(conn, sql.c_str());
-        PQ_CHECK_RESULT(result, sql);
+        PQ_CHECK_RESULT(result, conn, sql);
         PQclear(result);
     }
 
@@ -105,7 +105,7 @@ namespace dbi {
 
         PQ_PREPROCESS_QUERY(normalized_sql);
         result = PQexec(conn, normalized_sql.c_str());
-        PQ_CHECK_RESULT(result, sql);
+        PQ_CHECK_RESULT(result, conn, sql);
 
         if (_result) PQclear(_result);
         return _result = result;
@@ -123,7 +123,7 @@ namespace dbi {
         try {
             result = PQexecParams(conn, normalized_sql.c_str(), bind.size(), 0,
                                         (const char* const *)param_v, param_l, param_f, 0);
-            PQ_CHECK_RESULT(result, sql);
+            PQ_CHECK_RESULT(result, conn, sql);
         } catch (Error &e) {
             delete []param_v;
             delete []param_l;
@@ -326,7 +326,7 @@ namespace dbi {
                 throw RuntimeError(PQerrorMessage(conn));
 
         PGresult *res = PQgetResult(conn);
-        PQ_CHECK_RESULT(res, sql);
+        PQ_CHECK_RESULT(res, conn, sql);
         nrows = atol(PQcmdTuples(res));
 
         if (_result) PQclear(_result);

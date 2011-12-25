@@ -19,7 +19,7 @@
 #include <uuid/uuid.h>
 #include <stdint.h>
 
-#define DBI_VERSION      0.5.9
+#define DBI_VERSION      0.5.10
 
 namespace dbi {
     struct null {};

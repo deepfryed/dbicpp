@@ -69,7 +69,7 @@ namespace dbi {
         fetchMeta();
 
         while ((response = PQgetResult(_conn))) PQclear(response);
-        PQ_CHECK_RESULT(_result, _sql);
+        PQ_CHECK_RESULT(_result, _conn, _sql);
     }
 
     uint64_t PgResult::lastInsertID() {
