@@ -1,0 +1,72 @@
+=== 0.5.10 (2011-12-25)
+* pg: fix - throws ConnectionError instead of RuntimeError on connection failures.
+* getline fix for bsd/macosx
+ 
+=== 0.5.9  (2011-05-30)
+* Handle#reconnect respects trace flag
+* sqlite3: field type aliases
+ 
+=== 0.5.8  (2011-05-06)
+* bugfix: dirent.d_type not portable
+ 
+=== 0.5.7  (2011-03-17)
+* pg: fix segfault in statement cleanup after explicit connection close
+* pg: escape connection parameters
+* allow driver ssl options
+ 
+=== 0.5.6  (2011-01-22)
+* sqlite3: fix coercion of  as null. sqlite3_column_blob() returns NULL for empty strings in 3.7.4.
+ 
+=== 0.5.5  (2011-01-20)
+* getting sqlite3 affected_rows is wack. it seems to cache result from previous insert/update/delete
+* sqlite3: remove unnecessary variable
+ 
+=== 0.5.4  (2011-01-13)
+* mysql: fix bind interpolation snafu
+* mysql: bugfix in interpolation with just one bind value an the end.
+* pg: fix warning, read last insert id only when a result is present
+* trace begin, commit, rollback
+* sqlite3: fix Result#rows. sqlite3_changes() doesnt seem to work the way the docs state.
+ 
+=== 0.5.3  (2011-01-06)
+* sqlite3: fix Handle::write() bug that skipped last column value. cleanup.
+* fix PgStatement::lastInsertID()
+ 
+=== 0.5.2  (2011-01-05)
+* sqlite3: fix type detection issues for fields that are the result of expressions or functions
+* mysql: fix MySqlBinaryResult::read() signature
+ 
+=== 0.5.1  (2011-01-04)
+* sqlite3 driver
+* removed libgc dependency, didnt need it anyway
+* update FileIO constructor
+* fixed mysql gotcha with interpolated values
+* support full range of dbi types via type conversions
+* memory check for Handle::write
+* rename and rewrite: dbi::IOStream, dbi::IOFileStream -> dbi::StringIO, dbi::FileIO feature: Sqlite3Handle::write
+* memory leak checker
+* PgResult: fix row vs affect rows count
+* MySqlBinaryResult: avoid double buffering results.
+* fix mysql Handle#result for ddl
+* replace malloc/free with new/delete
+* mysql: negative affected rows should be zerod
+* fix binary result read() lengths for fields following string/blob values
+* fix mysql interpolate bind value
+* fix interleaved use of multiple MySqlResult::read() types
+* speedup MySqlResult::read()
+* fix and speedup MySqlBinaryResult::read()
+* pg: record affected rows if relevant
+* benchmark pg default to non-ssl.
+* pg defaults on non-ssl
+* fix MySqlBinaryResult#seek
+* bypass bind args and handle mysql binary results directly.
+ 
+=== 0.5.0  (2010-12-30)
+* removed support for db2 - not gonna waste my time on proprietary dbs.
+* make libgc optional
+* driver desctructors were not getting called
+* mysql: fix borked bind param interpolation.
+* release previous result before execute
+* Statement#lastInsertID
+* Query inherits Statement, Result
+* cleanup and fix dbl free issue in pg

@@ -1,3 +1,10 @@
+dbic++ (0.5.10-1~natty1) natty; urgency=medium
+
+  * pg: fix - throws ConnectionError instead of RuntimeError on connection failures.
+  * getline fix for bsd/macosx.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Sun, 25 Dec 2011 12:56:00 +1100
+
 dbic++ (0.5.9-2~maverick1) maverick; urgency=medium
 
   * maverick backport.
