@@ -1,3 +1,9 @@
+dbic++ (0.5.10-1~maverick1) maverick; urgency=medium
+
+  * maverick backport.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Mon, 26 Dec 2011 09:37:00 +1100
+
 dbic++ (0.5.10-1~natty1) natty; urgency=medium
 
   * pg: fix - throws ConnectionError instead of RuntimeError on connection failures.
