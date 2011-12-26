@@ -124,7 +124,14 @@ namespace dbi {
             result = PQexecParams(conn, normalized_sql.c_str(), bind.size(), 0,
                                         (const char* const *)param_v, param_l, param_f, 0);
             PQ_CHECK_RESULT(result, conn, sql);
-        } catch (Error &e) {
+        }
+        catch (ConnectionError &e) {
+            delete []param_v;
+            delete []param_l;
+            delete []param_f;
+            throw e;
+        }
+        catch (Error &e) {
             delete []param_v;
             delete []param_l;
             delete []param_f;
