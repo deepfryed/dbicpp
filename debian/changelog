@@ -1,3 +1,9 @@
+dbic++ (0.5.11-1~natty1) natty; urgency=medium
+
+  * fix Handle#execute and Statement#execute to re-raise ConnectionError properly.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Mon, 26 Dec 2011 13:17:00 +1100
+
 dbic++ (0.5.10-1~maverick1) maverick; urgency=medium
 
   * maverick backport.

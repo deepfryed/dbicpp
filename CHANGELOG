@@ -1,3 +1,6 @@
+=== 0.5.11 (2011-12-26)
+* fix Handle#execute and Statement#execute to re-raise ConnectionError properly.
+
 === 0.5.10 (2011-12-25)
 * pg: fix - throws ConnectionError instead of RuntimeError on connection failures.
 * getline fix for bsd/macosx
