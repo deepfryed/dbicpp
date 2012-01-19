@@ -1,3 +1,9 @@
+dbic++ (0.5.11-1~oneiric1) oneiric; urgency=medium
+
+  * oneiric build.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Thu, 19 Jan 2012 13:31:00 +1100
+
 dbic++ (0.5.11-1~natty1) natty; urgency=medium
 
   * fix Handle#execute and Statement#execute to re-raise ConnectionError properly.
