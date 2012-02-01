@@ -1,3 +1,9 @@
+dbic++ (0.5.11-1~maverick1) maverick; urgency=medium
+
+  * maverick backport.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Thu, 02 Feb 2012 06:05:00 +1100
+
 dbic++ (0.5.11-1~oneiric1) oneiric; urgency=medium
 
   * oneiric build.
