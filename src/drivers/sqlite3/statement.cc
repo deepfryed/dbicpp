@@ -40,11 +40,11 @@ namespace dbi {
     }
 
     uint32_t Sqlite3Statement::execute() {
-        vector<Param> bind;
+        param_list_t bind;
         return execute(bind);
     }
 
-    uint32_t Sqlite3Statement::execute(vector<Param> &bind) {
+    uint32_t Sqlite3Statement::execute(param_list_t &bind) {
         int rc, n;
         unsigned char *data;
         uint64_t length;

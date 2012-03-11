@@ -46,8 +46,8 @@ namespace dbi {
         return data[k];
     }
 
-    vector<string> ResultRowHash::fields(void) {
-        vector<string> rs;
+    string_list_t ResultRowHash::fields(void) {
+        string_list_t rs;
 
         for(map<string,Param>::iterator iter = data.begin(); iter != data.end(); ++iter)
             rs.push_back(iter->first);

@@ -1,8 +1,5 @@
 namespace dbi {
 
-    using namespace std;
-    using namespace pcrecpp;
-
     /*
         Class: Result
         Facade for AbstractResult, you should be using this for most of the normal work.
@@ -42,13 +39,13 @@ namespace dbi {
             Function: fields
             See <AbstractResult::fields()>
         */
-        vector<string>& fields();
+        string_list_t& fields();
 
         /*
             Function: types
             See <AbstractResult::types()>
         */
-        vector<int>& types();
+        int_list_t& types();
 
         /*
             Function: read(ResultRow&)
@@ -103,5 +100,8 @@ namespace dbi {
             See <AbstractResult::lastInsertID()>
         */
         uint64_t lastInsertID();
+
+        // async
+        void retrieve();
     };
 }

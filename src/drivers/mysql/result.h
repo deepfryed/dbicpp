@@ -9,8 +9,8 @@ namespace dbi {
         uint32_t _rowno;
         uint32_t _affected_rows;
 
-        vector<string> _rsfields;
-        vector<int>    _rstypes;
+        string_list_t _rsfields;
+        int_list_t    _rstypes;
 
         MYSQL_ROW _rowdata;
         unsigned long* _rowdata_lengths;
@@ -33,8 +33,8 @@ namespace dbi {
         uint32_t rows();
         uint32_t columns();
 
-        vector<string>& fields();
-        vector<int>&    types();
+        string_list_t& fields();
+        int_list_t&    types();
 
         bool read(ResultRow &r);
         bool read(ResultRowHash &r);

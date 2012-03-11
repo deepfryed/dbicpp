@@ -139,7 +139,7 @@ namespace dbi {
         return false;
     }
 
-    vector<string>& PgResult::fields() {
+    string_list_t& PgResult::fields() {
         return _rsfields;
     }
 
@@ -192,7 +192,7 @@ namespace dbi {
         _rowno = r;
     }
 
-    vector<int>& PgResult::types() {
+    int_list_t& PgResult::types() {
         return _rstypes;
     }
 }

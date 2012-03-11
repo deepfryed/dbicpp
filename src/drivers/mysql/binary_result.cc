@@ -372,11 +372,11 @@ namespace dbi {
         return last_insert_id;
     }
 
-    vector<string>& MySqlBinaryResult::fields() {
+    string_list_t& MySqlBinaryResult::fields() {
         return _rsfields;
     }
 
-    vector<int>& MySqlBinaryResult::types() {
+    int_list_t& MySqlBinaryResult::types() {
         return _rstypes;
     }
 

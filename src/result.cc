@@ -34,7 +34,7 @@ namespace dbi {
         }
     }
 
-    vector<string>& Result::fields() {
+    string_list_t& Result::fields() {
         if (!rs) throw RuntimeError("Invalid Result instance");
         return rs->fields();
     }
@@ -59,7 +59,7 @@ namespace dbi {
         return rs->tell();
     }
 
-    vector<int>& Result::types() {
+    int_list_t& Result::types() {
         if (!rs) throw RuntimeError("Invalid Result instance");
         return rs->types();
     }
@@ -77,5 +77,12 @@ namespace dbi {
     void Result::seek(uint32_t r) {
         if (!rs) throw RuntimeError("Invalid Result instance");
         rs->seek(r);
+    }
+
+    void Result::retrieve() {
+        while (rs->consumeResult()) {
+            printf("retr\n");
+        }
+        rs->prepareResult();
     }
 }

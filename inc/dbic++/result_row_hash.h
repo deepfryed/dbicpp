@@ -3,8 +3,6 @@
 
 namespace dbi {
 
-    using namespace std;
-
     /*
         Class: ResultRowHash
         Encapsulates a hash that maps field names to values in a result.
@@ -19,9 +17,9 @@ namespace dbi {
             Returns the fields in the result.
 
             Returns:
-            fields - vector<string>
+            fields - string_list_t
         */
-        vector<string> fields();
+        string_list_t fields();
         operator bool() { return data.size() > 0; }
         /*
             Operator: [](const char*)
@@ -38,9 +36,9 @@ namespace dbi {
             Returns:
             value - Param
         */
-        Param& operator [](string&);
+        Param& operator [](std::string&);
         void clear();
-        friend ostream& operator<< (ostream &out, ResultRowHash &r);
+        friend std::ostream& operator<< (std::ostream &out, ResultRowHash &r);
     };
 }
 

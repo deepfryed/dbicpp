@@ -1,7 +1,6 @@
-namespace dbi {
+#pragma once
 
-    using namespace std;
-    using namespace pcrecpp;
+namespace dbi {
 
     /*
         Class: AbstractHandle
@@ -20,7 +19,7 @@ namespace dbi {
             Returns:
             A pointer to AbstractStatement.
         */
-        virtual AbstractStatement* prepare(string sql) = 0;
+        virtual AbstractStatement* prepare(std::string sql) = 0;
 
         /*
             Function: execute(string)
@@ -32,20 +31,20 @@ namespace dbi {
             Returns:
             rows - number of rows affected or returned.
         */
-        virtual uint32_t execute(string sql) = 0;
+        virtual uint32_t execute(std::string sql) = 0;
 
         /*
-            Function: execute(string, vector<Param>&)
+            Function: execute(string, param_list_t&)
             executes a SQL with bind values.
 
             Parameters:
             sql  - SQL with or without placeholders.
-            bind - vector<Param> that contains bind values. Refer to the <Param> struct and associated methods.
+            bind - param_list_t that contains bind values. Refer to the <Param> struct and associated methods.
 
             Returns:
             rows - number of rows affected or returned.
         */
-        virtual uint32_t execute(string sql, vector<Param> &bind) = 0;
+        virtual uint32_t execute(std::string sql, param_list_t &bind) = 0;
 
         /*
             Function: result
@@ -94,7 +93,7 @@ namespace dbi {
             Returns:
             true or false - denotes success or failure.
         */
-        virtual bool begin(string name) = 0;
+        virtual bool begin(std::string name) = 0;
 
         /*
             Function: commit(string)
@@ -106,7 +105,7 @@ namespace dbi {
             Returns:
             true or false - denotes success or failure.
         */
-        virtual bool commit(string name) = 0;
+        virtual bool commit(std::string name) = 0;
 
         /*
             Function: rollback(string)
@@ -118,7 +117,7 @@ namespace dbi {
             Returns:
             true or false - denotes success or failure.
         */
-        virtual bool rollback(string name) = 0;
+        virtual bool rollback(std::string name) = 0;
 
         /*
             Function: close
@@ -154,7 +153,7 @@ namespace dbi {
             Returns:
             rows   - The number of rows written to database.
         */
-        virtual uint64_t write(string table, FieldSet &fields, IO*) = 0;
+        virtual uint64_t write(std::string table, FieldSet &fields, IO*) = 0;
 
         /*
             Function: setTimeZoneOffset(int, int)
@@ -185,7 +184,7 @@ namespace dbi {
             Returns:
             value  - string value that is escaped for the underlying database.
         */
-        virtual string escape(string) = 0;
+        virtual string escape(std::string) = 0;
 
         /*
             Function: driver
@@ -194,24 +193,33 @@ namespace dbi {
             Returns:
             name - string value.
         */
-        virtual string driver() = 0;
-
-        friend class ConnectionPool;
-        friend class Request;
-
+        virtual string driver()  = 0;
         virtual int  socket()    = 0;
         virtual void reconnect() = 0;
 
         virtual ~AbstractHandle() {}
 
-        // ASYNC API
-        protected:
-        virtual AbstractResult* aexecute(string sql) = 0;
-        virtual AbstractResult* aexecute(string sql, vector<Param> &bind) = 0;
+        /*
+            Function: aexecute(string)
+            Executes a query asynchronously and returns the result for further polling.
 
-        virtual void initAsync() = 0;
-        virtual bool isBusy()    = 0;
-        virtual bool cancel()    = 0;
+            Returns:
+            AbstractResult* - result object
+        */
+        virtual AbstractResult* aexecute(std::string sql) = 0;
+
+        /*
+            Function: aexecute(string,
+            Executes a query asynchronously and returns the result for further polling.
+
+            Returns:
+            AbstractResult* - result object
+        */
+        virtual AbstractResult* aexecute(std::string sql, param_list_t &bind) = 0;
+        virtual bool cancel() = 0;
+
+        protected:
+        virtual void async(bool) = 0;
     };
 
 }

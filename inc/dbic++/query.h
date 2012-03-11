@@ -1,8 +1,5 @@
 namespace dbi {
 
-    using namespace std;
-    using namespace pcrecpp;
-
     class Result;
     class Statement;
 
@@ -21,14 +18,14 @@ namespace dbi {
             handle - Handle instance.
             sql    - SQL to prepare using the handle.
         */
-        Query(Handle &handle, string sql);
+        Query(Handle &handle, std::string sql);
         ~Query();
 
         void finish();
         void cleanup();
 
         uint32_t execute();
-        uint32_t execute(vector<Param> &bind);
+        uint32_t execute(param_list_t &bind);
 
         /*
             Operator: , (string)
@@ -37,7 +34,7 @@ namespace dbi {
             Parameters:
             value - string
         */
-        Query& operator,(string value);
+        Query& operator,(std::string value);
         /*
             Operator: % (string)
             Alias for bind(Param)
@@ -45,7 +42,7 @@ namespace dbi {
             Parameters:
             value - string
         */
-        Query& operator%(string value);
+        Query& operator%(std::string value);
 
         /*
             Operator: , (long)
@@ -113,6 +110,6 @@ namespace dbi {
         */
         uint32_t operator,(dbi::execute const &);
 
-        Query& operator<<(string sql);
+        Query& operator<<(std::string sql);
     };
 }

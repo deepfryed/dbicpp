@@ -1,8 +1,5 @@
 namespace dbi {
 
-    using namespace std;
-    using namespace pcrecpp;
-
     class Result;
 
     /*
@@ -16,7 +13,7 @@ namespace dbi {
         protected:
         AbstractHandle *h;
         AbstractStatement *st;
-        vector<Param> params;
+        param_list_t params;
 
         public:
         Statement();
@@ -46,7 +43,7 @@ namespace dbi {
             handle - Handle instance.
             sql    - SQL to prepare using the handle.
         */
-        Statement(Handle &handle, string sql);
+        Statement(Handle &handle, std::string sql);
 
         /*
             Constructor: Statement(Handle *)
@@ -65,7 +62,7 @@ namespace dbi {
             handle - Pointer to a Handle instance.
             sql    - SQL to prepare using the handle.
         */
-        Statement(Handle *handle, string sql);
+        Statement(Handle *handle, std::string sql);
 
         ~Statement();
 
@@ -100,7 +97,7 @@ namespace dbi {
             Operator: << (string)
             Dealloactes any work memory and prepares a new statement for execution.
         */
-        Statement& operator<<(string sql);
+        Statement& operator<<(std::string sql);
 
         /*
             Operator: , (string)
@@ -109,7 +106,7 @@ namespace dbi {
             Parameters:
             value - string
         */
-        Statement& operator,(string value);
+        Statement& operator,(std::string value);
         /*
             Operator: % (string)
             Alias for bind(Param)
@@ -117,7 +114,7 @@ namespace dbi {
             Parameters:
             value - string
         */
-        Statement& operator%(string value);
+        Statement& operator%(std::string value);
 
         /*
             Operator: , (long)
@@ -196,10 +193,10 @@ namespace dbi {
         uint32_t execute();
 
         /*
-            Function: execute(vector<Param>&)
-            See <AbstractStatement::execute(vector<Param>&)>
+            Function: execute(param_list_t&)
+            See <AbstractStatement::execute(param_list_t&)>
         */
-        uint32_t execute(vector<Param> &bind);
+        uint32_t execute(param_list_t &bind);
 
         /*
             Function: result

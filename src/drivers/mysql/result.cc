@@ -196,11 +196,11 @@ namespace dbi {
         mysql_data_seek(result, 0);
     }
 
-    vector<string>& MySqlResult::fields() {
+    string_list_t& MySqlResult::fields() {
         return _rsfields;
     }
 
-    vector<int>& MySqlResult::types() {
+    int_list_t& MySqlResult::types() {
         return _rstypes;
     }
 }

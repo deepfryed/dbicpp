@@ -15,8 +15,8 @@ namespace dbi {
 
     class MySqlBinaryResult : public AbstractResult {
         private:
-        vector<string>  _rsfields;
-        vector<int>     _rstypes;
+        string_list_t  _rsfields;
+        int_list_t     _rstypes;
         uint32_t _rows, _cols, _rowno, _affected_rows;
 
         protected:
@@ -59,8 +59,8 @@ namespace dbi {
 
         uint32_t        rows();
         uint32_t        columns();
-        vector<string>& fields();
-        vector<int>&    types();
+        string_list_t& fields();
+        int_list_t&    types();
         uint64_t        lastInsertID();
 
         bool read(ResultRow &);

@@ -11,7 +11,7 @@ namespace dbi {
             re.Replace("?", &query);
     }
 
-    void SQLITE3_PROCESS_BIND(sqlite3_stmt *stmt, vector<Param> &bind) {
+    void SQLITE3_PROCESS_BIND(sqlite3_stmt *stmt, param_list_t &bind) {
         uint32_t cols = sqlite3_bind_parameter_count(stmt);
         if (bind.size() != cols) {
             snprintf(errormsg, 8192, "Given %d but expected %d bind args", (int)bind.size(), cols);

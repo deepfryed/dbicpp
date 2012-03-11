@@ -8,7 +8,7 @@ namespace dbi {
     int  _trace_fd;
 
     map<string, Driver *> drivers;
-    vector<string> available_drivers();
+    string_list_t available_drivers();
 
     string generateCompactUUID() {
         string rv;
@@ -96,8 +96,8 @@ namespace dbi {
         drivers.clear();
     }
 
-    vector<string> available_drivers () {
-        vector<string> list;
+    string_list_t available_drivers () {
+        string_list_t list;
 
         if (!drivers.size())
             dbiInitialize();
@@ -131,7 +131,7 @@ namespace dbi {
         _trace_fd = fd;
     }
 
-    string join(vector<Param> &p, string delim) {
+    string join(param_list_t &p, string delim) {
         unsigned i;
         stringstream out;
         if (p.size() > 0) {
@@ -142,7 +142,7 @@ namespace dbi {
         return out.str();
     }
 
-    string formatParams(string sql, vector<Param> &p) {
+    string formatParams(string sql, param_list_t &p) {
         string message(sql);
 
         if (p.size() > 0) message += " ~ " + join(p, ", ");

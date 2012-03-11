@@ -31,7 +31,7 @@ namespace dbi {
         return storeResult();
     }
 
-    uint32_t MySqlStatement::execute(vector<Param> &bind) {
+    uint32_t MySqlStatement::execute(param_list_t &bind) {
         finish();
 
         MYSQL_BIND *params = new MYSQL_BIND[bind.size()];

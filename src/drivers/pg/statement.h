@@ -11,7 +11,7 @@ namespace dbi {
         PGresult *_result;
 
         PGresult* _pgexec();
-        PGresult* _pgexec(vector<Param>&);
+        PGresult* _pgexec(param_list_t&);
 
         protected:
         PgHandle *handle;
@@ -28,7 +28,7 @@ namespace dbi {
         string command();
 
         uint32_t execute();
-        uint32_t execute(vector<Param>&);
+        uint32_t execute(param_list_t&);
         uint64_t lastInsertID();
 
         PgResult* result();

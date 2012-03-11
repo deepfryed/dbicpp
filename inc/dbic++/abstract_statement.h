@@ -1,7 +1,6 @@
-namespace dbi {
+#pragma once
 
-    using namespace std;
-    using namespace pcrecpp;
+namespace dbi {
 
     /*
         Class: AbstractStatement
@@ -29,17 +28,17 @@ namespace dbi {
         virtual uint32_t execute() = 0;
 
         /*
-            Function: execute(vector<Param>&)
+            Function: execute(param_list_t&)
             executes a SQL with bind values.
 
             Parameters:
             sql  - SQL with or without placeholders.
-            bind - vector<Param> that contains bind values. Refer to the <Param> struct and associated methods.
+            bind - param_list_t that contains bind values. Refer to the <Param> struct and associated methods.
 
             Returns:
             rows - number of rows affected or returned.
         */
-        virtual uint32_t execute(vector<Param> &bind) = 0;
+        virtual uint32_t execute(param_list_t &bind) = 0;
 
         /*
             Function: result

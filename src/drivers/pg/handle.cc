@@ -111,7 +111,7 @@ namespace dbi {
         return _result = result;
     }
 
-    PGresult* PgHandle::_pgexec(string sql, vector<Param> &bind) {
+    PGresult* PgHandle::_pgexec(string sql, param_list_t &bind) {
         int *param_l, *param_f;
         const char **param_v;
         PGresult *result;
@@ -148,6 +148,7 @@ namespace dbi {
 
     uint32_t PgHandle::execute(string sql) {
         uint32_t rows, ctuples = 0;
+        async(false);
         PGresult *result = _pgexec(sql);
         rows    = (uint32_t)PQntuples(result);
         ctuples = (uint32_t)atoi(PQcmdTuples(result));
@@ -155,8 +156,9 @@ namespace dbi {
         return ctuples > 0 ? ctuples : rows;
     }
 
-    uint32_t PgHandle::execute(string sql, vector<Param> &bind) {
+    uint32_t PgHandle::execute(string sql, param_list_t &bind) {
         uint32_t rows, ctuples = 0;
+        async(false);
         PGresult *result = _pgexec(sql, bind);
         rows    = (uint32_t)PQntuples(result);
         ctuples = (uint32_t)atoi(PQcmdTuples(result));
@@ -171,17 +173,19 @@ namespace dbi {
     PgResult* PgHandle::aexecute(string sql) {
         string normalized_sql = sql;
         PQ_PREPROCESS_QUERY(normalized_sql);
+        async(true);
         int done = PQsendQuery(conn, normalized_sql.c_str());
         if (!done) boom(PQerrorMessage(conn));
         return new PgResult(0, sql, conn);
     }
 
-    PgResult* PgHandle::aexecute(string sql, vector<Param> &bind) {
+    PgResult* PgHandle::aexecute(string sql, param_list_t &bind) {
         int *param_l, *param_f;
         const char **param_v;
         string normalized_sql = sql;
         PQ_PREPROCESS_QUERY(normalized_sql);
         PQ_PROCESS_BIND(&param_v, &param_l, &param_f, bind);
+        async(true);
         int done = PQsendQueryParams(conn, normalized_sql.c_str(), bind.size(),
                                      0, (const char* const *)param_v, param_l, param_f, 0);
 
@@ -192,12 +196,8 @@ namespace dbi {
         return new PgResult(0, sql, conn);
     }
 
-    void PgHandle::initAsync() {
-        if(!PQisnonblocking(conn)) PQsetnonblocking(conn, 1);
-    }
-
-    bool PgHandle::isBusy() {
-        return PQisBusy(conn) ? true : false;
+    void PgHandle::async(bool flag) {
+        PQsetnonblocking(conn, flag ? 1 : 0);
     }
 
     bool PgHandle::cancel() {
@@ -216,6 +216,7 @@ namespace dbi {
     }
 
     PgStatement* PgHandle::prepare(string sql) {
+        async(false);
         return new PgStatement(sql, &conn);
     }
 
@@ -306,7 +307,7 @@ namespace dbi {
             throw RuntimeError(m);
     }
 
-    uint64_t PgHandle::write(string table, FieldSet &fields, IO* io) {
+    uint64_t PgHandle::write(string table, field_list_t &fields, IO* io) {
         char sql[4096], *buffer;
         uint64_t nrows, len, buffer_len = 1024*1024;
 

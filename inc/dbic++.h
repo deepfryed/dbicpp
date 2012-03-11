@@ -26,9 +26,22 @@ namespace dbi {
     struct execute {};
 }
 
+namespace dbi {
+    typedef std::vector<int> int_list_t;
+    typedef std::vector<std::string> string_list_t;
+}
+
 #include "dbic++/error.h"
 #include "dbic++/param.h"
+namespace dbi {
+    typedef std::vector<dbi::Param> param_list_t;
+}
+
 #include "dbic++/container.h"
+namespace dbi {
+    typedef dbi::FieldSet field_list_t;
+}
+
 #include "dbic++/cpool.h"
 
 #define DEFAULT_DRIVER_PATH "/usr/lib/dbic++"

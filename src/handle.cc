@@ -32,9 +32,23 @@ namespace dbi {
         return h->execute(sql);
     }
 
-    uint32_t Handle::execute(string sql, vector<Param> &bind) {
+    uint32_t Handle::execute(string sql, param_list_t &bind) {
         if (_trace) logMessage(_trace_fd, sql);
         return h->execute(sql, bind);
+    }
+
+    Result* Handle::aexecute(string sql) {
+        if (_trace) logMessage(_trace_fd, sql);
+        return new Result(h->aexecute(sql));
+    }
+
+    Result* Handle::aexecute(string sql, param_list_t &bind) {
+        if (_trace) logMessage(_trace_fd, sql);
+        return new Result(h->aexecute(sql, bind));
+    }
+
+    int Handle::socket() {
+        return h->socket();
     }
 
     Result* Handle::result() {
@@ -89,11 +103,11 @@ namespace dbi {
         return h->close();
     }
 
-    vector<string>& Handle::transactions() {
+    string_list_t& Handle::transactions() {
         return trx;
     }
 
-    uint64_t Handle::write(string table, FieldSet &fields, IO* io) {
+    uint64_t Handle::write(string table, field_list_t &fields, IO* io) {
         return h->write(table, fields, io);
     }
 

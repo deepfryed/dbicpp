@@ -9,8 +9,8 @@ namespace dbi {
         private:
         PGconn         *_conn;
         PGresult       *_result;
-        vector<string> _rsfields;
-        vector<int>    _rstypes;
+        string_list_t  _rsfields;
+        int_list_t     _rstypes;
         uint32_t       _rowno, _rows, _cols, _affected_rows;
         unsigned char  *_bytea;
         string         _sql;
@@ -31,8 +31,8 @@ namespace dbi {
         uint32_t        rows();
         uint32_t        columns();
         uint64_t        lastInsertID();
-        vector<string>& fields();
-        vector<int>&    types();
+        string_list_t&  fields();
+        int_list_t&     types();
 
         bool           read(ResultRow &r);
         bool           read(ResultRowHash &r);

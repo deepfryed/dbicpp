@@ -1,8 +1,5 @@
 namespace dbi {
 
-    using namespace std;
-    using namespace pcrecpp;
-
     class Result;
     class Statement;
 
@@ -43,7 +40,7 @@ namespace dbi {
     */
     class Handle {
         protected:
-        vector<string> trx;
+        string_list_t trx;
         AbstractHandle *h;
         public:
         /*
@@ -71,7 +68,8 @@ namespace dbi {
 
 
         */
-        Handle(string driver, string user, string pass, string dbname, string host, string port, char *options = 0);
+        Handle(std::string driver, std::string user, std::string pass, std::string dbname,
+               std::string host, std::string port, char *options = 0);
 
         /*
             Constructor: Handle(string, string, string, string)
@@ -83,7 +81,7 @@ namespace dbi {
 
             This assumes localhost and default port number for the database.
         */
-        Handle(string driver, string user, string pass, string dbname);
+        Handle(std::string driver, std::string user, std::string pass, std::string dbname);
 
         /*
             Constructor: Handle(AbstractHandle*)
@@ -109,13 +107,19 @@ namespace dbi {
             Function: execute(string)
             See <AbstractHandle::execute(string)>
         */
-        uint32_t execute(string sql);
+        uint32_t execute(std::string sql);
 
         /*
-            Function: execute(string, vector<Param>&)
-            See <AbstractHandle::execute(string, vector<Param>&)>
+            Function: execute(string, param_list_t&)
+            See <AbstractHandle::execute(string, param_list_t&)>
         */
-        uint32_t execute(string sql, vector<Param> &bind);
+        uint32_t execute(std::string sql, param_list_t &bind);
+
+
+        Result* aexecute(std::string sql);
+        Result* aexecute(std::string sql, param_list_t &bind);
+
+        int socket();
 
         /*
             Function: result
@@ -137,7 +141,7 @@ namespace dbi {
             Returns:
             A pointer to Statement.
         */
-        Statement* prepare(string sql);
+        Statement* prepare(std::string sql);
 
         /*
             Operator: <<(string)
@@ -149,7 +153,7 @@ namespace dbi {
             Returns:
             A pointer to Statement.
         */
-        Statement* operator<<(string sql);
+        Statement* operator<<(std::string sql);
 
         /*
             Function: begin
@@ -173,19 +177,19 @@ namespace dbi {
             Function: begin(string)
             See <AbstractHandle::begin(string)>
         */
-        bool begin(string name)
+        bool begin(std::string name)
 ;
         /*
             Function: commit(string)
             See <AbstractHandle::commit(string)>
         */
-        bool commit(string name);
+        bool commit(std::string name);
 
         /*
             Function: rollback(string)
             See <AbstractHandle::rollback(string)>
         */
-        bool rollback(string name);
+        bool rollback(std::string name);
 
         /*
             Function: close
@@ -203,13 +207,13 @@ namespace dbi {
             Returns:
             list of transactions.
         */
-        vector<string>& transactions();
+        string_list_t& transactions();
 
         /*
             Function: write(string, FieldSet&, IO*)
             See <AbstractHandle::write(string, FieldSet&, IO*)>
         */
-        uint64_t write(string table, FieldSet &fields, IO*);
+        uint64_t write(std::string table, field_list_t &fields, IO*);
 
         /*
             Function: setTimeZoneOffset(int, int)
@@ -227,7 +231,7 @@ namespace dbi {
             Function: escape(string)
             See <AbstractHandle::escape(string)>
         */
-        string escape(string);
+        string escape(std::string);
 
         /*
             Function: driver

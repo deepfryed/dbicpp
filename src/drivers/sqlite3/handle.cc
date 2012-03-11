@@ -55,7 +55,7 @@ namespace dbi {
         return _result->rows();
     }
 
-    uint32_t Sqlite3Handle::execute(string sql, vector<Param> &bind) {
+    uint32_t Sqlite3Handle::execute(string sql, param_list_t &bind) {
         _sql = sql;
 
         Sqlite3Statement st(sql, conn);
@@ -77,13 +77,17 @@ namespace dbi {
         return 0;
     }
 
-    Sqlite3Result* Sqlite3Handle::aexecute(string sql, vector<Param> &bind) {
+    Sqlite3Result* Sqlite3Handle::aexecute(string sql, param_list_t &bind) {
         throw RuntimeError("Sqlite3Handle::aexecute is not implemented");
         return 0;
     }
 
     void Sqlite3Handle::initAsync() {
         throw RuntimeError("Sqlite3Handle::initAsync is not implemented");
+    }
+
+    void Sqlite3Handle::async(bool flag) {
+        throw RuntimeError("Sqlite3Handle::async is not implemented");
     }
 
     bool Sqlite3Handle::isBusy() {
@@ -175,7 +179,7 @@ namespace dbi {
         }
     }
 
-    uint64_t Sqlite3Handle::write(string table, FieldSet &fields, IO* io) {
+    uint64_t Sqlite3Handle::write(string table, field_list_t &fields, IO* io) {
         string sql  = "insert into " + table;
         int columns = fields.size();
 

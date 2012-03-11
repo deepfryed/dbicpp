@@ -1,9 +1,10 @@
 #ifndef _DBICXX_RESULTROW_H
 #define _DBICXX_RESULTROW_H
 
-namespace dbi {
+#include <string>
+#include <vector>
 
-    using namespace std;
+namespace dbi {
 
     /*
         Class: ResultRow
@@ -11,7 +12,7 @@ namespace dbi {
     */
     class ResultRow {
         protected:
-        vector<Param> fields;
+        param_list_t fields;
         Param nil;
 
         public:
@@ -53,48 +54,7 @@ namespace dbi {
             Reference to <Param>
         */
         Param& operator[](int);
-        friend ostream& operator<< (ostream &out, ResultRow &r);
-    };
-
-    /*
-        Class: FieldSet
-        A glorified vector<string> really, with some decorators.
-        See <StringIO> for an example where you can use this.
-    */
-    class FieldSet {
-        protected:
-        vector<string> fields;
-
-        public:
-        /*
-            Constructor: FieldSet(int, ...)
-            (begin code)
-            FieldSet fields(3, "id", "user", "name");
-            (end)
-
-        */
-        FieldSet(int n, ...);
-
-        /*
-            Function: size()
-            Returns the number of fields.
-
-            Returns:
-            integer
-        */
-        int size();
-
-        /*
-            Function: join(string delim)
-            Concatenates the field names with a given delimiter.
-
-            Parameters:
-            delim - a string delimiter.
-
-            Returns:
-            string
-        */
-        string join(string delim);
+        friend std::ostream& operator<< (std::ostream &out, ResultRow &r);
     };
 
 }

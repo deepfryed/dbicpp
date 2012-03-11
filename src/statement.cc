@@ -122,7 +122,7 @@ namespace dbi {
         return rc;
     }
 
-    uint32_t Statement::execute(vector<Param> &bind) {
+    uint32_t Statement::execute(param_list_t &bind) {
         if (_trace)
             logMessage(_trace_fd, formatParams(st->command(), bind));
         return st->execute(bind);

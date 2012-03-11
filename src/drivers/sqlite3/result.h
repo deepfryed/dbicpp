@@ -8,8 +8,8 @@ namespace dbi {
         string            _sql;
         bool              _lazy_typed;
         uint32_t          _rowno, _rows, _cols;
-        vector<int>       _rstypes;
-        vector<string>    _rsfields;
+        int_list_t        _rstypes;
+        string_list_t     _rsfields;
         vector<ResultRow> _rowdata;
 
         void init();
@@ -29,8 +29,8 @@ namespace dbi {
         uint32_t        rows();
         uint32_t        columns();
         uint64_t        lastInsertID();
-        vector<string>& fields();
-        vector<int>&    types();
+        string_list_t&  fields();
+        int_list_t&     types();
 
         bool           read(ResultRow &r);
         bool           read(ResultRowHash &r);

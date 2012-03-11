@@ -110,7 +110,7 @@ namespace dbi {
         return rows;
     }
 
-    uint32_t MySqlHandle::execute(string sql, vector<Param> &bind) {
+    uint32_t MySqlHandle::execute(string sql, param_list_t &bind) {
         int rows;
 
         if (_result) mysql_free_result(_result);
@@ -147,19 +147,15 @@ namespace dbi {
         return new MySqlResult(0, _sql, conn);
     }
 
-    MySqlResult* MySqlHandle::aexecute(string sql, vector<Param> &bind) {
+    MySqlResult* MySqlHandle::aexecute(string sql, param_list_t &bind) {
         MYSQL_PREPROCESS_QUERY(sql);
         MYSQL_INTERPOLATE_BIND(conn, sql, bind);
         mysql_send_query(conn, sql.c_str(), sql.length());
         return new MySqlResult(0, _sql, conn);
     }
 
-    void MySqlHandle::initAsync() {
+    void MySqlHandle::async(bool flag) {
         // NOP
-    }
-
-    bool MySqlHandle::isBusy() {
-        return false;
     }
 
     bool MySqlHandle::cancel() {
@@ -252,7 +248,7 @@ namespace dbi {
         throw RuntimeError(errormsg);
     }
 
-    uint64_t MySqlHandle::write(string table, FieldSet &fields, IO* io) {
+    uint64_t MySqlHandle::write(string table, field_list_t &fields, IO* io) {
         char buffer[4096];
         string filename = generateCompactUUID();
 

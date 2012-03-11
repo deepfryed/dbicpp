@@ -7,7 +7,7 @@ namespace dbi {
         private:
         string _sql;
         PGresult* _pgexec(string sql);
-        PGresult* _pgexec(string sql, vector<Param> &bind);
+        PGresult* _pgexec(string sql, param_list_t &bind);
 
         // execute queries directly and don't save results.
         void _pgexecDirect(string sql);
@@ -31,17 +31,16 @@ namespace dbi {
 
         PgStatement* prepare(string sql);
         uint32_t     execute(string sql);
-        uint32_t     execute(string sql, vector<Param> &bind);
+        uint32_t     execute(string sql, param_list_t &bind);
 
         PgResult*    result();
 
         int  socket();
-        void initAsync();
-        bool isBusy();
+        void async(bool);
         bool cancel();
 
         PgResult* aexecute(string sql);
-        PgResult* aexecute(string sql, vector<Param> &bind);
+        PgResult* aexecute(string sql, param_list_t &bind);
 
         bool begin();
         bool commit();
@@ -53,7 +52,7 @@ namespace dbi {
         bool close();
         void reconnect();
 
-        uint64_t write(string table, FieldSet &fields, IO*);
+        uint64_t write(string table, field_list_t &fields, IO*);
         void setTimeZoneOffset(int, int);
         void setTimeZone(char *);
         string escape(string);

@@ -58,7 +58,7 @@ namespace dbi {
         return _result = result;
     }
 
-    PGresult* PgStatement::_pgexec(vector<Param> &bind) {
+    PGresult* PgStatement::_pgexec(param_list_t &bind) {
         int *param_l, *param_f;
         const char **param_v;
         PGresult *result;
@@ -103,7 +103,7 @@ namespace dbi {
         return rows > 0 ? rows : (uint32_t)atoi(PQcmdTuples(result));
     }
 
-    uint32_t PgStatement::execute(vector<Param> &bind) {
+    uint32_t PgStatement::execute(param_list_t &bind) {
         uint32_t rows;
 
         PGresult *result = _pgexec(bind);

@@ -1,11 +1,11 @@
+#pragma once
+
 #ifndef _DBICXX_PARAM_H
 #define _DBICXX_PARAM_H
 
 #include "dbic++.h"
 
 namespace dbi {
-
-    using namespace std;
 
     /*
         Struct: Param
@@ -34,7 +34,7 @@ namespace dbi {
         Function: PARAM(string&)
         Creates a Param given a string.
     */
-    Param PARAM(string &s);
+    Param PARAM(std::string &s);
     /*
         Function: PARAM(const char*)
         Creates a Param given a string.
@@ -56,8 +56,7 @@ namespace dbi {
     */
     Param PARAM_BINARY(unsigned char* data, uint64_t l);
 
-    ostream& operator<<(ostream &out, Param &p);
-
+    std::ostream& operator<<(std::ostream &out, Param &p);
 }
 
 #endif

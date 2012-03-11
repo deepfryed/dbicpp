@@ -23,7 +23,7 @@ namespace dbi {
         string command();
 
         uint32_t execute();
-        uint32_t execute(vector<Param>&);
+        uint32_t execute(param_list_t&);
         uint64_t lastInsertID();
 
         Sqlite3Result* result();

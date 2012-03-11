@@ -18,8 +18,8 @@ namespace dbi {
             re.Replace("?", &query);
     }
 
-    void MYSQL_INTERPOLATE_BIND(MYSQL *conn, string &query, vector<Param> &bind) {
-        vector<string> parts;
+    void MYSQL_INTERPOLATE_BIND(MYSQL *conn, string &query, param_list_t &bind) {
+        string_list_t parts;
         const char *cptr = query.c_str();
         uint64_t max = query.length(),  begin = 0, end = 0;
         while (begin < max) {

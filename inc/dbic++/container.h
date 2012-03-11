@@ -6,5 +6,6 @@
 
 #include "result_row.h"
 #include "result_row_hash.h"
+#include "field_set.h"
 
 #endif

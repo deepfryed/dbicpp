@@ -36,7 +36,7 @@ namespace dbi {
         }
     }
 
-    void PQ_PROCESS_BIND(const char ***param_v, int **param_l, int **param_f, vector<Param> &bind) {
+    void PQ_PROCESS_BIND(const char ***param_v, int **param_l, int **param_f, param_list_t &bind) {
         *param_v = new const char*[bind.size()];
         *param_l = new int[bind.size()];
         *param_f = new int[bind.size()];

@@ -28,15 +28,14 @@ namespace dbi {
         MySqlStatement* prepare(string sql);
 
         uint32_t execute(string sql);
-        uint32_t execute(string sql, vector<Param> &bind);
+        uint32_t execute(string sql, param_list_t &bind);
 
         MySqlResult* aexecute(string sql);
-        MySqlResult* aexecute(string sql, vector<Param> &bind);
+        MySqlResult* aexecute(string sql, param_list_t &bind);
 
         AbstractResult* result();
 
-        void initAsync();
-        bool isBusy();
+        void async(bool);
         bool cancel();
         bool begin();
         bool commit();
@@ -50,7 +49,7 @@ namespace dbi {
         void cleanup();
         void reconnect();
 
-        uint64_t write(string table, FieldSet &fields, IO*);
+        uint64_t write(string table, field_list_t &fields, IO*);
         void setTimeZoneOffset(int, int);
         void setTimeZone(char *name);
         string escape(string);

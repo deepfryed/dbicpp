@@ -32,7 +32,7 @@ namespace dbi {
     extern map<string, IO*> CopyInList;
 
     void MYSQL_PREPROCESS_QUERY(string &query);
-    void MYSQL_INTERPOLATE_BIND(MYSQL *conn, string &query, vector<Param> &bind);
+    void MYSQL_INTERPOLATE_BIND(MYSQL *conn, string &query, param_list_t &bind);
     bool MYSQL_CONNECTION_ERROR(int error);
 
     int  LOCAL_INFILE_INIT(void **ptr, const char *filename, void *unused);

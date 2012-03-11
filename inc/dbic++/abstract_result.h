@@ -1,8 +1,5 @@
 namespace dbi {
 
-    using namespace std;
-    using namespace pcrecpp;
-
     /*
         Class: AbstractResult
         Pure virtual class that defines the api that individual database drivers need to support.
@@ -35,9 +32,9 @@ namespace dbi {
             Returns the fields returned in the result.
 
             Returns:
-            fields - vector<string>
+            fields - string_list_t
         */
-        virtual vector<string>& fields() = 0;
+        virtual string_list_t& fields() = 0;
 
         /*
             Function: read(ResultRow&)
@@ -129,7 +126,7 @@ namespace dbi {
             Returns an array of field types in the resultset.
 
             Returns:
-            types - vector<int> signifying a type for each field. Refer to the following constants.
+            types - int_list_t signifying a type for each field. Refer to the following constants.
 
                 - DBI_TYPE_INT
                 - DBI_TYPE_TIME
@@ -140,7 +137,7 @@ namespace dbi {
                 - DBI_TYPE_BLOB
 
         */
-        virtual vector<int>& types() = 0;
+        virtual int_list_t& types() = 0;
 
         /*
             Function: cleanup
@@ -149,9 +146,10 @@ namespace dbi {
         */
         virtual void cleanup() = 0;
 
-        // ASYNC API
+        // async api
         // Returns false if done, true is still more probably yet to consume
         virtual bool consumeResult() = 0;
+
         // Once all available data has been consumed, prepare results for
         // access.
         virtual void prepareResult() = 0;

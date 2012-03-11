@@ -76,7 +76,7 @@ namespace dbi {
         return rows;
     }
 
-    uint32_t Query::execute(vector<Param> &bind) {
+    uint32_t Query::execute(param_list_t &bind) {
         finish();
         if (_trace)
             logMessage(_trace_fd, formatParams(st->command(), bind));

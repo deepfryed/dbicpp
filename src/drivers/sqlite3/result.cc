@@ -148,7 +148,7 @@ namespace dbi {
         }
     }
 
-    vector<string>& Sqlite3Result::fields() {
+    string_list_t& Sqlite3Result::fields() {
         return _rsfields;
     }
 
@@ -178,7 +178,7 @@ namespace dbi {
         _rowno = r;
     }
 
-    vector<int>& Sqlite3Result::types() {
+    int_list_t& Sqlite3Result::types() {
         return _rstypes;
     }
 }

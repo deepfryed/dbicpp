@@ -25,7 +25,7 @@ namespace dbi {
         string command();
 
         uint32_t execute();
-        uint32_t execute(vector<Param> &bind);
+        uint32_t execute(param_list_t &bind);
         uint64_t lastInsertID();
 
         void cleanup();
