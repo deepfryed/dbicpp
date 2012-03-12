@@ -1,6 +1,6 @@
 Priority:
 
-1. Driver support for SQLite3, Oracle, SQL Server (in that order).
+1. Driver support for DB2, Oracle, SQL Server (in that order).
 2. Database specific function call interface.
 
 Bharanee Rathna <deepfryed@gmail.com>, author
