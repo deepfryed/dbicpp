@@ -74,7 +74,6 @@ namespace dbi {
 #include "dbic++/statement.h"
 #include "dbic++/result.h"
 #include "dbic++/query.h"
-#include "dbic++/socketinfo.h"
 
 #ifndef __linux
     extern size_t getline(char **, size_t *, FILE *);

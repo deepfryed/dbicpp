@@ -1,5 +1,7 @@
 namespace dbi {
 
+    class AbstractHandle;
+
     /*
         Section: Utility functions
     */
