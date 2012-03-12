@@ -42,8 +42,6 @@ namespace dbi {
     typedef dbi::FieldSet field_list_t;
 }
 
-#include "dbic++/cpool.h"
-
 #define DEFAULT_DRIVER_PATH "/usr/lib/dbic++"
 
 #define DBI_TYPE_UNKNOWN   0
