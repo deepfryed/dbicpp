@@ -30,7 +30,7 @@ and <Statement> work. It is also recommended that you read through documentation
 
 Examples:
 
-Checkout <Handle>, <StringIO> or <Reactor> for some quick examples. dbic++ source distribution
+Checkout <Handle> or <StringIO> for some quick examples. dbic++ source distribution
 also contains some examples that can be found under src/examples/.
 
 To compile code that uses dbic++, use pkg-config to get the correct compiler flags.
