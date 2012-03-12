@@ -8,4 +8,4 @@ Description: C++ database API
 Version: 0.2.6
 Requires:
 Cflags: -I${includedir}/
-Libs: -L${libdir} -ldbic++ -lpcrecpp -ldl -levent -rdynamic
+Libs: -L${libdir} -ldbic++ -lpcrecpp -ldl -rdynamic
