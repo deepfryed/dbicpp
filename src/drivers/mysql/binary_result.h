@@ -1,9 +1,9 @@
 #ifndef _DBICXX_MYSQL_BINARY_RESULT_H
 #define _DBICXX_MYSQL_BINARY_RESULT_H
 
-#include <mysql/my_global.h>
-#include <mysql/mysql_time.h>
-#include <mysql/m_string.h>
+#include <my_global.h>
+#include <mysql_time.h>
+#include <m_string.h>
 #include <stdint.h>
 
 namespace dbi {

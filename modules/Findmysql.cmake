@@ -20,11 +20,14 @@ if (MYSQL_LIBRARIES AND MYSQL_INCLUDE_DIRS)
 else (MYSQL_LIBRARIES AND MYSQL_INCLUDE_DIRS)
   find_path(MYSQL_INCLUDE_DIR
     NAMES
-      mysql/mysql.h
+      mysql.h
     PATHS
       /usr/include
+      /usr/include/mysql
       /usr/local/include
+      /usr/local/include/mysql
       /opt/local/include
+      /opt/local/include/mysql
       /opt/local/include/mysql5
       /sw/include
   )
