@@ -42,6 +42,7 @@ namespace dbi {
             std::transform(type.begin(), type.end(), type.begin(), (int(*)(int)) tolower);
             if(type == "int")       { _rstypes.push_back(DBI_TYPE_INT);       continue; }
             if(type == "integer")   { _rstypes.push_back(DBI_TYPE_INT);       continue; }
+            if(type == "bigint")    { _rstypes.push_back(DBI_TYPE_INT);       continue; }
             if(type == "real")      { _rstypes.push_back(DBI_TYPE_FLOAT);     continue; }
             if(type == "float")     { _rstypes.push_back(DBI_TYPE_FLOAT);     continue; }
             if(type == "decimal")   { _rstypes.push_back(DBI_TYPE_NUMERIC);   continue; }
