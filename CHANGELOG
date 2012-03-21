@@ -1,6 +1,7 @@
-=== 0.6.0 (2012-03-12)
+=== 0.6.0 (2012-03-22)
 * removed connection pool api.
 * exposes Handle#aexecute, Handle#socket and Result#retrieve.
+* adds support for SQLite3 bigint type.
 
 === 0.5.11 (2011-12-26)
 * fix Handle#execute and Statement#execute to re-raise ConnectionError properly.

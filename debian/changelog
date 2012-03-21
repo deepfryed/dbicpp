@@ -1,9 +1,10 @@
 dbic++ (0.6.0-1~oneiric1) oneiric; urgency=medium
 
   * removed connection pool api.
-  * just exposes Handle#aexecute, Handle#socket and Result#retrieve.
+  * exposes Handle#aexecute, Handle#socket and Result#retrieve.
+  * adds support for SQLite3 bigint type.
 
- -- Bharanee Rathna <deepfryed@gmail.com>  Mon, 12 Mar 2012 10:45:00 +1100
+ -- Bharanee Rathna <deepfryed@gmail.com>  Thu, 22 Mar 2012 10:45:00 +1100
 
 dbic++ (0.5.11-1~maverick1) maverick; urgency=medium
 
