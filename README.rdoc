@@ -191,10 +191,6 @@ Core2DUO 2.53GHz, 4GB, 5200rpm drive with stock database configs.
   Handle::execute(...) with bind arguments, make sure to provide all values as bind parameters to
   avoid the confusion and resulting errors.
 
-== SUPPORT
-
-{Support dbic++ on fundry}[https://fundry.com/project/5-dbic]
-
 == LICENSE
 
 See LICENSE.
