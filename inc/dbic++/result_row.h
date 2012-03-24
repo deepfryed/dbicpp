@@ -1,3 +1,4 @@
+#pragma once
 #ifndef _DBICXX_RESULTROW_H
 #define _DBICXX_RESULTROW_H
 

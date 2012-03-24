@@ -1,3 +1,4 @@
+#pragma once
 #ifndef _DBICXX_ERROR_H
 #define _DBICXX_ERROR_H
 

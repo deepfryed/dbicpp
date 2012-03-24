@@ -25,9 +25,9 @@ ostream& operator<< (ostream &out, Result *res) {
 
 int main(int argc, char *argv[]) {
     // Handle::Handle(driver, user, password, database, host, port)
-    Handle h1 ("postgresql", getlogin(), "", "dbicpp");
-    Handle h2 ("postgresql", getlogin(), "", "dbicpp");
-    Handle h3 ("postgresql", getlogin(), "", "dbicpp");
+    Handle h1 ("postgresql", dbi::getlogin(), "", "dbicpp");
+    Handle h2 ("postgresql", dbi::getlogin(), "", "dbicpp");
+    Handle h3 ("postgresql", dbi::getlogin(), "", "dbicpp");
 
     // Set trace on and log queries to stderr
     trace(true, fileno(stderr));

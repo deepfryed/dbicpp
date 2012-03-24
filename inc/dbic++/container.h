@@ -1,3 +1,4 @@
+#pragma once
 #ifndef _DBICXX_CONTAINER_H
 #define _DBICXX_CONTAINER_H
 
