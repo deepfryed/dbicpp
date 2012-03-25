@@ -103,7 +103,7 @@ namespace dbi {
         string normalized_sql = sql;
         _sql = sql;
 
-        PQ_PREPROCESS_QUERY(normalized_sql);
+        // no need to pre-process sql without arguments
         result = PQexec(conn, normalized_sql.c_str());
         PQ_CHECK_RESULT(result, conn, sql);
 
