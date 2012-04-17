@@ -21,7 +21,7 @@ namespace dbi {
     void PQ_NOTICE(void *arg, const char *message);
     void PQ_PREPROCESS_QUERY(string &query);
     void PQ_PROCESS_BIND(const char ***param_v, int **param_l, int **param_f, param_list_t &bind);
-    void PQ_CHECK_RESULT(PGresult *result, PGconn *conn, string sql);
+    void PQ_CHECK_RESULT(PGresult **result, PGconn *conn, string sql);
 }
 
 #include "result.h"

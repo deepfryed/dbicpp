@@ -49,9 +49,9 @@ namespace dbi {
         }
     }
 
-    void PQ_CHECK_RESULT(PGresult *result, PGconn *conn, string sql) {
+    void PQ_CHECK_RESULT(PGresult **result, PGconn *conn, string sql) {
         bool cerror;
-        switch(PQresultStatus(result)) {
+        switch(PQresultStatus(*result)) {
             case PGRES_TUPLES_OK:
             case PGRES_COPY_OUT:
             case PGRES_COPY_IN:
@@ -62,8 +62,9 @@ namespace dbi {
             case PGRES_FATAL_ERROR:
             case PGRES_NONFATAL_ERROR:
                 cerror = PQstatus(conn) == CONNECTION_BAD;
-                snprintf(errormsg, 8192, "In SQL: %s\n\n %s", sql.c_str(), PQresultErrorMessage(result));
-                PQclear(result);
+                snprintf(errormsg, 8192, "In SQL: %s\n\n %s", sql.c_str(), PQresultErrorMessage(*result));
+                PQclear(*result);
+                *result = 0;
                 if (cerror)
                     throw ConnectionError((const char*)errormsg);
                 else
@@ -72,7 +73,8 @@ namespace dbi {
             default:
                 cerror = PQstatus(conn) == CONNECTION_BAD;
                 snprintf(errormsg, 8192, "In SQL: %s\n\n Unknown error, check logs.", sql.c_str());
-                PQclear(result);
+                PQclear(*result);
+                *result = 0;
                 if (cerror)
                     throw ConnectionError((const char*)errormsg);
                 else

@@ -15,7 +15,7 @@ namespace dbi {
         result = PQprepare(*_conn, _uuid.c_str(), normalized_sql.c_str(), 0, 0);
         if (!result) boom("Unable to allocate statement");
 
-        PQ_CHECK_RESULT(result, *_conn, _sql);
+        PQ_CHECK_RESULT(&result, *_conn, _sql);
         PQclear(result);
     }
 
@@ -54,7 +54,7 @@ namespace dbi {
 
         finish();
         result = PQexecPrepared(*_conn, _uuid.c_str(), 0, 0, 0, 0, 0);
-        PQ_CHECK_RESULT(result, *_conn, _sql);
+        PQ_CHECK_RESULT(&result, *_conn, _sql);
         return _result = result;
     }
 
@@ -71,7 +71,7 @@ namespace dbi {
         try {
             result = PQexecPrepared(*_conn, _uuid.c_str(), bind.size(),
                                    (const char* const *)param_v, (const int*)param_l, (const int*)param_f, 0);
-            PQ_CHECK_RESULT(result, *_conn, _sql);
+            PQ_CHECK_RESULT(&result, *_conn, _sql);
         }
         catch (ConnectionError &e) {
             delete []param_v;
