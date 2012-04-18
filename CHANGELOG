@@ -1,3 +1,10 @@
+=== 0.6.1 (2012-04-19)
+* reset PGresult to NULL before raising exception.
+* remove openmp directive in build.
+* remove libevent depedency.
+* pg: skip pre-processing in Handle#execute() without bind arguments.
+* add dbi::getlogin(); getlogin() is not very reliable.
+
 === 0.6.0 (2012-03-22)
 * removed connection pool api.
 * exposes Handle#aexecute, Handle#socket and Result#retrieve.

@@ -1,3 +1,13 @@
+dbic++ (0.6.1-1~oneiric1) oneiric; urgency=medium
+
+  * reset PGresult to NULL before raising exception.
+  * remove openmp directive in build.
+  * remove libevent depedency.
+  * pg: skip pre-processing in Handle#execute() without bind arguments.
+  * add dbi::getlogin().
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Thu, 19 Apr 2012 07:00:00 +1000
+
 dbic++ (0.6.0-1~oneiric1) oneiric; urgency=medium
 
   * removed connection pool api.
