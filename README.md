@@ -28,7 +28,7 @@ dbic++ is a database client library written in C++ which comes with support for 
   int main() {
 
       // Handle h ("driver", "user", "password", "database", "host", "port");
-      Handle h ("postgresql", getlogin(), "", "dbicpp");
+      Handle h ("postgresql", dbi::getlogin(), "", "dbicpp");
 
       Query query (h, "SELECT id, name, email FROM users WHERE id >= ? AND id < ?");
 
