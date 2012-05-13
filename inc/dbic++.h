@@ -19,7 +19,7 @@
 #include <uuid/uuid.h>
 #include <stdint.h>
 
-#define DBI_VERSION      0.6.1
+#define DBI_VERSION      0.6.2
 
 namespace dbi {
     struct null {};
@@ -75,9 +75,5 @@ namespace dbi {
 #include "dbic++/result.h"
 #include "dbic++/query.h"
 #include "dbic++/etc.h"
-
-#ifndef __linux
-    extern size_t getline(char **, size_t *, FILE *);
-#endif
 
 #endif

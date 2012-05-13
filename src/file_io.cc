@@ -1,5 +1,17 @@
 #include "dbic++.h"
 
+#ifndef HAS_GETLINE
+size_t getline(char **lineptr, size_t *size, FILE *fp) {
+    if (!*lineptr) *lineptr = (char*)malloc(*size + 1);
+    if (!*lineptr) return -1;
+
+    if (fgets(*lineptr, *size, fp) != NULL)
+      return strlen(*lineptr);
+    else
+      return -1;
+}
+#endif
+
 namespace dbi {
     FileIO::FileIO(const char *path, char* mode) {
         if (!(fp = fopen(path, mode)))

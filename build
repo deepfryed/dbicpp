@@ -114,7 +114,7 @@ local_build() {
         -DCMAKE_MYSQL_VERSION=$MYSQL_VERSION \
         -DCMAKE_SQLITE3_VERSION=$SQLITE3_VERSION \
         -DCMAKE_INSTALL_PREFIX:PATH=tmp/
-  make
+  make -j4
   make install
   rm -rf lib/*
   mv tmp/lib/* lib/
