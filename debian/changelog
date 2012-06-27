@@ -1,3 +1,9 @@
+dbic++ (0.6.2-1~oneiric1) oneiric; urgency=medium
+
+  * better getline() detection on bsd based systems.
+
+ -- Bharanee Rathna <deepfryed@gmail.com>  Thu, 28 Jun 2012 08:29:00 +1000
+
 dbic++ (0.6.1-1~oneiric1) oneiric; urgency=medium
 
   * reset PGresult to NULL before raising exception.
