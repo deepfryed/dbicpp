@@ -103,7 +103,7 @@ INSTALL(DIRECTORY inc/
 
 IF (APPLE)
   INSTALL(FILES pkgconfig/macosx/dbic++.pc
-    DESTINATION /opt/local/lib/pkgconfig)
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 ELSE()
   INSTALL(FILES pkgconfig/dbic++.pc
     DESTINATION lib/pkgconfig)
