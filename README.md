@@ -89,18 +89,24 @@ c++ compiler (XCode if you are a MacOSX user).
 I'm assuming you're using homebrew. If not, please go to 
 https://github.com/mxcl/homebrew/wiki/installation
 
-You need to install the required dependencies first,
+brew install directly the latest version
+
+```
+brew install http://git.io/dbicpp
+```
+
+or you can pick and choose the database bindings you want to compile.
 
 ```
   brew install cmake
   brew install pcre
   brew install ossp-uuid
+  brew install sqlite3
   brew install postgresql
   brew install mysql
-  brew install sqlite3
 ```
 
-The last three database are optional. You only need to install the ones you want to test or use.
+You need atleast one of the database client libraries. Just unpack dbic++ and do `./build -i`
 
 ### Building libraries and demos
 
