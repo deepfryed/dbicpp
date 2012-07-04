@@ -4,6 +4,7 @@ class Dbicpp < Formula
   url 'https://github.com/deepfryed/dbicpp/tarball/OSX-0.6.2'
   homepage 'https://github.com/deepfryed/dbicpp'
   version '0.6.2'
+  md5 '3d41340844fc944d83fa7ee5fd8f9bd8'
 
   depends_on 'cmake'
   depends_on 'ossp-uuid'
