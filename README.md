@@ -95,6 +95,12 @@ brew install directly the latest version
 brew install http://git.io/dbicpp
 ```
 
+or
+
+```
+brew install https://raw.github.com/deepfryed/dbicpp/master/brew/dbicpp.rb
+```
+
 or you can pick and choose the database bindings you want to compile.
 
 ```
