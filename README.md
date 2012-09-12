@@ -54,11 +54,6 @@ dbic++ is a database client library written in C++ which comes with support for 
 
 See src/examples for more specific examples.
 
-### Ruby
-
-You need to install swift (http://github.com/shanna/swift), it includes ruby bindings for
-dbic++.
-
 ## INSTALL
 
 ### Dependencies
