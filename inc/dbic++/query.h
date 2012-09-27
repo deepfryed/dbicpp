@@ -101,6 +101,24 @@ namespace dbi {
         Query& operator%(dbi::null const &e);
 
         /*
+            Operator: , (dbi::Param)
+            Alias for bind(dbi::Param)
+
+            Parameters:
+            value - dbi::Param
+        */
+        Query& operator,(dbi::Param);
+
+        /*
+            Operator: % (dbi::Param)
+            Alias for bind(dbi::Param)
+
+            Parameters:
+            value - dbi::Param
+        */
+        Query& operator%(dbi::Param);
+
+        /*
             Operator: , (execute())
             Alias for execute()
 

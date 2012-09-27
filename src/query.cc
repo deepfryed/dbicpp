@@ -66,6 +66,16 @@ namespace dbi {
         return *this;
     }
 
+    Query& Query::operator,(dbi::Param v) {
+        bind(v);
+        return *this;
+    }
+
+    Query& Query::operator%(dbi::Param v) {
+        bind(v);
+        return *this;
+    }
+
     uint32_t Query::execute() {
         finish();
         if (_trace)

@@ -87,6 +87,16 @@ namespace dbi {
         return *this;
     }
 
+    Statement& Statement::operator,(dbi::Param v) {
+        bind(v);
+        return *this;
+    }
+
+    Statement& Statement::operator%(dbi::Param v) {
+        bind(v);
+        return *this;
+    }
+
     Statement& Statement::operator<<(string sql) {
         params.clear();
 

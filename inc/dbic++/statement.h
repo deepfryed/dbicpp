@@ -173,6 +173,24 @@ namespace dbi {
         Statement& operator%(dbi::null const &e);
 
         /*
+            Operator: , (dbi::Param)
+            Alias for bind(dbi::Param)
+
+            Parameters:
+            value - dbi::Param
+        */
+        Statement& operator,(dbi::Param);
+
+        /*
+            Operator: % (dbi::Param)
+            Alias for bind(dbi::Param)
+
+            Parameters:
+            value - dbi::Param
+        */
+        Statement& operator%(dbi::Param);
+
+        /*
             Operator: , (execute())
             Alias for execute()
 
